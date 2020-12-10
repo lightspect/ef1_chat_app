@@ -5,6 +5,7 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
+import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -104,24 +105,31 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             ),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    child: Icon(
-                      Icons.group_add,
-                      color: colorBlack,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context, rootNavigator: true)
+                    .push(MaterialPageRoute(
+                        builder: (context) => CreateGroupPage(
+                              contact: null,
+                            ))),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      child: Icon(
+                        Icons.group_add,
+                        color: colorBlack,
+                      ),
+                      backgroundColor: Color(0xffE5E5E5),
+                      radius: 20,
                     ),
-                    backgroundColor: Color(0xffE5E5E5),
-                    radius: 20,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "Create Group",
-                      style: TextStyle(fontSize: 10),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "Create Group",
+                        style: TextStyle(fontSize: 10),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Flexible(

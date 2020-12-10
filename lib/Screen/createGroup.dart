@@ -10,17 +10,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
-class CreateMessagePage extends StatefulWidget {
-  const CreateMessagePage({Key key, this.contact}) : super(key: key);
+class CreateGroupPage extends StatefulWidget {
+  const CreateGroupPage({Key key, this.contact}) : super(key: key);
 
   final ContactModel contact;
 
   @override
-  State<StatefulWidget> createState() => _CreateMessagePageState(contact);
+  State<StatefulWidget> createState() => _CreateGroupPageState(contact);
 }
 
-class _CreateMessagePageState extends State<CreateMessagePage> {
-  _CreateMessagePageState(this.contact);
+class _CreateGroupPageState extends State<CreateGroupPage> {
+  _CreateGroupPageState(this.contact);
   final ContactModel contact;
   DatabaseService databaseService;
   final _searchController = TextEditingController();
@@ -113,31 +113,48 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
               child: Row(
                 children: [
                   contact != null
-                      ? Material(
-                          child: contact.photoUrl != null
-                              ? CachedNetworkImage(
-                                  placeholder: (context, url) => Container(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 1.0,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.grey),
+                      ? Stack(
+                          children: [
+                            Material(
+                              child: contact.photoUrl != null
+                                  ? CachedNetworkImage(
+                                      placeholder: (context, url) => Container(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 1.0,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.grey),
+                                        ),
+                                        width: 40.0,
+                                        height: 40.0,
+                                        padding: EdgeInsets.all(10.0),
+                                      ),
+                                      imageUrl: contact.photoUrl,
+                                      width: 40.0,
+                                      height: 40.0,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Icon(
+                                      Icons.account_circle,
+                                      size: 40.0,
+                                      color: Colors.grey,
                                     ),
-                                    width: 40.0,
-                                    height: 40.0,
-                                    padding: EdgeInsets.all(10.0),
-                                  ),
-                                  imageUrl: contact.photoUrl,
-                                  width: 40.0,
-                                  height: 40.0,
-                                  fit: BoxFit.cover,
-                                )
-                              : Icon(
-                                  Icons.account_circle,
-                                  size: 40.0,
-                                  color: Colors.grey,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20.0)),
+                              clipBehavior: Clip.hardEdge,
+                            ),
+                            Positioned(
+                              right: 0.0,
+                              child: CircleAvatar(
+                                backgroundColor: colorBlack,
+                                child: Icon(
+                                  Icons.close,
+                                  size: 6,
                                 ),
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          clipBehavior: Clip.hardEdge,
+                                radius: 4,
+                              ),
+                            )
+                          ],
                         )
                       : Container(),
                 ],
@@ -158,6 +175,10 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                     contacts = snapshot.data.docs
                         .map((doc) => ContactModel.fromMap(doc.data()))
                         .toList();
+                    Map<ContactModel, bool> contactMap = {};
+                    contacts.forEach((element) {
+                      contactMap[element] = false;
+                    });
                     return GroupedListView<ContactModel, String>(
                       elements: contacts,
                       groupBy: (element) => element.nickname.substring(0, 1),
@@ -165,50 +186,49 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: Text(groupByValue),
                       ),
-                      itemBuilder: (context, element) => InkWell(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          handleCreateGroupMessage(element);
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Material(
-                              child: element.photoUrl != null
-                                  ? CachedNetworkImage(
-                                      placeholder: (context, url) => Container(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.0,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.grey),
-                                        ),
-                                        width: 40.0,
-                                        height: 40.0,
-                                        padding: EdgeInsets.all(10.0),
+                      itemBuilder: (context, element) => StatefulBuilder(
+                        builder: (context, checkListState) => CheckboxListTile(
+                          title: Text(element.nickname),
+                          value: contactMap[element],
+                          onChanged: (value) {
+                            print(element.nickname +
+                                ": " +
+                                contactMap[element].toString());
+                            checkListState(() {
+                              contactMap[element] = value;
+                            });
+                            print(element.nickname +
+                                ": " +
+                                contactMap[element].toString());
+                          },
+                          secondary: Material(
+                            child: element.photoUrl != null
+                                ? CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.0,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.grey),
                                       ),
-                                      imageUrl: element.photoUrl,
                                       width: 40.0,
                                       height: 40.0,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Icon(
-                                      Icons.account_circle,
-                                      size: 40.0,
-                                      color: Colors.grey,
+                                      padding: EdgeInsets.all(10.0),
                                     ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 12),
-                              child: Text(
-                                element.nickname,
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
+                                    imageUrl: element.photoUrl,
+                                    width: 40.0,
+                                    height: 40.0,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Icon(
+                                    Icons.account_circle,
+                                    size: 40.0,
+                                    color: Colors.grey,
+                                  ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20.0)),
+                            clipBehavior: Clip.hardEdge,
+                          ),
                         ),
                       ),
                       useStickyGroupSeparators: true,

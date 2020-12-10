@@ -5,6 +5,7 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
+import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -400,7 +401,13 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                 )),
             Divider(),
             InkWell(
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true)
+                      .push(MaterialPageRoute(
+                          builder: (context) => CreateGroupPage(
+                                contact: contact,
+                              )));
+                },
                 child: Container(
                   height: 28,
                   child: Row(

@@ -30,7 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.0
   flare_flutter: any
   flare_splash_screen: ^3.0.1
-  provider: ^4.0.4
+  provider: ^4.3.2+3
   firebase_core : ^0.5.0
   firebase_auth: ^0.18.0+1  #0.14.0+5
   google_sign_in: ^4.5.3 #4.0.7

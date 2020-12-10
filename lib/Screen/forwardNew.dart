@@ -4,6 +4,7 @@ import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
+import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -26,20 +27,62 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
   //final _debouncer = Debouncer(milliseconds: 500);
   DatabaseService databaseService;
 
-  List<GroupModel> groups;
+  List<GroupModel> groups = [];
 
   _ForwardMessagePageState(this.message);
 
   List<String> id = [];
+
+  Map<GroupModel, bool> groupsMap = {};
 
   @override
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
     databaseService.refreshMessageList();
+    getGroups();
   }
 
   void search(String search) {}
+
+  void getGroups() {
+    databaseService
+        .fetchGroupsByUserId(databaseService.user.userId)
+        .then((value) async => setState(() {
+              groups = value;
+              for (int i = 0; i < groups.length; i++) {
+                generateGroupMessage(groups[i]).then((value) => setState(() {
+                      groups[i] = value;
+                    }));
+              }
+              groups.forEach((element) {
+                groupsMap[element] = false;
+              });
+            }));
+  }
+
+  Future<ContactModel> getContactDetail(List<dynamic> members) async {
+    members.remove(databaseService.user.userId);
+    ContactModel contactModel = await databaseService.getContactById(
+        databaseService.user.userId, members.first.trim());
+    if (contactModel != null && contactModel.userId.isNotEmpty) {
+      return contactModel;
+    } else {
+      return new ContactModel(
+          userId: members.first.trim(), nickname: "", photoUrl: "");
+    }
+  }
+
+  Future<GroupModel> generateGroupMessage(GroupModel group) async {
+    if (group.type == 1) {
+      ContactModel contactModel = await getContactDetail(group.members);
+      group.groupName = contactModel.nickname.isNotEmpty
+          ? contactModel.nickname
+          : contactModel.userId;
+      group.groupPhoto = contactModel.photoUrl;
+    }
+    return group;
+  }
 
   void sendMessage(String groupId, String message, int contentType) async {
     //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
@@ -131,42 +174,20 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
               ),
             ),
             Flexible(
-              child: StreamBuilder(
-                stream: databaseService.groupStream,
-                builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                    );
-                  } else {
-                    groups = snapshot.data;
-                    groups.sort((group1, group2) {
-                      if (DateTime.parse(group1.recentMessageTime)
-                          .isAfter(DateTime.parse(group2.recentMessageTime))) {
-                        return -1;
-                      } else {
-                        return 1;
-                      }
-                    });
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItem(context, groups[index]),
-                      itemCount: groups.length,
-                    );
-                  }
-                },
-              ),
-            ),
+                child: ListView.builder(
+              padding: EdgeInsets.all(10.0),
+              itemBuilder: (context, index) {
+                return buildItem(context, groups[index], groupsMap);
+              },
+              itemCount: groups.length,
+            )),
           ],
         ),
       ),
     );
   }
 
-  Widget buildItem(BuildContext context, GroupModel group) {
+  Widget buildItem(BuildContext context, GroupModel group, Map groupsMap) {
     if (group.recentMessageContent == '') {
       return Container();
     } else {
@@ -229,23 +250,18 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                 LoginButton(
                   text: "Send",
                   onClick: () {
-                    if (!id.contains(group.groupId)) {
+                    if (!groupsMap[group]) {
                       sendMessage(group.groupId, message.messageContent,
                           message.contentType);
-                      id.add(group.groupId);
+                      groupsMap[group] = true;
                     }
                   },
-                  color: id.contains(group.groupId)
-                      ? colorMainBG
-                      : colorLightGreen,
-                  textColor:
-                      id.contains(group.groupId) ? Colors.grey : Colors.white,
+                  color: groupsMap[group] ? colorMainBG : colorLightGreen,
+                  textColor: groupsMap[group] ? Colors.grey : Colors.white,
                   minWidth: 56,
                   height: 20,
                   borderRadius: 10,
-                  borderColor: id.contains(group.groupId)
-                      ? Colors.grey
-                      : colorLightGreen,
+                  borderColor: groupsMap[group] ? Colors.grey : colorLightGreen,
                 ),
               ],
             ),

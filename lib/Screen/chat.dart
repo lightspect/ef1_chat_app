@@ -137,11 +137,14 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
       context: context,
       items: <PopupMenuEntry<int>>[PlusMinusEntry()],
     ).then((value) {
+      if (value == null) {
+        //Navigator.of(context).pop();
+        return;
+      }
       if (controller != null) {
         controller.close();
         controller = null;
       }
-      if (value == null) return;
     });
   }
 
