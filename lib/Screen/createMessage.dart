@@ -57,6 +57,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
           type: 1);
       DocumentReference groupDocRef = await databaseService.addGroup(group);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
+        group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
         Navigator.of(context, rootNavigator: true).push(

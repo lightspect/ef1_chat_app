@@ -24,58 +24,166 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final ContactModel contact;
   DatabaseService databaseService;
   final _searchController = TextEditingController();
+  final _groupNameController = TextEditingController();
 
   String alert = '';
-  List<ContactModel> contacts;
+  String groupName = '';
+  List<ContactModel> contacts = [];
+  List<ContactModel> selectedContacts = [];
+  Map<String, bool> contactMap = {};
 
   @override
   void initState() {
     super.initState();
-
-    readLocal();
+    databaseService = locator<DatabaseService>();
+    getContacts();
   }
 
-  void readLocal() async {
-    databaseService = locator<DatabaseService>();
-    // Force refresh input
-    setState(() {});
+  void getContacts() {
+    databaseService.fetchContacts(databaseService.user.userId).then((snap) {
+      contacts.clear();
+      setState(() {
+        snap.forEach((element) {
+          contacts.add(element);
+        });
+        if (contact != null) {
+          ContactModel element = new ContactModel(
+              userId: contact.userId,
+              nickname: contact.nickname,
+              photoUrl: contact.photoUrl);
+          selectedContacts.add(element);
+        }
+        contacts.forEach((element) {
+          if (selectedContacts
+              .where((contact) => element.userId == contact.userId)
+              .isNotEmpty) {
+            contactMap[element.userId] = true;
+          } else {
+            contactMap[element.userId] = false;
+          }
+        });
+      });
+    });
+  }
+
+  Future<void> createDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Create Group",
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Group Name"),
+                      Container(
+                        margin: EdgeInsets.only(top: 12, bottom: 16),
+                        child: TextFormField(
+                          cursorColor: colorBlue,
+                          style: TextStyle(
+                            color: colorBlack,
+                            fontSize: 12.0,
+                            letterSpacing: 1.2,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: "Group Name",
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: colorBlack),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: colorBlack),
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: colorBlack),
+                            ),
+                            hintStyle: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12.0,
+                              letterSpacing: 1.2,
+                            ),
+                            isDense: true,
+                          ),
+                          controller: _groupNameController,
+                          onFieldSubmitted: (value) {},
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          LoginButton(
+                            margin: EdgeInsets.symmetric(vertical: 16),
+                            height: 40,
+                            minWidth: MediaQuery.of(context).size.width / 4,
+                            color: colorMainBG,
+                            borderColor: colorBlack,
+                            borderRadius: 4,
+                            text: "Cancel",
+                            textColor: colorBlack,
+                            onClick: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          LoginButton(
+                            margin: EdgeInsets.symmetric(vertical: 16),
+                            height: 40,
+                            minWidth: MediaQuery.of(context).size.width / 4,
+                            color: colorBlue,
+                            borderColor: colorBlue,
+                            borderRadius: 4,
+                            text: "Save",
+                            onClick: () {
+                              setState(() {
+                                groupName = _groupNameController.text;
+                              });
+                              handleCreateGroupMessage(contact);
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void handleCreateGroupMessage(ContactModel contact) async {
-    final QuerySnapshot checkGroupResult = await FirebaseFirestore.instance
-        .collection('groups')
-        .where('type', isEqualTo: 1)
-        .where('members', arrayContains: contact.userId)
-        .get();
-    final List<DocumentSnapshot> contactDoc = checkGroupResult.docs;
-    if (contactDoc.length == 0) {
-      GroupModel group = new GroupModel(
-          createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdBy: databaseService.user.userId,
-          members: [databaseService.user.userId, contact.userId],
-          groupId: "",
-          groupName: "",
-          groupPhoto: "",
-          recentMessageContent: "",
-          recentMessageSender: "",
-          recentMessageTime: "",
-          type: 1);
-      DocumentReference groupDocRef = await databaseService.addGroup(group);
-      await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
-        Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(builder: (context) => ChatPage(group: group)));
-      });
-    } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data());
-      if (group.type == 1) {
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
-      }
+    List<String> contactIdList = [];
+    selectedContacts.forEach((element) {
+      contactIdList.add(element.userId);
+    });
+    GroupModel group = new GroupModel(
+        createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
+        createdBy: databaseService.user.userId,
+        members: contactIdList,
+        groupId: "",
+        groupName: groupName,
+        groupPhoto: "",
+        recentMessageContent: "",
+        recentMessageSender: "",
+        recentMessageTime: "",
+        type: 2);
+    DocumentReference groupDocRef = await databaseService.addGroup(group);
+    await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
+      group.groupId = groupDocRef.id;
+      group.groupName = contact.nickname;
+      group.groupPhoto = contact.photoUrl;
       Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
-    }
+    });
   }
 
   @override
@@ -91,6 +199,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         ),
         backgroundColor: colorMainBG,
         elevation: 0,
+        actions: [
+          InkWell(
+            onTap: createDialog,
+            child: Text("Create"),
+          )
+        ],
       ),
       body: Container(
         width: MediaQuery.of(context).size.width,
@@ -108,141 +222,154 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 ),
               ],
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Row(
-                children: [
-                  contact != null
-                      ? Stack(
-                          children: [
-                            Material(
-                              child: contact.photoUrl != null
-                                  ? CachedNetworkImage(
-                                      placeholder: (context, url) => Container(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.0,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.grey),
-                                        ),
-                                        width: 40.0,
-                                        height: 40.0,
-                                        padding: EdgeInsets.all(10.0),
-                                      ),
-                                      imageUrl: contact.photoUrl,
-                                      width: 40.0,
-                                      height: 40.0,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Icon(
-                                      Icons.account_circle,
-                                      size: 40.0,
-                                      color: Colors.grey,
-                                    ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            Positioned(
-                              right: 0.0,
-                              child: CircleAvatar(
-                                backgroundColor: colorBlack,
-                                child: Icon(
-                                  Icons.close,
-                                  size: 6,
-                                ),
-                                radius: 4,
-                              ),
-                            )
-                          ],
-                        )
-                      : Container(),
-                ],
+            Container(
+              height: selectedContacts.isNotEmpty ? 80 : 0,
+              child: ListView.builder(
+                itemBuilder: (context, index) =>
+                    buildItem(selectedContacts[index]),
+                itemCount: selectedContacts.length,
+                scrollDirection: Axis.horizontal,
               ),
             ),
             Flexible(
-              child: StreamBuilder(
-                stream: databaseService
-                    .fetchContactsAsStream(databaseService.user.userId),
-                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                    );
-                  } else {
-                    contacts = snapshot.data.docs
-                        .map((doc) => ContactModel.fromMap(doc.data()))
-                        .toList();
-                    Map<ContactModel, bool> contactMap = {};
-                    contacts.forEach((element) {
-                      contactMap[element] = false;
-                    });
-                    return GroupedListView<ContactModel, String>(
-                      elements: contacts,
-                      groupBy: (element) => element.nickname.substring(0, 1),
-                      groupSeparatorBuilder: (String groupByValue) => Container(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Text(groupByValue),
-                      ),
-                      itemBuilder: (context, element) => StatefulBuilder(
-                        builder: (context, checkListState) => CheckboxListTile(
-                          title: Text(element.nickname),
-                          value: contactMap[element],
-                          onChanged: (value) {
-                            print(element.nickname +
-                                ": " +
-                                contactMap[element].toString());
-                            checkListState(() {
-                              contactMap[element] = value;
-                            });
-                            print(element.nickname +
-                                ": " +
-                                contactMap[element].toString());
-                          },
-                          secondary: Material(
-                            child: element.photoUrl != null
-                                ? CachedNetworkImage(
-                                    placeholder: (context, url) => Container(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.0,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.grey),
-                                      ),
-                                      width: 40.0,
-                                      height: 40.0,
-                                      padding: EdgeInsets.all(10.0),
-                                    ),
-                                    imageUrl: element.photoUrl,
-                                    width: 40.0,
-                                    height: 40.0,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Icon(
-                                    Icons.account_circle,
-                                    size: 40.0,
-                                    color: Colors.grey,
-                                  ),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(20.0)),
-                            clipBehavior: Clip.hardEdge,
-                          ),
-                        ),
-                      ),
-                      useStickyGroupSeparators: true,
-                      floatingHeader: false,
-                      order: GroupedListOrder.ASC,
-                      separator: Divider(),
-                    );
-                  }
-                },
+              child: GroupedListView<ContactModel, String>(
+                elements: contacts,
+                groupBy: (element) => element.nickname.substring(0, 1),
+                groupSeparatorBuilder: (String groupByValue) => Container(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Text(groupByValue),
+                ),
+                itemBuilder: (context, element) => StatefulBuilder(
+                  builder: (context, checkListState) => CheckboxListTile(
+                    title: Text(element.nickname),
+                    value: contactMap[element.userId],
+                    onChanged: (value) {
+                      checkListState(() {
+                        contactMap[element.userId] = value;
+                      });
+                      setState(() {
+                        if (value) {
+                          if (!selectedContacts.contains(element)) {
+                            selectedContacts.add(element);
+                          }
+                        } else {
+                          selectedContacts.remove(selectedContacts
+                              .where((contactModel) =>
+                                  contactModel.userId == element.userId)
+                              .first);
+                        }
+                      });
+                    },
+                    secondary: Material(
+                      child: element.photoUrl != null
+                          ? CachedNetworkImage(
+                              placeholder: (context, url) => Container(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.0,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey),
+                                ),
+                                width: 40.0,
+                                height: 40.0,
+                                padding: EdgeInsets.all(10.0),
+                              ),
+                              imageUrl: element.photoUrl,
+                              width: 40.0,
+                              height: 40.0,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              Icons.account_circle,
+                              size: 40.0,
+                              color: Colors.grey,
+                            ),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      clipBehavior: Clip.hardEdge,
+                    ),
+                  ),
+                ),
+                useStickyGroupSeparators: true,
+                floatingHeader: false,
+                order: GroupedListOrder.ASC,
+                separator: Divider(),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget buildItem(ContactModel contactModel) {
+    return Container(
+      alignment: Alignment.center,
+      width: 60,
+      child: contactModel != null
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Stack(
+                  children: [
+                    Material(
+                      child: contactModel.photoUrl != null
+                          ? CachedNetworkImage(
+                              placeholder: (context, url) => Container(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.0,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey),
+                                ),
+                                width: 40.0,
+                                height: 40.0,
+                                padding: EdgeInsets.all(10.0),
+                              ),
+                              imageUrl: contactModel.photoUrl,
+                              width: 40.0,
+                              height: 40.0,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              Icons.account_circle,
+                              size: 40.0,
+                              color: Colors.grey,
+                            ),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      clipBehavior: Clip.hardEdge,
+                    ),
+                    Positioned(
+                      right: 0.0,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedContacts.remove(selectedContacts
+                                .where((currentContact) =>
+                                    currentContact.userId ==
+                                    contactModel.userId)
+                                .first);
+                            contactMap[contactModel.userId] = false;
+                          });
+                        },
+                        child: CircleAvatar(
+                          backgroundColor: colorBlack,
+                          child: Icon(
+                            Icons.close,
+                            size: 12,
+                          ),
+                          radius: 8,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                Flexible(
+                  child: Text(
+                    contactModel.nickname,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            )
+          : Container(),
     );
   }
 }

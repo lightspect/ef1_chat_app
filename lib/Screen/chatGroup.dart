@@ -9,6 +9,7 @@ import 'package:chat_app_ef1/Common/photo.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
+import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,6 +40,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
 
   final GroupModel group;
   List<MessagesModel> messages;
+  List<UserModel> members;
 
   bool hasContent = false;
   bool isLoading = false;
@@ -206,10 +208,14 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                           height: 50.0,
                           fit: BoxFit.cover,
                         )
-                      : Icon(
-                          Icons.account_circle,
-                          size: 50.0,
-                          color: Colors.grey,
+                      : CircleAvatar(
+                          backgroundColor: Colors.grey,
+                          radius: 25,
+                          child: Icon(
+                            Icons.group,
+                            size: 50.0,
+                            color: Colors.grey,
+                          ),
                         ),
                   borderRadius: BorderRadius.all(Radius.circular(25.0)),
                   clipBehavior: Clip.hardEdge,
