@@ -19,19 +19,19 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({Key key, this.group}) : super(key: key);
+class ChatGroupPage extends StatefulWidget {
+  const ChatGroupPage({Key key, this.group}) : super(key: key);
 
   final GroupModel group;
 
   static const route = '/message/chat';
 
   @override
-  _ChatPageState createState() => _ChatPageState(group);
+  _ChatGroupPageState createState() => _ChatGroupPageState(group);
 }
 
-class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
-  _ChatPageState(this.group);
+class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
+  _ChatGroupPageState(this.group);
   SharedPreferences prefs;
   DatabaseService databaseService;
   final _chatController = TextEditingController();
@@ -72,6 +72,12 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
         print("reach the top");
       });
     }
+  }
+
+  void getMemberList() {
+    group.members.forEach((element) {
+      databaseService.getUserById(element).then((value) => members.add(value));
+    });
   }
 
   void sendMessage(String message, int contentType) async {
@@ -214,7 +220,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                           child: Icon(
                             Icons.group,
                             size: 50.0,
-                            color: Colors.grey,
+                            color: Colors.white,
                           ),
                         ),
                   borderRadius: BorderRadius.all(Radius.circular(25.0)),
@@ -551,7 +557,12 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
             Row(
               children: <Widget>[
                 isLastMessageLeft(index)
-                    ? group.groupPhoto != ""
+                    ? members
+                                .where((element) =>
+                                    element.userId == message.sentBy)
+                                .first
+                                .photoUrl !=
+                            ""
                         ? Material(
                             child: CachedNetworkImage(
                               placeholder: (context, url) => Container(
@@ -564,7 +575,11 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                                 height: 35.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: group.groupPhoto,
+                              imageUrl: members
+                                  .where((element) =>
+                                      element.userId == message.sentBy)
+                                  .first
+                                  .photoUrl,
                               width: 35.0,
                               height: 35.0,
                               fit: BoxFit.cover,
@@ -703,7 +718,8 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             messages != null &&
-            messages[index - 1].sentBy == databaseService.user.userId) ||
+            (messages[index - 1].sentBy == databaseService.user.userId ||
+                messages[index].sentBy != messages[index - 1].sentBy)) ||
         index == 0) {
       return true;
     } else {

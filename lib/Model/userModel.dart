@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class UserModel {
   String userId;
   String nickname;

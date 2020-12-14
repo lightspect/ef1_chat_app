@@ -25,6 +25,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   DatabaseService databaseService;
   final _searchController = TextEditingController();
   final _groupNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   String alert = '';
   String groupName = '';
@@ -79,78 +80,98 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Container(
+                Form(
+                  key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Group Name"),
-                      Container(
-                        margin: EdgeInsets.only(top: 12, bottom: 16),
-                        child: TextFormField(
-                          cursorColor: colorBlue,
-                          style: TextStyle(
-                            color: colorBlack,
-                            fontSize: 12.0,
-                            letterSpacing: 1.2,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "Group Name",
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: colorBlack),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: colorBlack),
-                            ),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(color: colorBlack),
-                            ),
-                            hintStyle: TextStyle(
-                              color: Colors.grey,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("New Group name"),
+                        Container(
+                          margin: EdgeInsets.only(top: 12, bottom: 16),
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return "Please enter a group Name";
+                              }
+                              return null;
+                            },
+                            cursorColor: colorBlue,
+                            style: TextStyle(
+                              color: colorBlack,
                               fontSize: 12.0,
                               letterSpacing: 1.2,
                             ),
-                            isDense: true,
+                            decoration: InputDecoration(
+                              hintText: "Group Name",
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorRed),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorRed),
+                              ),
+                              errorStyle: TextStyle(
+                                color: colorRed,
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w300,
+                                fontStyle: FontStyle.normal,
+                                letterSpacing: 1.2,
+                              ),
+                              hintStyle: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12.0,
+                                letterSpacing: 1.2,
+                              ),
+                              isDense: true,
+                            ),
+                            controller: _groupNameController,
+                            onFieldSubmitted: (value) {},
                           ),
-                          controller: _groupNameController,
-                          onFieldSubmitted: (value) {},
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          LoginButton(
-                            margin: EdgeInsets.symmetric(vertical: 16),
-                            height: 40,
-                            minWidth: MediaQuery.of(context).size.width / 4,
-                            color: colorMainBG,
-                            borderColor: colorBlack,
-                            borderRadius: 4,
-                            text: "Cancel",
-                            textColor: colorBlack,
-                            onClick: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          LoginButton(
-                            margin: EdgeInsets.symmetric(vertical: 16),
-                            height: 40,
-                            minWidth: MediaQuery.of(context).size.width / 4,
-                            color: colorBlue,
-                            borderColor: colorBlue,
-                            borderRadius: 4,
-                            text: "Save",
-                            onClick: () {
-                              setState(() {
-                                groupName = _groupNameController.text;
-                              });
-                              handleCreateGroupMessage(contact);
-                              Navigator.of(context).pop();
-                            },
-                          )
-                        ],
-                      )
-                    ],
-                  ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorMainBG,
+                              borderColor: colorBlack,
+                              borderRadius: 4,
+                              text: "Cancel",
+                              textColor: colorBlack,
+                              onClick: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorBlue,
+                              borderColor: colorBlue,
+                              borderRadius: 4,
+                              text: "Create",
+                              onClick: () {
+                                var validate = _formKey.currentState.validate();
+                                if (validate) {
+                                  _formKey.currentState.save();
+                                  handleCreateGroupMessage();
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            )
+                          ],
+                        )
+                      ]),
                 )
               ],
             ),
@@ -160,7 +181,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     );
   }
 
-  void handleCreateGroupMessage(ContactModel contact) async {
+  void handleCreateGroupMessage() async {
     List<String> contactIdList = [];
     selectedContacts.forEach((element) {
       contactIdList.add(element.userId);
@@ -179,8 +200,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     DocumentReference groupDocRef = await databaseService.addGroup(group);
     await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
       group.groupId = groupDocRef.id;
-      group.groupName = contact.nickname;
-      group.groupPhoto = contact.photoUrl;
       Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
     });
@@ -200,10 +219,23 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         backgroundColor: colorMainBG,
         elevation: 0,
         actions: [
-          InkWell(
-            onTap: createDialog,
-            child: Text("Create"),
-          )
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: InkWell(
+              enableFeedback: selectedContacts.isNotEmpty,
+              onTap: selectedContacts.isNotEmpty ? createDialog : null,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Create",
+                  style: TextStyle(
+                      color: selectedContacts.isNotEmpty
+                          ? colorBlack
+                          : Colors.grey),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       body: Container(
@@ -216,7 +248,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               children: [
                 Text("To: "),
                 TextFormFieldWidget(
-                  hintText: "Name or Group",
+                  hintText: "Name",
                   controller: _searchController,
                   width: MediaQuery.of(context).size.width - 60,
                 ),

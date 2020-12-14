@@ -36,6 +36,22 @@ class DatabaseService extends ChangeNotifier {
     readLocal();
   }
 
+  Future readContactsList() async {
+    List<dynamic> contactList = await sharedPref.read("contactList");
+    contacts = contactList
+        .map<ContactModel>((contact) => ContactModel.fromMap(contact))
+        .toList();
+  }
+
+  Future setContactsList() async {
+    await sharedPref.save(
+        "contactList",
+        contacts
+            .map<Map<String, dynamic>>((contact) => contact.toMap())
+            .toList());
+    readContactsList();
+  }
+
   Future<List<UserModel>> fetchUsers() async {
     var result = await _api.getDataCollection('users');
     users = result.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
