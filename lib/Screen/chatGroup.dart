@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
@@ -18,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ChatGroupPage extends StatefulWidget {
   const ChatGroupPage({Key key, this.group}) : super(key: key);
@@ -41,6 +43,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   final GroupModel group;
   List<MessagesModel> messages;
   List<UserModel> members = [];
+  List<String> membersToken = [];
 
   bool hasContent = false;
   bool isLoading = false;
@@ -83,6 +86,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     for (String id in group.members) {
       UserModel userModel = await databaseService.getUserById(id);
       members.add(userModel);
+      membersToken.add(userModel.token);
     }
     setState(() {
       isLoading = false;
@@ -123,6 +127,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             Fluttertoast.showToast(msg: onError.toString());
           });
     }
+    sendNotificationMessageToPeerUser(
+        contentType, message, group.groupName, group.groupId);
   }
 
   void openGallery() async {
@@ -194,6 +200,33 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
       });
       Fluttertoast.showToast(msg: err.toString());
     });
+  }
+
+  Future<void> sendNotificationMessageToPeerUser(
+      messageType, textFromTextField, groupName, groupId) async {
+    await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=' +
+            'AAAA82yclUs:APA91bGwko4n5s8Jctyx_4wQZjuJ4-L8thKuDJT8cQK-RxIjAo9AMROZFWJ6kHpYik6TeCxIsNV9t2IlSldnZjmYImSADJq7_1G3VGxZBEkRc6nYxHzBDT1rmTsd93zNNQj4M5Al_Xa_',
+      },
+      body: json.encode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': messageType == 1 ? '$textFromTextField' : '(Photo)',
+            'title': '$groupName',
+            "sound": "default"
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'groupId': groupId,
+          },
+          'registration_ids': membersToken,
+        },
+      ),
+    );
   }
 
   @override

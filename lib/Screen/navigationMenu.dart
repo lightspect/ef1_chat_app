@@ -57,9 +57,15 @@ class NavigationMenuState extends State<NavigationMenu> {
       }
       return;
     }, onResume: (Map<String, dynamic> message) {
+      var data = message['data'] as Map;
+      String groupId = data['groupId'].toString();
+      selectNotification(groupId);
       print('onResume: $message');
       return;
     }, onLaunch: (Map<String, dynamic> message) {
+      var data = message['data'] as Map;
+      String groupId = data['groupId'].toString();
+      selectNotification(groupId);
       print('onLaunch: $message');
       return;
     });

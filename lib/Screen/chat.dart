@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
@@ -9,6 +10,7 @@ import 'package:chat_app_ef1/Common/photo.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
+import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key key, this.group}) : super(key: key);
@@ -106,6 +109,8 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
           .catchError((onError) {
             Fluttertoast.showToast(msg: onError.toString());
           });
+      sendNotificationMessageToPeerUser(
+          contentType, message, group.groupName, group.groupId);
     }
   }
 
@@ -178,16 +183,6 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
       });
       Fluttertoast.showToast(msg: err.toString());
     });
-  }
-
-  Future<bool> onBackPress() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(databaseService.user.userId)
-        .update({'chattingWith': null});
-    Navigator.pop(context);
-
-    return Future.value(false);
   }
 
   @override
@@ -265,6 +260,35 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
               databaseService.currentGroupId = "";
               return Future.value(true);
             }));
+  }
+
+  Future<void> sendNotificationMessageToPeerUser(
+      messageType, textFromTextField, myName, groupId) async {
+    UserModel peerUser =
+        await databaseService.getUserById(group.members.first.toString());
+    await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=' +
+            'AAAA82yclUs:APA91bGwko4n5s8Jctyx_4wQZjuJ4-L8thKuDJT8cQK-RxIjAo9AMROZFWJ6kHpYik6TeCxIsNV9t2IlSldnZjmYImSADJq7_1G3VGxZBEkRc6nYxHzBDT1rmTsd93zNNQj4M5Al_Xa_',
+      },
+      body: json.encode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': messageType == 1 ? '$textFromTextField' : '(Photo)',
+            'title': '$myName',
+            "sound": "default"
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'groupId': groupId,
+          },
+          'to': peerUser.token,
+        },
+      ),
+    );
   }
 
   Widget buildBody() {
