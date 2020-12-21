@@ -180,16 +180,6 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
     });
   }
 
-  Future<bool> onBackPress() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(databaseService.user.userId)
-        .update({'chattingWith': null});
-    Navigator.pop(context);
-
-    return Future.value(false);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

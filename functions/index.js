@@ -45,6 +45,11 @@ exports.sendNotification = functions.firestore
         groupId: groupId,
       },
       tokens: memberToken,
+      android: {
+        notification: {
+            clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+        },
+      }
     }
     if(memberToken.length > 0) {
       admin.messaging().sendMulticast(payload).then(response => {
