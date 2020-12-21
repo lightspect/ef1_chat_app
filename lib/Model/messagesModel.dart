@@ -6,6 +6,7 @@ class MessagesModel {
   int type;
   int contentType;
   List<String> reaction;
+  bool isRead;
 
   MessagesModel(
       {this.messageId,
@@ -14,7 +15,8 @@ class MessagesModel {
       this.sentAt,
       this.type,
       this.contentType,
-      this.reaction});
+      this.reaction,
+      this.isRead});
 
   factory MessagesModel.fromMap(Map data, String id) {
     data = data ?? {};
@@ -26,6 +28,7 @@ class MessagesModel {
       type: data['type'] ?? 1,
       contentType: data['contentType'] ?? 1,
       reaction: data['reaction'] != null ? data['reaction'].toList() : [],
+      isRead: data['isRead'] ?? true,
     );
   }
 
@@ -38,6 +41,7 @@ class MessagesModel {
       'type': type,
       'contentType': contentType,
       'reaction': reaction,
+      'isRead': isRead,
     };
   }
 }

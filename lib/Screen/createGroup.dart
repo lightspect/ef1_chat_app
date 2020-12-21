@@ -4,7 +4,7 @@ import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
-import 'package:chat_app_ef1/Screen/chat.dart';
+import 'package:chat_app_ef1/Screen/chatGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -164,6 +164,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 var validate = _formKey.currentState.validate();
                                 if (validate) {
                                   _formKey.currentState.save();
+                                  groupName = _groupNameController.text;
                                   handleCreateGroupMessage();
                                   Navigator.of(context).pop();
                                 }
@@ -186,6 +187,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     selectedContacts.forEach((element) {
       contactIdList.add(element.userId);
     });
+    contactIdList.add(databaseService.user.userId);
     GroupModel group = new GroupModel(
         createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
         createdBy: databaseService.user.userId,
@@ -201,7 +203,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
       group.groupId = groupDocRef.id;
       Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(builder: (context) => ChatPage(group: group)));
+          MaterialPageRoute(builder: (context) => ChatGroupPage(group: group)));
     });
   }
 

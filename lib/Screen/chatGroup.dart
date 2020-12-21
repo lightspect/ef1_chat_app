@@ -40,7 +40,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
 
   final GroupModel group;
   List<MessagesModel> messages;
-  List<UserModel> members;
+  List<UserModel> members = [];
 
   bool hasContent = false;
   bool isLoading = false;
@@ -52,6 +52,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     super.initState();
     databaseService = locator<DatabaseService>();
     listScrollController.addListener(_scrollListener);
+    getMemberList();
+    databaseService.currentGroupId = group.groupId;
   }
 
   _scrollListener() {
@@ -74,9 +76,16 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     }
   }
 
-  void getMemberList() {
-    group.members.forEach((element) {
-      databaseService.getUserById(element).then((value) => members.add(value));
+  void getMemberList() async {
+    setState(() {
+      isLoading = true;
+    });
+    for (String id in group.members) {
+      UserModel userModel = await databaseService.getUserById(id);
+      members.add(userModel);
+    }
+    setState(() {
+      isLoading = false;
     });
   }
 
@@ -262,7 +271,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                 buildLoading(),
               ],
             ),
-            onWillPop: null));
+            onWillPop: () {
+              databaseService.currentGroupId = "";
+              return Future.value(true);
+            }));
   }
 
   Widget buildBody() {
@@ -321,7 +333,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                              messages[index]
+                                              messages[index - 1]
                                                   .sentAt
                                                   .substring(0, 10),
                                               textAlign: TextAlign.center,
@@ -556,45 +568,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
           children: <Widget>[
             Row(
               children: <Widget>[
-                isLastMessageLeft(index)
-                    ? members
-                                .where((element) =>
-                                    element.userId == message.sentBy)
-                                .first
-                                .photoUrl !=
-                            ""
-                        ? Material(
-                            child: CachedNetworkImage(
-                              placeholder: (context, url) => Container(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.0,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.grey),
-                                ),
-                                width: 35.0,
-                                height: 35.0,
-                                padding: EdgeInsets.all(10.0),
-                              ),
-                              imageUrl: members
-                                  .where((element) =>
-                                      element.userId == message.sentBy)
-                                  .first
-                                  .photoUrl,
-                              width: 35.0,
-                              height: 35.0,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(18.0),
-                            ),
-                            clipBehavior: Clip.hardEdge,
-                          )
-                        : Icon(
-                            Icons.account_circle,
-                            size: 35.0,
-                            color: Colors.grey,
-                          )
-                    : Container(width: 35.0),
+                buildChatAvatar(message),
                 message.contentType == 1
                     ? Container(
                         child: Text(
@@ -760,6 +734,46 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     } else {
       return false;
     }
+  }
+
+  Widget buildChatAvatar(MessagesModel message) {
+    if (members.isNotEmpty) {
+      if (members
+              .firstWhere(((element) => element.userId == message.sentBy),
+                  orElse: () => new UserModel())
+              .photoUrl !=
+          null) {
+        return Material(
+          child: CachedNetworkImage(
+            placeholder: (context, url) => Container(
+              child: CircularProgressIndicator(
+                strokeWidth: 1.0,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+              width: 35.0,
+              height: 35.0,
+              padding: EdgeInsets.all(10.0),
+            ),
+            imageUrl: members
+                .where((element) => element.userId == message.sentBy)
+                .first
+                .photoUrl,
+            width: 35.0,
+            height: 35.0,
+            fit: BoxFit.cover,
+          ),
+          borderRadius: BorderRadius.all(
+            Radius.circular(18.0),
+          ),
+          clipBehavior: Clip.hardEdge,
+        );
+      }
+    }
+    return Icon(
+      Icons.account_circle,
+      size: 35.0,
+      color: Colors.grey,
+    );
   }
 
   void _settingModalBottomSheet(MessagesModel message, BuildContext context) {

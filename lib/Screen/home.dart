@@ -5,10 +5,15 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Common/share_prefs.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
+import 'package:chat_app_ef1/Model/groupsModel.dart';
+import 'package:chat_app_ef1/Model/navigationService.dart';
+import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,12 +62,29 @@ class _HomePageState extends State<HomePage> {
       isLoading = false;
     });
 
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(databaseService.user.userId)
+        .update({'token': ""});
+
+    databaseService.user = new UserModel(
+        userId: "",
+        aboutMe: "",
+        chattingWith: "",
+        createdAt: "",
+        nickname: "",
+        photoUrl: "",
+        token: "");
+    databaseService.setLocal();
+
     Navigator.of(context, rootNavigator: true)
         .pushNamedAndRemoveUntil('/unlock', (Route<dynamic> route) => false);
   }
 
   void readLocal() async {
     await databaseService.readLocal();
+    await databaseService.fetchContacts(databaseService.user.userId);
+    await databaseService.setContactsList();
     // Force refresh input
     setState(() {});
   }

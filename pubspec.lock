@@ -237,6 +237,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.11"
+  flutter_portal:
+    dependency: "direct main"
+    description:
+      name: flutter_portal
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   flutter_qr_bar_scanner:
     dependency: "direct main"
     description:
@@ -297,7 +304,7 @@ packages:
     source: hosted
     version: "3.7.0"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       url: "https://pub.dartlang.org"
@@ -373,13 +380,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.0"
-  overlay_container:
-    dependency: "direct main"
-    description:
-      name: overlay_container
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.4+1"
   path:
     dependency: transitive
     description:
@@ -464,6 +464,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.3.2+3"
+  pull_to_refresh:
+    dependency: "direct main"
+    description:
+      name: pull_to_refresh
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.6.3"
   qr:
     dependency: transitive
     description:

@@ -7,6 +7,7 @@ import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class DatabaseService extends ChangeNotifier {
@@ -19,10 +20,14 @@ class DatabaseService extends ChangeNotifier {
   List<GroupModel> groups;
   List<MessagesModel> messages;
   Stream<List<GroupModel>> groupStream;
+  FirebaseMessaging firebaseMessaging;
+  String currentGroupId;
 
   DatabaseService() {
+    firebaseMessaging = FirebaseMessaging();
     sharedPref = SharedPref();
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
+    currentGroupId = "";
     readLocal();
   }
 

@@ -1,10 +1,16 @@
+import 'dart:io';
+
 import 'package:chat_app_ef1/Common/color_utils.dart';
+import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/navigationModel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:chat_app_ef1/Model/databaseService.dart';
+import 'package:chat_app_ef1/Model/navigationService.dart';
+import 'package:chat_app_ef1/locator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 class NavigationMenu extends StatefulWidget {
@@ -22,6 +28,104 @@ class NavigationMenuState extends State<NavigationMenu> {
   NavigationMenuState({Key key, this.currentUserId});
 
   final String currentUserId;
+  DatabaseService databaseService;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    databaseService = locator<DatabaseService>();
+    registerNotification();
+    configLocalNotification();
+  }
+
+  void registerNotification() {
+    databaseService.firebaseMessaging.requestNotificationPermissions();
+
+    databaseService.firebaseMessaging.configure(
+        onMessage: (Map<String, dynamic> message) {
+      print('onMessage: $message');
+      var notification = (Platform.isAndroid
+          ? message['notification']
+          : message['aps']['alert']) as Map;
+      var data = message['data'] as Map;
+      String groupId = data['groupId'].toString();
+      if (groupId != databaseService.currentGroupId) {
+        print("Current Group Id: " + databaseService.currentGroupId);
+        showNotification(notification, groupId);
+      }
+      return;
+    }, onResume: (Map<String, dynamic> message) {
+      print('onResume: $message');
+      return;
+    }, onLaunch: (Map<String, dynamic> message) {
+      print('onLaunch: $message');
+      return;
+    });
+    databaseService.firebaseMessaging.getToken().then((token) {
+      print('token: $token');
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(databaseService.user.userId)
+          .update({'token': token});
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.message.toString());
+    });
+  }
+
+  void configLocalNotification() async {
+    var initializationSettingsAndroid =
+        new AndroidInitializationSettings('ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: selectNotification);
+  }
+
+  Future selectNotification(String payload) async {
+    if (payload != null) {
+      debugPrint('notification payload: $payload');
+      GroupModel group = await databaseService.getGroupById(payload);
+      if (group.type == 1) {
+        group = await databaseService.generateGroupMessage(group);
+      }
+      print("Current Group Id on Click: " + databaseService.currentGroupId);
+      if (databaseService.currentGroupId.isNotEmpty) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      locator<NavigationService>().navigateToChat(group);
+    }
+  }
+
+  void showNotification(message, payload) async {
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+      Platform.isAndroid
+          ? 'com.example.chat_app_ef1'
+          : 'com.example.chatAppEf1',
+      'Flutter chat demo',
+      'your channel description',
+      playSound: true,
+      enableVibration: true,
+      importance: Importance.Max,
+      priority: Priority.High,
+    );
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    print(message);
+//    print(message['body'].toString());
+//    print(json.encode(message));
+
+    await flutterLocalNotificationsPlugin.show(0, message['title'].toString(),
+        message['body'].toString(), platformChannelSpecifics,
+        payload: payload);
+
+//    await flutterLocalNotificationsPlugin.show(
+//        0, 'plain title', 'plain body', platformChannelSpecifics,
+//        payload: 'item x');
+  }
 
   @override
   Widget build(BuildContext context) {

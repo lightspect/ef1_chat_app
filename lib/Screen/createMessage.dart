@@ -8,6 +8,7 @@ import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -60,7 +61,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
         group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
-        Navigator.of(context, rootNavigator: true).push(
+        Navigator.of(context, rootNavigator: true).pushReplacement(
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
@@ -69,7 +70,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
       }
-      Navigator.of(context, rootNavigator: true).push(
+      Navigator.of(context, rootNavigator: true).pushReplacement(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
     }
   }

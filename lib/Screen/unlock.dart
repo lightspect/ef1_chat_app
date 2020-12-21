@@ -1,3 +1,4 @@
+import 'package:chat_app_ef1/Common/loading.dart';
 import 'package:chat_app_ef1/Common/share_prefs.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
@@ -86,12 +87,15 @@ class _UnlockPageState extends State<UnlockPage> {
       final List<DocumentSnapshot> documents = result.docs;
       if (documents.length == 0) {
         currentUser = firebaseUser;
+        String token = await databaseService.firebaseMessaging.getToken();
         user = new UserModel(
             userId: currentUser.uid,
             nickname: currentUser.displayName,
             photoUrl: currentUser.photoURL,
             createdAt: DateTime.now().toString(),
-            aboutMe: "");
+            aboutMe: "",
+            chattingWith: "",
+            token: token);
         // Update data to server if new user
         databaseService.setUser(user, currentUser.uid);
 
@@ -116,103 +120,115 @@ class _UnlockPageState extends State<UnlockPage> {
     }
   }
 
+  Widget buildLoading() {
+    return Positioned(
+      child: isLoading ? const Loading() : Container(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool keyboardIsOpen = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
         backgroundColor: splashBG,
-        body: Container(
-            width: MediaQuery.of(context).size.width,
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: <Widget>[
-                Flexible(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: EdgeInsets.only(top: 50),
-                    child: Image(
-                      image: AssetImage('assets/images/logo_1.png'),
+        body: Stack(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: <Widget>[
+                  Flexible(
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      margin: EdgeInsets.only(top: 50),
+                      child: Image(
+                        image: AssetImage('assets/images/logo_1.png'),
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  "Welcome to EagleF1nance",
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  "We're happy to see you",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                TextFormFieldWidget(
-                  hintText: 'Password',
-                  obscureText: true,
-                ),
-                LoginButton(
-                  text: "Unlock",
-                  color: colorRed,
-                  borderRadius: 5,
-                  fontSize: 20,
-                  highlightColor: colorRed,
-                  onClick: () {
-                    handleSignIn();
-                  },
-                  borderColor: colorRed,
-                  textColor: _buttonTextColor,
-                ),
-                LoginButton(
-                  text: "Create Wallet",
-                  color: splashBG,
-                  borderRadius: 5,
-                  highlightColor: colorRed,
-                  borderColor: Colors.white,
-                  textColor: Colors.white,
-                  onClick: () {},
-                ),
-                Visibility(
-                  visible: !keyboardIsOpen,
-                  child: Container(
-                    padding: EdgeInsets.only(bottom: 80.0),
-                    width: MediaQuery.of(context).size.width / 1.3,
-                    child: Column(
-                      children: <Widget>[
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            margin:
-                                const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                            child: Text(
-                              "Restore Account?",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  decoration: TextDecoration.underline),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            margin:
-                                const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                            child: Text(
-                              "Import using account seed phrase",
-                              style: TextStyle(
-                                  color: colorRed,
-                                  decoration: TextDecoration.underline),
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    "Welcome to EagleF1nance",
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
-            )));
+                  Text(
+                    "We're happy to see you",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  TextFormFieldWidget(
+                    hintText: 'Password',
+                    obscureText: true,
+                  ),
+                  LoginButton(
+                    text: "Unlock",
+                    color: colorRed,
+                    borderRadius: 5,
+                    fontSize: 20,
+                    highlightColor: colorRed,
+                    onClick: () {
+                      handleSignIn();
+                    },
+                    borderColor: colorRed,
+                    textColor: _buttonTextColor,
+                  ),
+                  LoginButton(
+                    text: "Create Wallet",
+                    color: splashBG,
+                    borderRadius: 5,
+                    highlightColor: colorRed,
+                    borderColor: Colors.white,
+                    textColor: Colors.white,
+                    onClick: () {},
+                  ),
+                  Visibility(
+                    visible: !keyboardIsOpen,
+                    child: Container(
+                      padding: EdgeInsets.only(bottom: 80.0),
+                      width: MediaQuery.of(context).size.width / 1.3,
+                      child: Column(
+                        children: <Widget>[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                              child: Text(
+                                "Restore Account?",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    decoration: TextDecoration.underline),
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                              child: Text(
+                                "Import using account seed phrase",
+                                style: TextStyle(
+                                    color: colorRed,
+                                    decoration: TextDecoration.underline),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            buildLoading(),
+          ],
+        ));
   }
 }

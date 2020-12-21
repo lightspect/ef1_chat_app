@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class UserModel {
   String userId;
   String nickname;
@@ -7,6 +5,7 @@ class UserModel {
   String createdAt;
   String aboutMe;
   String chattingWith;
+  String token;
 
   UserModel(
       {this.userId,
@@ -14,7 +13,8 @@ class UserModel {
       this.photoUrl,
       this.createdAt,
       this.aboutMe,
-      this.chattingWith});
+      this.chattingWith,
+      this.token});
 
   factory UserModel.fromMap(Map data) {
     data = data ?? {};
@@ -24,7 +24,8 @@ class UserModel {
         photoUrl: data['photoUrl'] ?? '',
         createdAt: data['createdAt'] ?? '',
         aboutMe: data['aboutMe'] ?? '',
-        chattingWith: data['chattingWith'] ?? '');
+        chattingWith: data['chattingWith'] ?? '',
+        token: data['token'] ?? '');
   }
 
   Map<String, dynamic> toMap() {
@@ -34,7 +35,8 @@ class UserModel {
       'photoUrl': photoUrl,
       'createdAt': createdAt,
       'aboutMe': aboutMe,
-      'chattingWith': chattingWith
+      'chattingWith': chattingWith,
+      'token': token,
     };
   }
 }

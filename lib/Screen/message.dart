@@ -3,10 +3,12 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
+import 'package:chat_app_ef1/Screen/chatGroup.dart';
 import 'package:chat_app_ef1/Screen/createMessage.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({Key key, this.title}) : super(key: key);
@@ -21,6 +23,8 @@ class MessagePage extends StatefulWidget {
 
 class _MessagePageState extends State<MessagePage> {
   final _searchController = TextEditingController();
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
   //final _debouncer = Debouncer(milliseconds: 500);
   DatabaseService databaseService;
 
@@ -33,6 +37,13 @@ class _MessagePageState extends State<MessagePage> {
     super.initState();
     databaseService = locator<DatabaseService>();
     databaseService.refreshMessageList();
+    setState(() {});
+  }
+
+  void _onRefresh() async {
+    databaseService.refreshMessageList();
+    setState(() {});
+    _refreshController.refreshCompleted();
   }
 
   void search(String search) {
@@ -187,7 +198,7 @@ class _MessagePageState extends State<MessagePage> {
                       ),
                     );
                   } else {
-                    groups = snapshot.data;
+                    groups = List.from(snapshot.data);
                     groups.sort((group1, group2) {
                       if (DateTime.parse(group1.recentMessageTime)
                           .isAfter(DateTime.parse(group2.recentMessageTime))) {
@@ -196,11 +207,38 @@ class _MessagePageState extends State<MessagePage> {
                         return 1;
                       }
                     });
-                    return ListView.builder(
-                      padding: EdgeInsets.all(10.0),
-                      itemBuilder: (context, index) =>
-                          buildItem(context, groups[index]),
-                      itemCount: groups.length,
+                    return SmartRefresher(
+                      enablePullDown: true,
+                      enablePullUp: true,
+                      header: WaterDropHeader(),
+                      footer: CustomFooter(
+                        builder: (BuildContext context, LoadStatus mode) {
+                          Widget body;
+                          if (mode == LoadStatus.idle) {
+                            body = Text("pull up load");
+                          } else if (mode == LoadStatus.loading) {
+                            body = Text("Loading");
+                          } else if (mode == LoadStatus.failed) {
+                            body = Text("Load Failed!Click retry!");
+                          } else if (mode == LoadStatus.canLoading) {
+                            body = Text("release to load more");
+                          } else {
+                            body = Text("No more Data");
+                          }
+                          return Container(
+                            height: 55.0,
+                            child: Center(child: body),
+                          );
+                        },
+                      ),
+                      controller: _refreshController,
+                      onRefresh: _onRefresh,
+                      child: ListView.builder(
+                        padding: EdgeInsets.all(10.0),
+                        itemBuilder: (context, index) =>
+                            buildItem(context, groups[index]),
+                        itemCount: groups.length,
+                      ),
                     );
                   }
                 },
@@ -241,8 +279,10 @@ class _MessagePageState extends State<MessagePage> {
                               fit: BoxFit.cover,
                             )
                           : Icon(
-                              Icons.account_circle,
-                              size: 50.0,
+                              group.type == 1
+                                  ? Icons.account_circle
+                                  : Icons.group,
+                              size: 60.0,
                               color: Colors.grey,
                             ),
                       borderRadius: BorderRadius.all(Radius.circular(30.0)),
@@ -282,9 +322,19 @@ class _MessagePageState extends State<MessagePage> {
                   ],
                 ),
                 onTap: () {
-                  Navigator.of(context, rootNavigator: true).push(
-                      MaterialPageRoute(
-                          builder: (context) => ChatPage(group: group)));
+                  switch (group.type) {
+                    case 1:
+                      Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                              builder: (context) => ChatPage(group: group)));
+                      break;
+                    case 2:
+                      Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  ChatGroupPage(group: group)));
+                      break;
+                  }
                 }),
           ),
           Divider(

@@ -41,14 +41,16 @@ dependencies:
   firebase_storage: ^4.0.0 #3.0.6
   cached_network_image: ^2.3.1 #2.0.0-rc.1
   intl: ^0.16.1 #0.15.7
-  firebase_messaging: ^7.0.0 #6.0.13
+  firebase_messaging: ^7.0.3 #6.0.13
   flutter_local_notifications: 1.4.4+4 #1.4.0
   photo_view: ^0.10.2 #0.5.0
   flutter_qr_bar_scanner: ^1.0.2
   qr_flutter: ^3.1.0
   grouped_list: ^3.7.0
   get_it: ^5.0.1
-  overlay_container: ^0.0.4+1
+  pull_to_refresh: ^1.6.3
+  flutter_portal: ^0.3.0
+  http: ^0.12.2
 
 dev_dependencies:
   flutter_test:

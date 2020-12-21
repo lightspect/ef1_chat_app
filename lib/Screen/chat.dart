@@ -50,6 +50,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
     super.initState();
     databaseService = locator<DatabaseService>();
     listScrollController.addListener(_scrollListener);
+    databaseService.currentGroupId = group.groupId;
   }
 
   _scrollListener() {
@@ -179,6 +180,16 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
     });
   }
 
+  Future<bool> onBackPress() {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(databaseService.user.userId)
+        .update({'chattingWith': null});
+    Navigator.pop(context);
+
+    return Future.value(false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,7 +261,10 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                 buildLoading(),
               ],
             ),
-            onWillPop: null));
+            onWillPop: () {
+              databaseService.currentGroupId = "";
+              return Future.value(true);
+            }));
   }
 
   Widget buildBody() {
@@ -309,7 +323,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                              messages[index]
+                                              messages[index - 1]
                                                   .sentAt
                                                   .substring(0, 10),
                                               textAlign: TextAlign.center,
