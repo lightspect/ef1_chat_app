@@ -37,7 +37,6 @@ class _MessagePageState extends State<MessagePage> {
     super.initState();
     databaseService = locator<DatabaseService>();
     databaseService.refreshMessageList();
-    setState(() {});
   }
 
   void _onRefresh() async {

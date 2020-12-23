@@ -52,7 +52,6 @@ class NavigationMenuState extends State<NavigationMenu> {
       var data = message['data'] as Map;
       String groupId = data['groupId'].toString();
       if (groupId != databaseService.currentGroupId) {
-        print("Current Group Id: " + databaseService.currentGroupId);
         showNotification(notification, groupId);
       }
       return;
@@ -97,7 +96,6 @@ class NavigationMenuState extends State<NavigationMenu> {
       if (group.type == 1) {
         group = await databaseService.generateGroupMessage(group);
       }
-      print("Current Group Id on Click: " + databaseService.currentGroupId);
       if (databaseService.currentGroupId.isNotEmpty) {
         Navigator.of(context, rootNavigator: true).pop();
       }

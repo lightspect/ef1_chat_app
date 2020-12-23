@@ -8,7 +8,6 @@ import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -23,11 +22,11 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
 
   String alert = '';
   List<ContactModel> contacts;
+  List<ContactModel> searchList = [];
 
   @override
   void initState() {
     super.initState();
-
     readLocal();
   }
 
@@ -75,6 +74,23 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
     }
   }
 
+  void search(String search) {
+    searchList = [];
+    if (search.isNotEmpty) {
+      for (int i = 0; i < contacts.length; i++) {
+        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
+            contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
+          searchList.add(contacts[i]);
+        }
+      }
+      setState(() {});
+    } else {
+      setState(() {
+        searchList = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,6 +118,9 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                   hintText: "Name or Group",
                   controller: _searchController,
                   width: MediaQuery.of(context).size.width - 60,
+                  onChange: search,
+                  textColor: colorBlack,
+                  focusBorderColor: colorBlack,
                 ),
               ],
             ),
@@ -150,7 +169,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                         .map((doc) => ContactModel.fromMap(doc.data()))
                         .toList();
                     return GroupedListView<ContactModel, String>(
-                      elements: contacts,
+                      elements: searchList.isEmpty ? contacts : searchList,
                       groupBy: (element) => element.nickname.substring(0, 1),
                       groupSeparatorBuilder: (String groupByValue) => Container(
                         padding: EdgeInsets.symmetric(vertical: 16),

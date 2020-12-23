@@ -26,12 +26,15 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final _searchController = TextEditingController();
   final _groupNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _debouncer = Debouncer(milliseconds: 500);
 
   String alert = '';
   String groupName = '';
   List<ContactModel> contacts = [];
   List<ContactModel> selectedContacts = [];
+  List<ContactModel> searchList = [];
   Map<String, bool> contactMap = {};
+  Map<String, bool> searchMap = {};
 
   @override
   void initState() {
@@ -207,12 +210,41 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     });
   }
 
+  void search(String search) {
+    searchMap = {};
+    if (search.isNotEmpty) {
+      for (int i = 0; i < contacts.length; i++) {
+        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
+            contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
+          searchList.add(contacts[i]);
+          searchMap[contacts[i].userId] = contactMap[contacts[i].userId];
+        }
+      }
+      setState(() {});
+    } else {
+      setState(() {
+        searchList = [];
+        searchMap = {};
+      });
+    }
+  }
+
+  void _navigateAndReturnData() async {
+    final result = await Navigator.of(context, rootNavigator: true)
+        .pushNamed('/qrscan', arguments: "getAddress");
+    setState(() {
+      if (result.toString() != "null") {
+        _searchController.text = result.toString();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Choose from Contact",
+          "Choose Member",
           style: TextStyle(color: colorBlack),
         ),
         leading: BackButton(
@@ -220,25 +252,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         ),
         backgroundColor: colorMainBG,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: InkWell(
-              enableFeedback: selectedContacts.isNotEmpty,
-              onTap: selectedContacts.isNotEmpty ? createDialog : null,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Create",
-                  style: TextStyle(
-                      color: selectedContacts.isNotEmpty
-                          ? colorBlack
-                          : Colors.grey),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Container(
         width: MediaQuery.of(context).size.width,
@@ -246,15 +259,51 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text("To: "),
-                TextFormFieldWidget(
-                  hintText: "Name",
-                  controller: _searchController,
-                  width: MediaQuery.of(context).size.width - 60,
+            Container(
+              margin: EdgeInsets.only(bottom: 16),
+              child: TextFormField(
+                cursorColor: colorBlue,
+                style: TextStyle(
+                  color: colorBlack,
+                  fontSize: 14.0,
+                  letterSpacing: 1.2,
                 ),
-              ],
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.qr_code_scanner),
+                    onPressed: () {
+                      _navigateAndReturnData();
+                      search(_searchController.text);
+                    },
+                  ),
+                  hintText: "Search",
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorBlack),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorBlack),
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: colorBlack),
+                  ),
+                  hintStyle: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14.0,
+                    letterSpacing: 1.2,
+                  ),
+                  isDense: true,
+                ),
+                controller: _searchController,
+                onFieldSubmitted: (value) {
+                  search(value);
+                },
+                onChanged: (value) {
+                  _debouncer.run(() {
+                    search(value);
+                  });
+                },
+              ),
             ),
             Container(
               height: selectedContacts.isNotEmpty ? 80 : 0,
@@ -267,7 +316,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ),
             Flexible(
               child: GroupedListView<ContactModel, String>(
-                elements: contacts,
+                elements: searchList.isEmpty ? contacts : searchList,
                 groupBy: (element) => element.nickname.substring(0, 1),
                 groupSeparatorBuilder: (String groupByValue) => Container(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -276,10 +325,15 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 itemBuilder: (context, element) => StatefulBuilder(
                   builder: (context, checkListState) => CheckboxListTile(
                     title: Text(element.nickname),
-                    value: contactMap[element.userId],
+                    value: searchMap.isEmpty
+                        ? (contactMap[element.userId] ?? false)
+                        : (searchMap[element.userId] ?? false),
                     onChanged: (value) {
                       checkListState(() {
                         contactMap[element.userId] = value;
+                        if (searchMap.isNotEmpty) {
+                          searchMap[element.userId] = value;
+                        }
                       });
                       setState(() {
                         if (value) {
@@ -328,6 +382,21 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 separator: Divider(),
               ),
             ),
+            Align(
+              alignment: Alignment.center,
+              child: LoginButton(
+                margin: EdgeInsets.only(bottom: 32),
+                text: "Create Group",
+                textColor:
+                    selectedContacts.length > 1 ? Colors.white : Colors.grey,
+                fontSize: 20,
+                borderColor:
+                    selectedContacts.length > 1 ? colorLightGreen : Colors.grey,
+                color:
+                    selectedContacts.length > 1 ? colorLightGreen : colorMainBG,
+                onClick: selectedContacts.length > 1 ? null : createDialog,
+              ),
+            )
           ],
         ),
       ),

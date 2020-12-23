@@ -42,7 +42,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
   void search(String search) {}
 
   void sendMessage(String groupId, String message, int contentType) async {
-    //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
+    //contentType: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
+    //type: 1 = Normal, 2 = Forward, 3 = Reply
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
       await FirebaseFirestore.instance
@@ -54,7 +55,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
         'messageContent': message,
         'sentAt': dateTime,
         'sentBy': databaseService.user.userId,
-        'type': 1,
+        'type': 2,
         'contentType': contentType
       }).then((value) {
         FirebaseFirestore.instance
@@ -87,6 +88,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
         leading: BackButton(
           color: colorBlack,
         ),
+        elevation: 0,
       ),
       body: Container(
         width: MediaQuery.of(context).size.width,
@@ -195,7 +197,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                         )
                       : Icon(
                           Icons.account_circle,
-                          size: 50.0,
+                          size: 60.0,
                           color: Colors.grey,
                         ),
                   borderRadius: BorderRadius.all(Radius.circular(30.0)),

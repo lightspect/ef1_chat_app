@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/emoji_menu.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
 import 'package:chat_app_ef1/Common/my_icons.dart';
 import 'package:chat_app_ef1/Common/photo.dart';
@@ -32,7 +31,7 @@ class ChatGroupPage extends StatefulWidget {
   _ChatGroupPageState createState() => _ChatGroupPageState(group);
 }
 
-class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
+class _ChatGroupPageState extends State<ChatGroupPage> {
   _ChatGroupPageState(this.group);
   SharedPreferences prefs;
   DatabaseService databaseService;
@@ -151,22 +150,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
         builder: (context) => ForwardMessagePage(
               message: message,
             )));
-  }
-
-  void showEmojiMenu() {
-    this.showMenu(
-      context: context,
-      items: <PopupMenuEntry<int>>[PlusMinusEntry()],
-    ).then((value) {
-      if (value == null) {
-        //Navigator.of(context).pop();
-        return;
-      }
-      if (controller != null) {
-        controller.close();
-        controller = null;
-      }
-    });
   }
 
   Future uploadFile(File chatImageFile) async {
@@ -333,19 +316,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                     messages = snapshot.data.docs
                         .map((doc) => MessagesModel.fromMap(doc.data(), doc.id))
                         .toList();
-                    messages.sort((element1, element2) {
-                      if (DateTime.parse(element1.sentAt)
-                          .isAfter(DateTime.parse(element2.sentAt))) {
-                        return -1;
-                      } else {
-                        return 1;
-                      }
-                    });
                     return ListView.builder(
                       itemBuilder: (context, index) => GestureDetector(
-                          onTapDown: storePosition,
                           onLongPress: () {
-                            showEmojiMenu();
                             _settingModalBottomSheet(messages[index], context);
                           },
                           child: Column(
@@ -601,7 +574,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
           children: <Widget>[
             Row(
               children: <Widget>[
-                buildChatAvatar(message),
+                buildChatAvatar(message, index),
                 message.contentType == 1
                     ? Container(
                         child: Text(
@@ -683,7 +656,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                 width: MediaQuery.of(context).size.width / 1.8,
                                 decoration: BoxDecoration(
                                     color: Color(0xffE6E5E5),
-                                    borderRadius: BorderRadius.circular(8.0)),
+                                    borderRadius: BorderRadius.circular(18.0)),
                                 margin: EdgeInsets.only(left: 10.0),
                               )
                             : Container(
@@ -705,7 +678,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             isLastMessageLeft(index)
                 ? Container(
                     child: Text(
-                      message.sentAt,
+                      message.sentAt.substring(11, 16),
                       style: TextStyle(
                           color: Colors.grey,
                           fontSize: 12.0,
@@ -769,69 +742,77 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     }
   }
 
-  Widget buildChatAvatar(MessagesModel message) {
-    if (members.isNotEmpty) {
-      if (members
-              .firstWhere(((element) => element.userId == message.sentBy),
-                  orElse: () => new UserModel())
-              .photoUrl !=
-          null) {
-        return Material(
-          child: CachedNetworkImage(
-            placeholder: (context, url) => Container(
-              child: CircularProgressIndicator(
-                strokeWidth: 1.0,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+  Widget buildChatAvatar(MessagesModel message, int index) {
+    if (isLastMessageLeft(index)) {
+      if (members.isNotEmpty) {
+        if (members
+                .firstWhere(((element) => element.userId == message.sentBy),
+                    orElse: () => new UserModel())
+                .photoUrl !=
+            null) {
+          return Material(
+            child: CachedNetworkImage(
+              placeholder: (context, url) => Container(
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                ),
+                width: 35.0,
+                height: 35.0,
+                padding: EdgeInsets.all(10.0),
               ),
+              imageUrl: members
+                  .where((element) => element.userId == message.sentBy)
+                  .first
+                  .photoUrl,
               width: 35.0,
               height: 35.0,
-              padding: EdgeInsets.all(10.0),
+              fit: BoxFit.cover,
             ),
-            imageUrl: members
-                .where((element) => element.userId == message.sentBy)
-                .first
-                .photoUrl,
-            width: 35.0,
-            height: 35.0,
-            fit: BoxFit.cover,
-          ),
-          borderRadius: BorderRadius.all(
-            Radius.circular(18.0),
-          ),
-          clipBehavior: Clip.hardEdge,
-        );
+            borderRadius: BorderRadius.all(
+              Radius.circular(18.0),
+            ),
+            clipBehavior: Clip.hardEdge,
+          );
+        }
       }
+      return Icon(
+        Icons.account_circle,
+        size: 35.0,
+        color: Colors.grey,
+      );
+    } else {
+      return Container(
+        width: 35,
+      );
     }
-    return Icon(
-      Icons.account_circle,
-      size: 35.0,
-      color: Colors.grey,
-    );
   }
 
   void _settingModalBottomSheet(MessagesModel message, BuildContext context) {
     FocusScope.of(context).unfocus();
-    controller = Scaffold.of(context).showBottomSheet(
-      (context) {
-        return StatefulBuilder(
-            builder: (BuildContext bc, StateSetter setSheetState) {
-          return SingleChildScrollView(
-              child: Container(
-            height: 56,
-            color: Color(0xFFECEFF0),
-            padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.reply,
-                    color: Colors.grey,
-                    size: 36,
-                  ),
-                  onPressed: null,
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+            child: Container(
+          height: 56,
+          color: Color(0xFFECEFF0),
+          padding: EdgeInsets.symmetric(horizontal: 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.reply,
+                  color: Colors.grey,
+                  size: 36,
                 ),
-                IconButton(
+                onPressed: null,
+              ),
+              Visibility(
+                visible: message.sentBy == databaseService.user.userId,
+                child: IconButton(
                   icon: Icon(
                     Icons.delete_forever,
                     color: Colors.grey,
@@ -842,25 +823,24 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                     _deleteConfirmBottomSheet(message);
                   },
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.fast_forward,
-                    color: Colors.grey,
-                    size: 36,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    forwardMessage(message);
-                  },
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.fast_forward,
+                  color: Colors.grey,
+                  size: 36,
                 ),
-              ],
-            ),
-          ));
-        });
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  forwardMessage(message);
+                },
+              ),
+            ],
+          ),
+        ));
       },
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8.0))),
-      //isScrollControlled: true,
     );
   }
 
@@ -929,85 +909,5 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             ));
           });
         }).whenComplete(() {});
-  }
-}
-
-class PlusMinusEntry extends PopupMenuEntry<int> {
-  @override
-  final double height = 60;
-
-  // height doesn't matter, as long as we are not giving
-  // initialValue to showMenu().
-
-  @override
-  bool represents(int n) => n == 1 || n == 2 || n == 3 || n == 4 || n == 5;
-
-  @override
-  PlusMinusEntryState createState() => PlusMinusEntryState();
-}
-
-class PlusMinusEntryState extends State<PlusMinusEntry> {
-  void _love() {
-    // This is how you close the popup menu and return user selection.
-    Navigator.pop<int>(context, 1);
-  }
-
-  void _happy() {
-    Navigator.pop<int>(context, 2);
-  }
-
-  void _surprise() {
-    Navigator.pop<int>(context, 3);
-  }
-
-  void _sad() {
-    Navigator.pop<int>(context, 4);
-  }
-
-  void _angry() {
-    Navigator.pop<int>(context, 5);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-            child: FlatButton(
-                onPressed: _love,
-                child: Text(
-                  '❤',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _happy,
-                child: Text(
-                  '😂',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _surprise,
-                child: Text(
-                  '😮',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _sad,
-                child: Text(
-                  '😢',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _angry,
-                child: Text(
-                  '😠',
-                  style: TextStyle(fontSize: 15),
-                ))),
-      ],
-    );
   }
 }

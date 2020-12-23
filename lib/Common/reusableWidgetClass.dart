@@ -207,6 +207,9 @@ class TextFormFieldWidget extends StatefulWidget {
   final Widget prefixIcon;
   final Widget suffixIcon;
   final String defaultText;
+  final Color textColor;
+  final Color cursorColor;
+  final Color focusBorderColor;
   final FocusNode focusNode;
   final bool obscureText;
   final bool enable;
@@ -227,6 +230,9 @@ class TextFormFieldWidget extends StatefulWidget {
       this.defaultText,
       this.obscureText = false,
       this.enable = true,
+      this.textColor,
+      this.cursorColor,
+      this.focusBorderColor,
       this.controller,
       this.functionValidate,
       this.actionKeyboard = TextInputAction.next,
@@ -251,13 +257,13 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
       width: widget.width ?? 288,
       child: TextFormField(
         enabled: widget.enable,
-        cursorColor: Colors.white,
+        cursorColor: widget.cursorColor ?? Colors.white,
         obscureText: widget.obscureText,
         keyboardType: widget.textInputType,
         textInputAction: widget.actionKeyboard,
         focusNode: widget.focusNode,
         style: TextStyle(
-          color: Colors.white,
+          color: widget.textColor ?? Colors.white,
           fontSize: 14.0,
           letterSpacing: 1.2,
         ),
@@ -270,7 +276,8 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
             borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
+            borderSide:
+                BorderSide(color: widget.focusBorderColor ?? Colors.white),
           ),
           border: UnderlineInputBorder(
             borderSide: BorderSide(color: Colors.grey),
@@ -308,13 +315,13 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
           return null;
         },
         onFieldSubmitted: (value) {
-          if (widget.onSubmitField != null) widget.onSubmitField();
+          if (widget.onSubmitField != null) widget.onSubmitField(value);
         },
         onTap: () {
           if (widget.onFieldTap != null) widget.onFieldTap();
         },
         onChanged: (value) {
-          if (widget.onChange != null) widget.onChange();
+          if (widget.onChange != null) widget.onChange(value);
         },
       ),
     );

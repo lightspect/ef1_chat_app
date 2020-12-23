@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/emoji_menu.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
 import 'package:chat_app_ef1/Common/my_icons.dart';
 import 'package:chat_app_ef1/Common/photo.dart';
@@ -32,15 +31,15 @@ class ChatPage extends StatefulWidget {
   _ChatPageState createState() => _ChatPageState(group);
 }
 
-class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
+class _ChatPageState extends State<ChatPage> {
   _ChatPageState(this.group);
   SharedPreferences prefs;
   DatabaseService databaseService;
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
-  PersistentBottomSheetController controller;
 
   final GroupModel group;
+  UserModel peerUser;
   List<MessagesModel> messages;
 
   bool hasContent = false;
@@ -134,22 +133,6 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
         builder: (context) => ForwardMessagePage(
               message: message,
             )));
-  }
-
-  void showEmojiMenu() {
-    this.showMenu(
-      context: context,
-      items: <PopupMenuEntry<int>>[PlusMinusEntry()],
-    ).then((value) {
-      if (value == null) {
-        //Navigator.of(context).pop();
-        return;
-      }
-      if (controller != null) {
-        controller.close();
-        controller = null;
-      }
-    });
   }
 
   Future uploadFile(File chatImageFile) async {
@@ -314,19 +297,9 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                     messages = snapshot.data.docs
                         .map((doc) => MessagesModel.fromMap(doc.data(), doc.id))
                         .toList();
-                    messages.sort((element1, element2) {
-                      if (DateTime.parse(element1.sentAt)
-                          .isAfter(DateTime.parse(element2.sentAt))) {
-                        return -1;
-                      } else {
-                        return 1;
-                      }
-                    });
                     return ListView.builder(
                       itemBuilder: (context, index) => GestureDetector(
-                          onTapDown: storePosition,
                           onLongPress: () {
-                            showEmojiMenu();
                             _settingModalBottomSheet(messages[index], context);
                           },
                           child: Column(
@@ -467,16 +440,20 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
   Widget buildItem(int index, MessagesModel message) {
     if (message.sentBy == databaseService.user.userId) {
       // Right (my message)
-      return Row(
-        children: <Widget>[
-          message.contentType == 1
-              // Text
-              ? Column(
-                  children: [
-                    Container(
+      return Column(
+        children: [
+          Row(
+            children: <Widget>[
+              message.contentType == 1 || message.contentType == 4
+                  // Text
+                  ? Container(
                       child: Text(
                         message.messageContent,
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontStyle: message.contentType == 1
+                                ? FontStyle.normal
+                                : FontStyle.italic),
                       ),
                       padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
                       width: MediaQuery.of(context).size.width / 1.8,
@@ -486,81 +463,65 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                       margin: EdgeInsets.only(
                           bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                           right: 10.0),
-                    ),
-                  ],
-                )
-              : message.contentType == 2
-                  // Image
-                  ? Container(
-                      child: FlatButton(
-                        child: Material(
-                          child: CachedNetworkImage(
-                            placeholder: (context, url) => Container(
-                              child: CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.grey),
-                              ),
-                              width: MediaQuery.of(context).size.width / 1.8,
-                              height: 200.0,
-                              padding: EdgeInsets.all(70.0),
-                              decoration: BoxDecoration(
-                                color: Colors.grey,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(8.0),
+                    )
+                  : message.contentType == 2
+                      // Image
+                      ? Container(
+                          child: FlatButton(
+                            child: Material(
+                              child: CachedNetworkImage(
+                                placeholder: (context, url) => Container(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.grey),
+                                  ),
+                                  width:
+                                      MediaQuery.of(context).size.width / 1.8,
+                                  height: 200.0,
+                                  padding: EdgeInsets.all(70.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(8.0),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Material(
-                              child: Image.asset(
-                                'assets/images/logo_1.png',
+                                errorWidget: (context, url, error) => Material(
+                                  child: Image.asset(
+                                    'assets/images/logo_1.png',
+                                    width:
+                                        MediaQuery.of(context).size.width / 1.8,
+                                    height: 200.0,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(8.0),
+                                  ),
+                                  clipBehavior: Clip.hardEdge,
+                                ),
+                                imageUrl: message.messageContent,
                                 width: MediaQuery.of(context).size.width / 1.8,
                                 height: 200.0,
                                 fit: BoxFit.cover,
                               ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8.0),
-                              ),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
                               clipBehavior: Clip.hardEdge,
                             ),
-                            imageUrl: message.messageContent,
-                            width: MediaQuery.of(context).size.width / 1.8,
-                            height: 200.0,
-                            fit: BoxFit.cover,
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => FullPhoto(
+                                          url: message.messageContent)));
+                            },
+                            padding: EdgeInsets.all(0),
                           ),
-                          borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                          clipBehavior: Clip.hardEdge,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      FullPhoto(url: message.messageContent)));
-                        },
-                        padding: EdgeInsets.all(0),
-                      ),
-                      margin: EdgeInsets.only(
-                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                          right: 10.0),
-                    )
-                  // Sticker
-                  : message.contentType == 4
-                      ? Container(
-                          child: Text(
-                            message.messageContent,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontStyle: FontStyle.italic),
-                          ),
-                          padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                          width: MediaQuery.of(context).size.width / 1.8,
-                          decoration: BoxDecoration(
-                              color: splashBG,
-                              borderRadius: BorderRadius.circular(18.0)),
                           margin: EdgeInsets.only(
                               bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                               right: 10.0),
                         )
+                      // Sticker
                       : Container(
                           /*child: Image.asset(
                         message.messageContent,
@@ -568,12 +529,14 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                         height: 100.0,
                         fit: BoxFit.cover,
                       ),
-                          margin: EdgeInsets.only(
-                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                              right: 10.0),*/
+                      margin: EdgeInsets.only(
+                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                          right: 10.0),*/
                           ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.end,
+          )
         ],
-        mainAxisAlignment: MainAxisAlignment.end,
       );
     } else {
       // Left (peer message)
@@ -582,7 +545,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
           children: <Widget>[
             Row(
               children: <Widget>[
-                isLastMessageLeft(index)
+                isLastMessageLeft(index) || isLastMessageYesterday(index)
                     ? group.groupPhoto != ""
                         ? Material(
                             child: CachedNetworkImage(
@@ -612,11 +575,15 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                             color: Colors.grey,
                           )
                     : Container(width: 35.0),
-                message.contentType == 1
+                message.contentType == 1 || message.contentType == 4
                     ? Container(
                         child: Text(
                           message.messageContent,
-                          style: TextStyle(color: colorBlack),
+                          style: TextStyle(
+                              color: colorBlack,
+                              fontStyle: message.contentType == 1
+                                  ? FontStyle.normal
+                                  : FontStyle.italic),
                         ),
                         padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
                         width: MediaQuery.of(context).size.width / 1.8,
@@ -680,34 +647,17 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                             ),
                             margin: EdgeInsets.only(left: 10.0),
                           )
-                        : message.contentType == 4
-                            ? Container(
-                                child: Text(
-                                  message.messageContent,
-                                  style: TextStyle(
-                                      color: colorBlack,
-                                      fontStyle: FontStyle.italic),
-                                ),
-                                padding:
-                                    EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                                width: MediaQuery.of(context).size.width / 1.8,
-                                decoration: BoxDecoration(
-                                    color: Color(0xffE6E5E5),
-                                    borderRadius: BorderRadius.circular(8.0)),
-                                margin: EdgeInsets.only(left: 10.0),
-                              )
-                            : Container(
-                                /*child: Image.asset(
-                        message.messageContent,
-                        width: 100.0,
-                        height: 100.0,
-                        fit: BoxFit.cover,
-                      ),
-                                margin: EdgeInsets.only(
-                                    bottom:
-                                        isLastMessageRight(index) ? 20.0 : 10.0,
-                                    right: 10.0),*/
-                                ),
+                        : Container(
+                            /*child: Image.asset(
+                              message.messageContent,
+                              width: 100.0,
+                              height: 100.0,
+                              fit: BoxFit.cover,
+                            ),
+                            margin: EdgeInsets.only(
+                                bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                                right: 10.0),*/
+                            ),
               ],
             ),
 
@@ -715,7 +665,7 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
             isLastMessageLeft(index)
                 ? Container(
                     child: Text(
-                      message.sentAt,
+                      message.sentAt.substring(11, 16),
                       style: TextStyle(
                           color: Colors.grey,
                           fontSize: 12.0,
@@ -780,27 +730,29 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
 
   void _settingModalBottomSheet(MessagesModel message, BuildContext context) {
     FocusScope.of(context).unfocus();
-    controller = Scaffold.of(context).showBottomSheet(
-      (context) {
-        return StatefulBuilder(
-            builder: (BuildContext bc, StateSetter setSheetState) {
-          return SingleChildScrollView(
-              child: Container(
-            height: 56,
-            color: Color(0xFFECEFF0),
-            padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.reply,
-                    color: Colors.grey,
-                    size: 36,
-                  ),
-                  onPressed: null,
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+            child: Container(
+          height: 56,
+          color: Color(0xFFECEFF0),
+          padding: EdgeInsets.symmetric(horizontal: 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.reply,
+                  color: Colors.grey,
+                  size: 36,
                 ),
-                IconButton(
+                onPressed: null,
+              ),
+              Visibility(
+                visible: message.sentBy == databaseService.user.userId,
+                child: IconButton(
                   icon: Icon(
                     Icons.delete_forever,
                     color: Colors.grey,
@@ -811,25 +763,24 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
                     _deleteConfirmBottomSheet(message);
                   },
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.fast_forward,
-                    color: Colors.grey,
-                    size: 36,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    forwardMessage(message);
-                  },
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.fast_forward,
+                  color: Colors.grey,
+                  size: 36,
                 ),
-              ],
-            ),
-          ));
-        });
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  forwardMessage(message);
+                },
+              ),
+            ],
+          ),
+        ));
       },
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(8.0))),
-      //isScrollControlled: true,
     );
   }
 
@@ -898,85 +849,5 @@ class _ChatPageState extends State<ChatPage> with CustomPopupMenu {
             ));
           });
         }).whenComplete(() {});
-  }
-}
-
-class PlusMinusEntry extends PopupMenuEntry<int> {
-  @override
-  final double height = 60;
-
-  // height doesn't matter, as long as we are not giving
-  // initialValue to showMenu().
-
-  @override
-  bool represents(int n) => n == 1 || n == 2 || n == 3 || n == 4 || n == 5;
-
-  @override
-  PlusMinusEntryState createState() => PlusMinusEntryState();
-}
-
-class PlusMinusEntryState extends State<PlusMinusEntry> {
-  void _love() {
-    // This is how you close the popup menu and return user selection.
-    Navigator.pop<int>(context, 1);
-  }
-
-  void _happy() {
-    Navigator.pop<int>(context, 2);
-  }
-
-  void _surprise() {
-    Navigator.pop<int>(context, 3);
-  }
-
-  void _sad() {
-    Navigator.pop<int>(context, 4);
-  }
-
-  void _angry() {
-    Navigator.pop<int>(context, 5);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-            child: FlatButton(
-                onPressed: _love,
-                child: Text(
-                  '❤',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _happy,
-                child: Text(
-                  '😂',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _surprise,
-                child: Text(
-                  '😮',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _sad,
-                child: Text(
-                  '😢',
-                  style: TextStyle(fontSize: 15),
-                ))),
-        Expanded(
-            child: FlatButton(
-                onPressed: _angry,
-                child: Text(
-                  '😠',
-                  style: TextStyle(fontSize: 15),
-                ))),
-      ],
-    );
   }
 }
