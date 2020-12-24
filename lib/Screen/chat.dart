@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
@@ -39,11 +40,12 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController listScrollController = ScrollController();
 
   final GroupModel group;
-  UserModel peerUser;
   List<MessagesModel> messages;
 
+  MessagesModel replyMessage = new MessagesModel();
   bool hasContent = false;
   bool isLoading = false;
+  bool replyVisibility = false;
   int limit = 20;
   final limitIncrease = 20;
 
@@ -75,6 +77,14 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  MessagesModel getMessageData(String id) {
+    MessagesModel message = new MessagesModel();
+    databaseService
+        .getMessageById(group.groupId, id)
+        .then((value) => message = value);
+    return message;
+  }
+
   void sendMessage(String message, int contentType) async {
     //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
     _chatController.text = "";
@@ -83,6 +93,7 @@ class _ChatPageState extends State<ChatPage> {
     });
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
+      MessagesModel messagesModel = new MessagesModel();
       await FirebaseFirestore.instance
           .collection('messages')
           .doc(group.groupId)
@@ -92,8 +103,9 @@ class _ChatPageState extends State<ChatPage> {
             'messageContent': message,
             'sentAt': dateTime,
             'sentBy': databaseService.user.userId,
-            'type': 1,
-            'contentType': contentType
+            'type': replyMessage.messageContent.isNotEmpty ? 3 : 1,
+            'contentType': contentType,
+            'replyTo': '',
           })
           .then((value) => FirebaseFirestore.instance
                   .collection('groups')
@@ -343,6 +355,88 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
+          Visibility(
+            visible: replyVisibility,
+            child: Container(
+              color: Color(0xFFECEFF0),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Reply to ".replaceAll(" ", "\u00A0") +
+                              group.groupName,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          replyMessage.contentType == 2
+                              ? "Photo"
+                              : replyMessage.messageContent,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Spacer(),
+                  replyMessage.contentType == 2
+                      ? Material(
+                          child: CachedNetworkImage(
+                            placeholder: (context, url) => Container(
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                              width: 20.0,
+                              height: 20.0,
+                              padding: EdgeInsets.all(70.0),
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Material(
+                              child: Image.asset(
+                                'assets/images/logo_1.png',
+                                width: MediaQuery.of(context).size.width / 1.8,
+                                height: 20.0,
+                                fit: BoxFit.cover,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                            ),
+                            imageUrl: replyMessage.messageContent,
+                            width: 20.0,
+                            height: 20.0,
+                            fit: BoxFit.cover,
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                        )
+                      : Container(),
+                  Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          replyMessage = new MessagesModel();
+                          replyVisibility = false;
+                        });
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: colorBlack,
+                        child: Icon(
+                          Icons.close,
+                          size: 12,
+                        ),
+                        radius: 8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Container(
             color: Color(0xFFECEFF0),
             alignment: Alignment.bottomCenter,
@@ -440,8 +534,9 @@ class _ChatPageState extends State<ChatPage> {
   Widget buildItem(int index, MessagesModel message) {
     if (message.sentBy == databaseService.user.userId) {
       // Right (my message)
-      return Column(
+      return ColumnSuper(
         children: [
+          buildForwardReply(message),
           Row(
             children: <Widget>[
               message.contentType == 1 || message.contentType == 4
@@ -543,6 +638,7 @@ class _ChatPageState extends State<ChatPage> {
       return Container(
         child: Column(
           children: <Widget>[
+            buildForwardReply(message),
             Row(
               children: <Widget>[
                 isLastMessageLeft(index) || isLastMessageYesterday(index)
@@ -728,6 +824,138 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Widget buildForwardReply(MessagesModel message) {
+    if (message.type == 2 || message.type == 3) {
+      return Container(
+        margin: EdgeInsets.only(left: 50, right: 15, bottom: 5),
+        child: Row(
+            mainAxisAlignment: message.sentBy == databaseService.user.userId
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            children: [
+              Icon(
+                message.type == 2 ? Icons.arrow_forward : Icons.reply,
+                size: 14,
+                color: Colors.grey,
+              ),
+              Flexible(
+                child: Text(
+                  message.sentBy == databaseService.user.userId
+                      ? "You"
+                      : group.groupName,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                message.type == 2
+                    ? " forwarded a message"
+                    : (" replied to " + group.groupName),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              )
+            ]),
+      );
+    } else {
+      return Container();
+    }
+  }
+
+  Widget buildQuote(MessagesModel message) {
+    if (message.type == 3) {
+      MessagesModel quote = getMessageData(message.replyTo);
+      return Container(
+        child: Row(
+          children: <Widget>[
+            quote.contentType == 1 || quote.contentType == 4
+                // Text
+                ? Container(
+                    child: Text(
+                      quote.messageContent,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontStyle: quote.contentType == 1
+                              ? FontStyle.normal
+                              : FontStyle.italic),
+                    ),
+                    padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                    width: MediaQuery.of(context).size.width / 2,
+                    decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(18.0)),
+                  )
+                : quote.contentType == 2
+                    // Image
+                    ? Container(
+                        child: FlatButton(
+                          child: Material(
+                            child: CachedNetworkImage(
+                              placeholder: (context, url) => Container(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey),
+                                ),
+                                width: MediaQuery.of(context).size.width / 2,
+                                height: 200.0,
+                                padding: EdgeInsets.all(70.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(8.0),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Material(
+                                child: Image.asset(
+                                  'assets/images/logo_1.png',
+                                  width: MediaQuery.of(context).size.width / 2,
+                                  height: 200.0,
+                                  fit: BoxFit.cover,
+                                ),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8.0),
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                              ),
+                              imageUrl: quote.messageContent,
+                              width: MediaQuery.of(context).size.width / 2,
+                              height: 200.0,
+                              fit: BoxFit.cover,
+                            ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(8.0)),
+                            clipBehavior: Clip.hardEdge,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        FullPhoto(url: quote.messageContent)));
+                          },
+                          padding: EdgeInsets.all(0),
+                        ),
+                      )
+                    // Sticker
+                    : Container(
+                        /*child: Image.asset(
+                        message.messageContent,
+                        width: 100.0,
+                        height: 100.0,
+                        fit: BoxFit.cover,
+                      ),
+                      margin: EdgeInsets.only(
+                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                          right: 10.0),*/
+                        ),
+          ],
+          mainAxisAlignment: MainAxisAlignment.end,
+        ),
+      );
+    } else {
+      return Container();
+    }
+  }
+
   void _settingModalBottomSheet(MessagesModel message, BuildContext context) {
     FocusScope.of(context).unfocus();
     showModalBottomSheet(
@@ -748,7 +976,13 @@ class _ChatPageState extends State<ChatPage> {
                   color: Colors.grey,
                   size: 36,
                 ),
-                onPressed: null,
+                onPressed: () {
+                  setState(() {
+                    Navigator.of(context).pop();
+                    replyMessage = message;
+                    replyVisibility = true;
+                  });
+                },
               ),
               Visibility(
                 visible: message.sentBy == databaseService.user.userId,

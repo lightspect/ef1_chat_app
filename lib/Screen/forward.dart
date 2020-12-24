@@ -204,13 +204,14 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                   clipBehavior: Clip.hardEdge,
                 ),
                 SizedBox(
-                  width: 200,
+                  width: 150,
                   child: Container(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
                           group.groupName,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               color: colorBlack,
                               fontSize: 12,

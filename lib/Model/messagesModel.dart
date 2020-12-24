@@ -8,13 +8,13 @@ class MessagesModel {
   String replyTo;
 
   MessagesModel({
-    this.messageId,
-    this.messageContent,
-    this.sentBy,
-    this.sentAt,
-    this.type,
-    this.contentType,
-    this.replyTo,
+    this.messageId = "",
+    this.messageContent = "",
+    this.sentBy = "",
+    this.sentAt = "",
+    this.type = 0,
+    this.contentType = 0,
+    this.replyTo = "",
   });
 
   factory MessagesModel.fromMap(Map data, String id) {

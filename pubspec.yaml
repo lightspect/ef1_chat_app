@@ -51,6 +51,7 @@ dependencies:
   pull_to_refresh: ^1.6.3
   flutter_portal: ^0.3.0
   http: ^0.12.2
+  assorted_layout_widgets: ^3.0.0
 
 dev_dependencies:
   flutter_test:
