@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
@@ -44,8 +45,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   List<UserModel> members = [];
   List<String> membersToken = [];
 
+  MessagesModel replyMessage = new MessagesModel();
   bool hasContent = false;
   bool isLoading = false;
+  bool replyVisibility = false;
   int limit = 20;
   final limitIncrease = 20;
 
@@ -103,6 +106,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
+  Future<MessagesModel> getMessageData(String id) async {
+    MessagesModel message = new MessagesModel();
+    message = await databaseService.getMessageById(group.groupId, id);
+    return message;
+  }
+
   void sendMessage(String message, int contentType) async {
     //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
     _chatController.text = "";
@@ -111,18 +120,17 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     });
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
-      await FirebaseFirestore.instance
-          .collection('messages')
-          .doc(group.groupId)
-          .collection("messages")
-          .doc()
-          .set({
-            'messageContent': message,
-            'sentAt': dateTime,
-            'sentBy': databaseService.user.userId,
-            'type': 1,
-            'contentType': contentType
-          })
+      MessagesModel messagesModel = new MessagesModel(
+        messageContent: message,
+        sentAt: dateTime,
+        sentBy: databaseService.user.userId,
+        type: replyMessage.messageId.isNotEmpty ? 3 : 1,
+        contentType: contentType,
+        replyTo:
+            replyMessage.messageId.isNotEmpty ? replyMessage.messageId : '',
+      );
+      await databaseService
+          .addMessage(messagesModel, group.groupId)
           .then((value) => FirebaseFirestore.instance
                   .collection('groups')
                   .doc(group.groupId)
@@ -134,9 +142,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {
-            Fluttertoast.showToast(msg: onError.toString());
-          });
+        Fluttertoast.showToast(msg: onError.toString());
+      });
     }
+    setState(() {
+      replyMessage = new MessagesModel();
+      replyVisibility = false;
+    });
     sendNotificationMessageToPeerUser(
         contentType, message, group.groupName, group.groupId);
   }
@@ -373,6 +385,97 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               ),
             ),
           ),
+          Visibility(
+            visible: replyVisibility,
+            child: Container(
+              color: Color(0xFFECEFF0),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Reply to ".replaceAll(" ", "\u00A0") +
+                              (replyMessage.sentBy ==
+                                      databaseService.user.userId
+                                  ? "yourself"
+                                  : members
+                                      .firstWhere(
+                                          (element) =>
+                                              element.userId ==
+                                              replyMessage.sentBy,
+                                          orElse: () => new UserModel())
+                                      .nickname),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          replyMessage.contentType == 2
+                              ? "Photo"
+                              : replyMessage.messageContent,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Spacer(),
+                  replyMessage.contentType == 2
+                      ? Material(
+                          child: CachedNetworkImage(
+                            placeholder: (context, url) => Container(
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                              width: 20.0,
+                              height: 20.0,
+                              padding: EdgeInsets.all(70.0),
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Material(
+                              child: Image.asset(
+                                'assets/images/logo_1.png',
+                                width: MediaQuery.of(context).size.width / 1.8,
+                                height: 20.0,
+                                fit: BoxFit.cover,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                            ),
+                            imageUrl: replyMessage.messageContent,
+                            width: 20.0,
+                            height: 20.0,
+                            fit: BoxFit.cover,
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                        )
+                      : Container(),
+                  Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          replyMessage = new MessagesModel();
+                          replyVisibility = false;
+                        });
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: colorBlack,
+                        child: Icon(
+                          Icons.close,
+                          size: 12,
+                        ),
+                        radius: 8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Container(
             color: Color(0xFFECEFF0),
             alignment: Alignment.bottomCenter,
@@ -472,89 +575,97 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       // Right (my message)
       return Column(
         children: [
-          buildForward(message),
-          Row(
-            children: <Widget>[
-              message.contentType == 1 || message.contentType == 4
-                  // Text
-                  ? Container(
-                      child: Text(
-                        message.messageContent,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontStyle: message.contentType == 1
-                                ? FontStyle.normal
-                                : FontStyle.italic),
-                      ),
-                      padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                      width: MediaQuery.of(context).size.width / 1.8,
-                      decoration: BoxDecoration(
-                          color: splashBG,
-                          borderRadius: BorderRadius.circular(18.0)),
-                      margin: EdgeInsets.only(
-                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                          right: 10.0),
-                    )
-                  : message.contentType == 2
-                      // Image
+          buildForwardReply(message),
+          ColumnSuper(
+            children: [
+              buildQuote(message),
+              Row(
+                children: <Widget>[
+                  message.contentType == 1 || message.contentType == 4
+                      // Text
                       ? Container(
-                          child: FlatButton(
-                            child: Material(
-                              child: CachedNetworkImage(
-                                placeholder: (context, url) => Container(
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.grey),
-                                  ),
-                                  width:
-                                      MediaQuery.of(context).size.width / 1.8,
-                                  height: 200.0,
-                                  padding: EdgeInsets.all(70.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(8.0),
+                          child: Text(
+                            message.messageContent,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontStyle: message.contentType == 1
+                                    ? FontStyle.normal
+                                    : FontStyle.italic),
+                          ),
+                          padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                          width: MediaQuery.of(context).size.width / 1.8,
+                          decoration: BoxDecoration(
+                              color: splashBG,
+                              borderRadius: BorderRadius.circular(18.0)),
+                          margin: EdgeInsets.only(
+                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                              right: 10.0),
+                        )
+                      : message.contentType == 2
+                          // Image
+                          ? Container(
+                              child: FlatButton(
+                                child: Material(
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.grey),
+                                      ),
+                                      width: MediaQuery.of(context).size.width /
+                                          1.8,
+                                      height: 200.0,
+                                      padding: EdgeInsets.all(70.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Material(
-                                  child: Image.asset(
-                                    'assets/images/logo_1.png',
+                                    errorWidget: (context, url, error) =>
+                                        Material(
+                                      child: Image.asset(
+                                        'assets/images/logo_1.png',
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                1.8,
+                                        height: 200.0,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(8.0),
+                                      ),
+                                      clipBehavior: Clip.hardEdge,
+                                    ),
+                                    imageUrl: message.messageContent,
                                     width:
                                         MediaQuery.of(context).size.width / 1.8,
                                     height: 200.0,
                                     fit: BoxFit.cover,
                                   ),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(8.0),
-                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8.0)),
                                   clipBehavior: Clip.hardEdge,
                                 ),
-                                imageUrl: message.messageContent,
-                                width: MediaQuery.of(context).size.width / 1.8,
-                                height: 200.0,
-                                fit: BoxFit.cover,
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => FullPhoto(
+                                              url: message.messageContent)));
+                                },
+                                padding: EdgeInsets.all(0),
                               ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => FullPhoto(
-                                          url: message.messageContent)));
-                            },
-                            padding: EdgeInsets.all(0),
-                          ),
-                          margin: EdgeInsets.only(
-                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                              right: 10.0),
-                        )
-                      // Sticker
-                      : Container(
-                          /*child: Image.asset(
+                              margin: EdgeInsets.only(
+                                  bottom:
+                                      isLastMessageRight(index) ? 20.0 : 10.0,
+                                  right: 10.0),
+                            )
+                          // Sticker
+                          : Container(
+                              /*child: Image.asset(
                         message.messageContent,
                         width: 100.0,
                         height: 100.0,
@@ -563,9 +674,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           margin: EdgeInsets.only(
                               bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                               right: 10.0),*/
-                          ),
+                              ),
+                ],
+                mainAxisAlignment: MainAxisAlignment.end,
+              )
             ],
-            mainAxisAlignment: MainAxisAlignment.end,
+            innerDistance: message.type == 3 ? -14 : 0,
           )
         ],
       );
@@ -574,84 +688,92 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       return Container(
         child: Column(
           children: <Widget>[
-            buildForward(message),
-            Row(
-              children: <Widget>[
-                buildChatAvatar(message, index),
-                message.contentType == 1 || message.contentType == 4
-                    ? Container(
-                        child: Text(
-                          message.messageContent,
-                          style: TextStyle(
-                              color: colorBlack,
-                              fontStyle: message.contentType == 1
-                                  ? FontStyle.normal
-                                  : FontStyle.italic),
-                        ),
-                        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                        width: MediaQuery.of(context).size.width / 1.8,
-                        decoration: BoxDecoration(
-                            color: Color(0xffE6E5E5),
-                            borderRadius: BorderRadius.circular(18.0)),
-                        margin: EdgeInsets.only(left: 10.0),
-                      )
-                    : message.contentType == 2
+            buildForwardReply(message),
+            ColumnSuper(
+              children: [
+                buildQuote(message),
+                Row(
+                  children: <Widget>[
+                    buildChatAvatar(message, index),
+                    message.contentType == 1 || message.contentType == 4
                         ? Container(
-                            child: FlatButton(
-                              child: Material(
-                                child: CachedNetworkImage(
-                                  placeholder: (context, url) => Container(
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.grey),
-                                    ),
-                                    width:
-                                        MediaQuery.of(context).size.width / 1.8,
-                                    height: 200.0,
-                                    padding: EdgeInsets.all(70.0),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(8.0),
+                            child: Text(
+                              message.messageContent,
+                              style: TextStyle(
+                                  color: colorBlack,
+                                  fontStyle: message.contentType == 1
+                                      ? FontStyle.normal
+                                      : FontStyle.italic),
+                            ),
+                            padding:
+                                EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                            width: MediaQuery.of(context).size.width / 1.8,
+                            decoration: BoxDecoration(
+                                color: Color(0xffE6E5E5),
+                                borderRadius: BorderRadius.circular(18.0)),
+                            margin: EdgeInsets.only(left: 10.0),
+                          )
+                        : message.contentType == 2
+                            ? Container(
+                                child: FlatButton(
+                                  child: Material(
+                                    child: CachedNetworkImage(
+                                      placeholder: (context, url) => Container(
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.grey),
+                                        ),
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                1.8,
+                                        height: 200.0,
+                                        padding: EdgeInsets.all(70.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(8.0),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) =>
-                                      Material(
-                                    child: Image.asset(
-                                      'assets/images/logo_1.png',
-                                      width: MediaQuery.of(context).size.width /
-                                          1.8,
+                                      errorWidget: (context, url, error) =>
+                                          Material(
+                                        child: Image.asset(
+                                          'assets/images/logo_1.png',
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
+                                              1.8,
+                                          height: 200.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                        clipBehavior: Clip.hardEdge,
+                                      ),
+                                      imageUrl: message.messageContent,
+                                      width: 200.0,
                                       height: 200.0,
                                       fit: BoxFit.cover,
                                     ),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(8.0),
-                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(8.0)),
                                     clipBehavior: Clip.hardEdge,
                                   ),
-                                  imageUrl: message.messageContent,
-                                  width: 200.0,
-                                  height: 200.0,
-                                  fit: BoxFit.cover,
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => FullPhoto(
+                                                url: message.messageContent)));
+                                  },
+                                  padding: EdgeInsets.all(0),
                                 ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(8.0)),
-                                clipBehavior: Clip.hardEdge,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => FullPhoto(
-                                            url: message.messageContent)));
-                              },
-                              padding: EdgeInsets.all(0),
-                            ),
-                            margin: EdgeInsets.only(left: 10.0),
-                          )
-                        : Container(
-                            /*child: Image.asset(
+                                margin: EdgeInsets.only(left: 10.0),
+                              )
+                            : Container(
+                                /*child: Image.asset(
                         message.messageContent,
                         width: 100.0,
                         height: 100.0,
@@ -661,8 +783,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                     bottom:
                                         isLastMessageRight(index) ? 20.0 : 10.0,
                                     right: 10.0),*/
-                            ),
+                                ),
+                  ],
+                ),
               ],
+              innerDistance: message.type == 3 ? -14 : 0,
             ),
 
             // Time
@@ -733,8 +858,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
-  Widget buildForward(MessagesModel message) {
-    if (message.type == 2) {
+  Widget buildForwardReply(MessagesModel message) {
+    if (message.type == 2 || message.type == 3) {
       return Container(
         margin: EdgeInsets.only(left: 50, right: 15, bottom: 5),
         child: Row(
@@ -743,20 +868,160 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 : MainAxisAlignment.start,
             children: [
               Icon(
-                Icons.arrow_forward,
+                message.type == 2 ? Icons.arrow_forward : Icons.reply,
                 size: 14,
                 color: Colors.grey,
               ),
+              Flexible(
+                child: Text(
+                  members.isNotEmpty
+                      ? (message.sentBy == databaseService.user.userId
+                          ? "You"
+                          : getMemberData(message.sentBy).nickname)
+                      : "",
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               Text(
-                (message.sentBy == databaseService.user.userId
-                        ? "You"
-                        : (members.isNotEmpty
-                            ? getMemberData(message.sentBy).nickname
-                            : "")) +
-                    " forwarded a message",
+                message.type == 2 ? " forwarded a message" : " reply a message",
                 style: TextStyle(fontSize: 14, color: Colors.grey),
-              )
+              ),
             ]),
+      );
+    } else {
+      return Container();
+    }
+  }
+
+  Widget buildQuote(MessagesModel message) {
+    if (message.type == 3) {
+      return FutureBuilder(
+        builder: (BuildContext context, AsyncSnapshot<MessagesModel> snap) {
+          if (snap.hasData) {
+            return Container(
+              child: Row(
+                children: <Widget>[
+                  snap.data.contentType == 1 || snap.data.contentType == 4
+                      // Text
+                      ? Container(
+                          child: Text(
+                            snap.data.messageContent,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontStyle: snap.data.contentType == 1
+                                    ? FontStyle.normal
+                                    : FontStyle.italic),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                          margin: message.sentBy == databaseService.user.userId
+                              ? EdgeInsets.only(right: 10)
+                              : EdgeInsets.only(left: 45),
+                          width: MediaQuery.of(context).size.width / 2,
+                          height: 48,
+                          decoration: BoxDecoration(
+                              color: Color(0xFF868B90),
+                              borderRadius:
+                                  message.sentBy == databaseService.user.userId
+                                      ? BorderRadius.only(
+                                          bottomLeft: Radius.circular(18),
+                                          topLeft: Radius.circular(18),
+                                          topRight: Radius.circular(18))
+                                      : BorderRadius.only(
+                                          bottomRight: Radius.circular(18),
+                                          topLeft: Radius.circular(18),
+                                          topRight: Radius.circular(18))),
+                        )
+                      : snap.data.contentType == 2
+                          // Image
+                          ? Container(
+                              child: FlatButton(
+                                child: Material(
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.grey),
+                                      ),
+                                      width:
+                                          MediaQuery.of(context).size.width / 2,
+                                      height: 100.0,
+                                      padding: EdgeInsets.all(70.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Material(
+                                      child: Image.asset(
+                                        'assets/images/logo_1.png',
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                2,
+                                        height: 100.0,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(8.0),
+                                      ),
+                                      clipBehavior: Clip.hardEdge,
+                                    ),
+                                    imageUrl: snap.data.messageContent,
+                                    width:
+                                        MediaQuery.of(context).size.width / 2,
+                                    height: 100.0,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8.0)),
+                                  clipBehavior: Clip.hardEdge,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => FullPhoto(
+                                              url: snap.data.messageContent)));
+                                },
+                                padding: EdgeInsets.all(0),
+                              ),
+                              margin:
+                                  message.sentBy == databaseService.user.userId
+                                      ? EdgeInsets.only(right: 10)
+                                      : EdgeInsets.only(left: 45),
+                            )
+                          // Sticker
+                          : Container(
+                              /*child: Image.asset(
+                        message.messageContent,
+                        width: 100.0,
+                        height: 100.0,
+                        fit: BoxFit.cover,
+                      ),
+                      margin: EdgeInsets.only(
+                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                          right: 10.0),*/
+                              ),
+                ],
+                mainAxisAlignment: message.sentBy == databaseService.user.userId
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+              ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            );
+          }
+        },
+        future: getMessageData(message.replyTo),
       );
     } else {
       return Container();
@@ -822,7 +1087,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   color: Colors.grey,
                   size: 36,
                 ),
-                onPressed: null,
+                onPressed: () {
+                  setState(() {
+                    Navigator.of(context).pop();
+                    replyMessage = message;
+                    replyVisibility = true;
+                  });
+                },
               ),
               Visibility(
                 visible: message.sentBy == databaseService.user.userId,

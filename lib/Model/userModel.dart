@@ -8,13 +8,13 @@ class UserModel {
   String token;
 
   UserModel(
-      {this.userId,
-      this.nickname,
-      this.photoUrl,
-      this.createdAt,
-      this.aboutMe,
-      this.chattingWith,
-      this.token});
+      {this.userId = "",
+      this.nickname = "",
+      this.photoUrl = "",
+      this.createdAt = "",
+      this.aboutMe = "",
+      this.chattingWith = "",
+      this.token = ""});
 
   factory UserModel.fromMap(Map data) {
     data = data ?? {};

@@ -77,11 +77,9 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  MessagesModel getMessageData(String id) {
+  Future<MessagesModel> getMessageData(String id) async {
     MessagesModel message = new MessagesModel();
-    databaseService
-        .getMessageById(group.groupId, id)
-        .then((value) => message = value);
+    message = await databaseService.getMessageById(group.groupId, id);
     return message;
   }
 
@@ -93,20 +91,17 @@ class _ChatPageState extends State<ChatPage> {
     });
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
-      MessagesModel messagesModel = new MessagesModel();
-      await FirebaseFirestore.instance
-          .collection('messages')
-          .doc(group.groupId)
-          .collection("messages")
-          .doc()
-          .set({
-            'messageContent': message,
-            'sentAt': dateTime,
-            'sentBy': databaseService.user.userId,
-            'type': replyMessage.messageContent.isNotEmpty ? 3 : 1,
-            'contentType': contentType,
-            'replyTo': '',
-          })
+      MessagesModel messagesModel = new MessagesModel(
+        messageContent: message,
+        sentAt: dateTime,
+        sentBy: databaseService.user.userId,
+        type: replyMessage.messageId.isNotEmpty ? 3 : 1,
+        contentType: contentType,
+        replyTo:
+            replyMessage.messageId.isNotEmpty ? replyMessage.messageId : '',
+      );
+      await databaseService
+          .addMessage(messagesModel, group.groupId)
           .then((value) => FirebaseFirestore.instance
                   .collection('groups')
                   .doc(group.groupId)
@@ -118,8 +113,12 @@ class _ChatPageState extends State<ChatPage> {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {
-            Fluttertoast.showToast(msg: onError.toString());
-          });
+        Fluttertoast.showToast(msg: onError.toString());
+      });
+      setState(() {
+        replyMessage = new MessagesModel();
+        replyVisibility = false;
+      });
       sendNotificationMessageToPeerUser(
           contentType, message, group.groupName, group.groupId);
     }
@@ -368,7 +367,10 @@ class _ChatPageState extends State<ChatPage> {
                       children: [
                         Text(
                           "Reply to ".replaceAll(" ", "\u00A0") +
-                              group.groupName,
+                              (replyMessage.sentBy ==
+                                      databaseService.user.userId
+                                  ? "yourself"
+                                  : group.groupName),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
@@ -534,91 +536,99 @@ class _ChatPageState extends State<ChatPage> {
   Widget buildItem(int index, MessagesModel message) {
     if (message.sentBy == databaseService.user.userId) {
       // Right (my message)
-      return ColumnSuper(
+      return Column(
         children: [
           buildForwardReply(message),
-          Row(
-            children: <Widget>[
-              message.contentType == 1 || message.contentType == 4
-                  // Text
-                  ? Container(
-                      child: Text(
-                        message.messageContent,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontStyle: message.contentType == 1
-                                ? FontStyle.normal
-                                : FontStyle.italic),
-                      ),
-                      padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                      width: MediaQuery.of(context).size.width / 1.8,
-                      decoration: BoxDecoration(
-                          color: splashBG,
-                          borderRadius: BorderRadius.circular(18.0)),
-                      margin: EdgeInsets.only(
-                          bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                          right: 10.0),
-                    )
-                  : message.contentType == 2
-                      // Image
+          ColumnSuper(
+            children: [
+              buildQuote(message),
+              Row(
+                children: <Widget>[
+                  message.contentType == 1 || message.contentType == 4
+                      // Text
                       ? Container(
-                          child: FlatButton(
-                            child: Material(
-                              child: CachedNetworkImage(
-                                placeholder: (context, url) => Container(
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.grey),
-                                  ),
-                                  width:
-                                      MediaQuery.of(context).size.width / 1.8,
-                                  height: 200.0,
-                                  padding: EdgeInsets.all(70.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(8.0),
+                          child: Text(
+                            message.messageContent,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontStyle: message.contentType == 1
+                                    ? FontStyle.normal
+                                    : FontStyle.italic),
+                          ),
+                          padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                          width: MediaQuery.of(context).size.width / 1.8,
+                          decoration: BoxDecoration(
+                              color: splashBG,
+                              borderRadius: BorderRadius.circular(18.0)),
+                          margin: EdgeInsets.only(
+                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
+                              right: 10.0),
+                        )
+                      : message.contentType == 2
+                          // Image
+                          ? Container(
+                              child: FlatButton(
+                                child: Material(
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.grey),
+                                      ),
+                                      width: MediaQuery.of(context).size.width /
+                                          1.8,
+                                      height: 200.0,
+                                      padding: EdgeInsets.all(70.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Material(
-                                  child: Image.asset(
-                                    'assets/images/logo_1.png',
+                                    errorWidget: (context, url, error) =>
+                                        Material(
+                                      child: Image.asset(
+                                        'assets/images/logo_1.png',
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                1.8,
+                                        height: 200.0,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(8.0),
+                                      ),
+                                      clipBehavior: Clip.hardEdge,
+                                    ),
+                                    imageUrl: message.messageContent,
                                     width:
                                         MediaQuery.of(context).size.width / 1.8,
                                     height: 200.0,
                                     fit: BoxFit.cover,
                                   ),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(8.0),
-                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8.0)),
                                   clipBehavior: Clip.hardEdge,
                                 ),
-                                imageUrl: message.messageContent,
-                                width: MediaQuery.of(context).size.width / 1.8,
-                                height: 200.0,
-                                fit: BoxFit.cover,
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => FullPhoto(
+                                              url: message.messageContent)));
+                                },
+                                padding: EdgeInsets.all(0),
                               ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => FullPhoto(
-                                          url: message.messageContent)));
-                            },
-                            padding: EdgeInsets.all(0),
-                          ),
-                          margin: EdgeInsets.only(
-                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                              right: 10.0),
-                        )
-                      // Sticker
-                      : Container(
-                          /*child: Image.asset(
+                              margin: EdgeInsets.only(
+                                  bottom:
+                                      isLastMessageRight(index) ? 20.0 : 10.0,
+                                  right: 10.0),
+                            )
+                          // Sticker
+                          : Container(
+                              /*child: Image.asset(
                         message.messageContent,
                         width: 100.0,
                         height: 100.0,
@@ -627,9 +637,12 @@ class _ChatPageState extends State<ChatPage> {
                       margin: EdgeInsets.only(
                           bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                           right: 10.0),*/
-                          ),
+                              ),
+                ],
+                mainAxisAlignment: MainAxisAlignment.end,
+              )
             ],
-            mainAxisAlignment: MainAxisAlignment.end,
+            innerDistance: message.type == 3 ? -14 : 0,
           )
         ],
       );
@@ -639,112 +652,120 @@ class _ChatPageState extends State<ChatPage> {
         child: Column(
           children: <Widget>[
             buildForwardReply(message),
-            Row(
-              children: <Widget>[
-                isLastMessageLeft(index) || isLastMessageYesterday(index)
-                    ? group.groupPhoto != ""
-                        ? Material(
-                            child: CachedNetworkImage(
-                              placeholder: (context, url) => Container(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 1.0,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.grey),
-                                ),
-                                width: 35.0,
-                                height: 35.0,
-                                padding: EdgeInsets.all(10.0),
-                              ),
-                              imageUrl: group.groupPhoto,
-                              width: 35.0,
-                              height: 35.0,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(18.0),
-                            ),
-                            clipBehavior: Clip.hardEdge,
-                          )
-                        : Icon(
-                            Icons.account_circle,
-                            size: 35.0,
-                            color: Colors.grey,
-                          )
-                    : Container(width: 35.0),
-                message.contentType == 1 || message.contentType == 4
-                    ? Container(
-                        child: Text(
-                          message.messageContent,
-                          style: TextStyle(
-                              color: colorBlack,
-                              fontStyle: message.contentType == 1
-                                  ? FontStyle.normal
-                                  : FontStyle.italic),
-                        ),
-                        padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                        width: MediaQuery.of(context).size.width / 1.8,
-                        decoration: BoxDecoration(
-                            color: Color(0xffE6E5E5),
-                            borderRadius: BorderRadius.circular(18.0)),
-                        margin: EdgeInsets.only(left: 10.0),
-                      )
-                    : message.contentType == 2
-                        ? Container(
-                            child: FlatButton(
-                              child: Material(
+            ColumnSuper(
+              children: [
+                buildQuote(message),
+                Row(
+                  children: <Widget>[
+                    isLastMessageLeft(index) || isLastMessageYesterday(index)
+                        ? group.groupPhoto != ""
+                            ? Material(
                                 child: CachedNetworkImage(
                                   placeholder: (context, url) => Container(
                                     child: CircularProgressIndicator(
+                                      strokeWidth: 1.0,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                           Colors.grey),
                                     ),
-                                    width:
-                                        MediaQuery.of(context).size.width / 1.8,
-                                    height: 200.0,
-                                    padding: EdgeInsets.all(70.0),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(8.0),
-                                      ),
-                                    ),
+                                    width: 35.0,
+                                    height: 35.0,
+                                    padding: EdgeInsets.all(10.0),
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      Material(
-                                    child: Image.asset(
-                                      'assets/images/logo_1.png',
-                                      width: MediaQuery.of(context).size.width /
-                                          1.8,
+                                  imageUrl: group.groupPhoto,
+                                  width: 35.0,
+                                  height: 35.0,
+                                  fit: BoxFit.cover,
+                                ),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(18.0),
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                              )
+                            : Icon(
+                                Icons.account_circle,
+                                size: 35.0,
+                                color: Colors.grey,
+                              )
+                        : Container(width: 35.0),
+                    message.contentType == 1 || message.contentType == 4
+                        ? Container(
+                            child: Text(
+                              message.messageContent,
+                              style: TextStyle(
+                                  color: colorBlack,
+                                  fontStyle: message.contentType == 1
+                                      ? FontStyle.normal
+                                      : FontStyle.italic),
+                            ),
+                            padding:
+                                EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                            width: MediaQuery.of(context).size.width / 1.8,
+                            decoration: BoxDecoration(
+                                color: Color(0xffE6E5E5),
+                                borderRadius: BorderRadius.circular(18.0)),
+                            margin: EdgeInsets.only(left: 10.0),
+                          )
+                        : message.contentType == 2
+                            ? Container(
+                                child: FlatButton(
+                                  child: Material(
+                                    child: CachedNetworkImage(
+                                      placeholder: (context, url) => Container(
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.grey),
+                                        ),
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                1.8,
+                                        height: 200.0,
+                                        padding: EdgeInsets.all(70.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(8.0),
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Material(
+                                        child: Image.asset(
+                                          'assets/images/logo_1.png',
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width /
+                                              1.8,
+                                          height: 200.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                        clipBehavior: Clip.hardEdge,
+                                      ),
+                                      imageUrl: message.messageContent,
+                                      width: 200.0,
                                       height: 200.0,
                                       fit: BoxFit.cover,
                                     ),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(8.0),
-                                    ),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(8.0)),
                                     clipBehavior: Clip.hardEdge,
                                   ),
-                                  imageUrl: message.messageContent,
-                                  width: 200.0,
-                                  height: 200.0,
-                                  fit: BoxFit.cover,
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => FullPhoto(
+                                                url: message.messageContent)));
+                                  },
+                                  padding: EdgeInsets.all(0),
                                 ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(8.0)),
-                                clipBehavior: Clip.hardEdge,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => FullPhoto(
-                                            url: message.messageContent)));
-                              },
-                              padding: EdgeInsets.all(0),
-                            ),
-                            margin: EdgeInsets.only(left: 10.0),
-                          )
-                        : Container(
-                            /*child: Image.asset(
+                                margin: EdgeInsets.only(left: 10.0),
+                              )
+                            : Container(
+                                /*child: Image.asset(
                               message.messageContent,
                               width: 100.0,
                               height: 100.0,
@@ -753,8 +774,11 @@ class _ChatPageState extends State<ChatPage> {
                             margin: EdgeInsets.only(
                                 bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                                 right: 10.0),*/
-                            ),
+                                ),
+                  ],
+                ),
               ],
+              innerDistance: message.type == 3 ? -14 : 0,
             ),
 
             // Time
@@ -848,11 +872,9 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
               Text(
-                message.type == 2
-                    ? " forwarded a message"
-                    : (" replied to " + group.groupName),
+                message.type == 2 ? " forwarded a message" : " reply a message",
                 style: TextStyle(fontSize: 14, color: Colors.grey),
-              )
+              ),
             ]),
       );
     } else {
@@ -862,82 +884,108 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget buildQuote(MessagesModel message) {
     if (message.type == 3) {
-      MessagesModel quote = getMessageData(message.replyTo);
-      return Container(
-        child: Row(
-          children: <Widget>[
-            quote.contentType == 1 || quote.contentType == 4
-                // Text
-                ? Container(
-                    child: Text(
-                      quote.messageContent,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontStyle: quote.contentType == 1
-                              ? FontStyle.normal
-                              : FontStyle.italic),
-                    ),
-                    padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                    width: MediaQuery.of(context).size.width / 2,
-                    decoration: BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.circular(18.0)),
-                  )
-                : quote.contentType == 2
-                    // Image
-                    ? Container(
-                        child: FlatButton(
-                          child: Material(
-                            child: CachedNetworkImage(
-                              placeholder: (context, url) => Container(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.grey),
-                                ),
-                                width: MediaQuery.of(context).size.width / 2,
-                                height: 200.0,
-                                padding: EdgeInsets.all(70.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(8.0),
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (context, url, error) => Material(
-                                child: Image.asset(
-                                  'assets/images/logo_1.png',
-                                  width: MediaQuery.of(context).size.width / 2,
-                                  height: 200.0,
-                                  fit: BoxFit.cover,
-                                ),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(8.0),
-                                ),
-                                clipBehavior: Clip.hardEdge,
-                              ),
-                              imageUrl: quote.messageContent,
-                              width: MediaQuery.of(context).size.width / 2,
-                              height: 200.0,
-                              fit: BoxFit.cover,
-                            ),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(8.0)),
-                            clipBehavior: Clip.hardEdge,
+      return FutureBuilder(
+        builder: (BuildContext context, AsyncSnapshot<MessagesModel> snap) {
+          if (snap.hasData) {
+            return Container(
+              child: Row(
+                children: <Widget>[
+                  snap.data.contentType == 1 || snap.data.contentType == 4
+                      // Text
+                      ? Container(
+                          child: Text(
+                            snap.data.messageContent,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontStyle: snap.data.contentType == 1
+                                    ? FontStyle.normal
+                                    : FontStyle.italic),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        FullPhoto(url: quote.messageContent)));
-                          },
-                          padding: EdgeInsets.all(0),
-                        ),
-                      )
-                    // Sticker
-                    : Container(
-                        /*child: Image.asset(
+                          padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
+                          margin: message.sentBy == databaseService.user.userId
+                              ? EdgeInsets.only(right: 10)
+                              : EdgeInsets.only(left: 45),
+                          width: MediaQuery.of(context).size.width / 2,
+                          height: 48,
+                          decoration: BoxDecoration(
+                              color: Color(0xFF868B90),
+                              borderRadius:
+                                  message.sentBy == databaseService.user.userId
+                                      ? BorderRadius.only(
+                                          bottomLeft: Radius.circular(18),
+                                          topLeft: Radius.circular(18),
+                                          topRight: Radius.circular(18))
+                                      : BorderRadius.only(
+                                          bottomRight: Radius.circular(18),
+                                          topLeft: Radius.circular(18),
+                                          topRight: Radius.circular(18))),
+                        )
+                      : snap.data.contentType == 2
+                          // Image
+                          ? Container(
+                              child: FlatButton(
+                                child: Material(
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.grey),
+                                      ),
+                                      width:
+                                          MediaQuery.of(context).size.width / 2,
+                                      height: 100.0,
+                                      padding: EdgeInsets.all(70.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Material(
+                                      child: Image.asset(
+                                        'assets/images/logo_1.png',
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                2,
+                                        height: 100.0,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(8.0),
+                                      ),
+                                      clipBehavior: Clip.hardEdge,
+                                    ),
+                                    imageUrl: snap.data.messageContent,
+                                    width:
+                                        MediaQuery.of(context).size.width / 2,
+                                    height: 100.0,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8.0)),
+                                  clipBehavior: Clip.hardEdge,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => FullPhoto(
+                                              url: snap.data.messageContent)));
+                                },
+                                padding: EdgeInsets.all(0),
+                              ),
+                              margin:
+                                  message.sentBy == databaseService.user.userId
+                                      ? EdgeInsets.only(right: 10)
+                                      : EdgeInsets.only(left: 45),
+                            )
+                          // Sticker
+                          : Container(
+                              /*child: Image.asset(
                         message.messageContent,
                         width: 100.0,
                         height: 100.0,
@@ -946,10 +994,22 @@ class _ChatPageState extends State<ChatPage> {
                       margin: EdgeInsets.only(
                           bottom: isLastMessageRight(index) ? 20.0 : 10.0,
                           right: 10.0),*/
-                        ),
-          ],
-          mainAxisAlignment: MainAxisAlignment.end,
-        ),
+                              ),
+                ],
+                mainAxisAlignment: message.sentBy == databaseService.user.userId
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+              ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+              ),
+            );
+          }
+        },
+        future: getMessageData(message.replyTo),
       );
     } else {
       return Container();
