@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
@@ -5,11 +7,14 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
+import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final GroupModel group;
@@ -25,6 +30,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   final _nicknameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  bool isLoading = false;
+  File avatarImageFile;
   List<UserModel> members;
   GroupModel group;
   String alert = '';
@@ -33,7 +40,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    //contact = new ContactModel();
   }
 
   Future<void> _changeNicknameDialog() async {
@@ -44,7 +50,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            "Change Alias",
+            "Change Group Name",
             textAlign: TextAlign.center,
           ),
           content: SingleChildScrollView(
@@ -56,13 +62,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("New Alias"),
+                        Text("New Group Name"),
                         Container(
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
                               if (value.isEmpty) {
-                                return "Please enter a new nickname";
+                                return "Please enter a new group name";
                               }
                               return null;
                             },
@@ -152,11 +158,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleLeaveGroup() async {
-    members.remove(databaseService.user.userId);
+    group.members.remove(databaseService.user.userId);
     await FirebaseFirestore.instance
         .collection("groups")
         .doc(group.groupId)
-        .update({'member': members}).then((value) {
+        .update({'members': group.members}).then((value) {
       setState(() {
         alert = "success";
       });
@@ -200,8 +206,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 text: alert == "success" ? "Back" : "Confirm",
                 onClick: () {
                   if (alert == "success") {
-                    Navigator.of(parentContext).pop();
-                    Navigator.of(context).pop();
+                    Navigator.of(context, rootNavigator: true)
+                        .popUntil(ModalRoute.withName('/navigationMenu'));
                   } else {
                     Navigator.of(context).pop();
                     handleLeaveGroup();
@@ -215,9 +221,71 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     );
   }
 
+  Future getImage() async {
+    ImagePicker imagePicker = ImagePicker();
+    PickedFile pickedFile;
+    File image;
+
+    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      image = File(pickedFile.path);
+    }
+
+    if (image != null) {
+      setState(() {
+        avatarImageFile = image;
+        isLoading = true;
+      });
+      uploadFile();
+    }
+  }
+
+  Future uploadFile() async {
+    String fileName = group.groupId;
+    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
+    StorageUploadTask uploadTask = reference.putFile(avatarImageFile);
+    StorageTaskSnapshot storageTaskSnapshot;
+    uploadTask.onComplete.then((value) {
+      if (value.error == null) {
+        storageTaskSnapshot = value;
+        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+          group.groupPhoto = downloadUrl;
+          databaseService.updateGroup(group, group.groupId).then((data) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(msg: "Upload success");
+          }).catchError((err) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(msg: err.toString());
+          });
+        }, onError: (err) {
+          setState(() {
+            isLoading = false;
+          });
+          Fluttertoast.showToast(msg: 'This file is not an image');
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        Fluttertoast.showToast(msg: 'This file is not an image');
+      }
+    }, onError: (err) {
+      setState(() {
+        isLoading = false;
+      });
+      Fluttertoast.showToast(msg: err.toString());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
           color: colorBlack,
@@ -235,27 +303,17 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ),
             Padding(
               padding: EdgeInsets.all(16),
-              child: Material(
-                child: CachedNetworkImage(
-                  placeholder: (context, url) => Container(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                    ),
-                    width: 60.0,
-                    height: 60.0,
-                    padding: EdgeInsets.all(10.0),
-                  ),
-                  imageUrl: group.groupPhoto,
-                  width: 60.0,
-                  height: 60.0,
-                  fit: BoxFit.cover,
-                ),
-                borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                clipBehavior: Clip.hardEdge,
+              child: Center(
+                child: InkWell(
+                    borderRadius: BorderRadius.circular(60),
+                    onTap: getImage,
+                    child: groupPhoto()),
               ),
             ),
-            Text(group != null ? group.groupName : ""),
+            Text(
+              group != null ? group.groupName : "",
+              style: TextStyle(fontSize: 16),
+            ),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Row(
@@ -275,7 +333,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           radius: 15,
                         ),
                         Text(
-                          "Search",
+                          "  Search\nMessage",
                           style: TextStyle(fontSize: 10),
                         )
                       ],
@@ -286,7 +344,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     child: Column(
                       children: [
                         InkWell(
-                          onTap: handleAddMember,
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => AddMemberPage(
+                                      groupId: group.groupId,
+                                      members: group.members,
+                                    )));
+                          },
                           child: CircleAvatar(
                             child: Icon(
                               Icons.group_add,
@@ -297,8 +361,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           ),
                         ),
                         Text(
-                          "Message",
+                          " Add\nMember",
                           style: TextStyle(fontSize: 10),
+                          textAlign: TextAlign.center,
                         )
                       ],
                     ),
@@ -399,5 +464,50 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         ),
       ),
     );
+  }
+
+  Widget groupPhoto() {
+    if (group.groupPhoto.isEmpty) {
+      return CircleAvatar(
+        backgroundColor: Colors.grey,
+        radius: 30,
+        child: Icon(
+          Icons.group,
+          size: 60.0,
+          color: Colors.white,
+        ),
+      );
+    } else if (avatarImageFile == null) {
+      return Material(
+        child: CachedNetworkImage(
+          placeholder: (context, url) => Container(
+            child: CircularProgressIndicator(
+              strokeWidth: 2.0,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+            ),
+            width: 60.0,
+            height: 60.0,
+            padding: EdgeInsets.all(10.0),
+          ),
+          imageUrl: group.groupPhoto,
+          width: 60.0,
+          height: 60.0,
+          fit: BoxFit.cover,
+        ),
+        borderRadius: BorderRadius.all(Radius.circular(30.0)),
+        clipBehavior: Clip.hardEdge,
+      );
+    } else {
+      return Material(
+        child: Image.file(
+          avatarImageFile,
+          width: 60.0,
+          height: 60.0,
+          fit: BoxFit.cover,
+        ),
+        borderRadius: BorderRadius.all(Radius.circular(60.0)),
+        clipBehavior: Clip.hardEdge,
+      );
+    }
   }
 }

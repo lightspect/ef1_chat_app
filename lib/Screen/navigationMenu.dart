@@ -7,7 +7,6 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/navigationService.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -51,8 +50,14 @@ class NavigationMenuState extends State<NavigationMenu> {
           : message['aps']['alert']) as Map;
       var data = message['data'] as Map;
       String groupId = data['groupId'].toString();
-      if (groupId != databaseService.currentGroupId) {
+      if (groupId != databaseService.currentGroupId &&
+          !databaseService.offGroupNotification.containsKey(groupId)) {
         showNotification(notification, groupId);
+      } else if (databaseService.offGroupNotification.containsKey(groupId)) {
+        if (DateTime.now().isAfter(
+            DateTime.parse(databaseService.offGroupNotification[groupId]))) {
+          databaseService.offGroupNotification.remove(groupId);
+        }
       }
       return;
     }, onResume: (Map<String, dynamic> message) {
@@ -133,6 +138,7 @@ class NavigationMenuState extends State<NavigationMenu> {
 
   @override
   Widget build(BuildContext context) {
+    print(ModalRoute.of(context).settings.name);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => NavigationProvider()),

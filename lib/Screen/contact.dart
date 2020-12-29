@@ -501,6 +501,8 @@ class _ContactPageState extends State<ContactPage> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
+                                  settings:
+                                      RouteSettings(name: "/contact/detail"),
                                   builder: (context) =>
                                       ContactDetailPage(element)));
                         },

@@ -325,11 +325,15 @@ class _MessagePageState extends State<MessagePage> {
                     case 1:
                       Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
+                              settings:
+                                  RouteSettings(name: "/message/chatPage"),
                               builder: (context) => ChatPage(group: group)));
                       break;
                     case 2:
                       Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
+                              settings:
+                                  RouteSettings(name: "/message/chatGroup"),
                               builder: (context) =>
                                   ChatGroupPage(group: group)));
                       break;

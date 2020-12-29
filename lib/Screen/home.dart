@@ -70,7 +70,6 @@ class _HomePageState extends State<HomePage> {
     databaseService.user = new UserModel(
         userId: "",
         aboutMe: "",
-        chattingWith: "",
         createdAt: "",
         nickname: "",
         photoUrl: "",
@@ -309,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                     child: InkWell(
                         borderRadius: BorderRadius.circular(90),
                         onTap: getImage,
-                        child: profilePicture(context)),
+                        child: profilePicture()),
                   ),
                 ),
                 InkWell(
@@ -416,7 +415,7 @@ class _HomePageState extends State<HomePage> {
         ));
   }
 
-  Widget profilePicture(BuildContext context) {
+  Widget profilePicture() {
     if (databaseService.user == null) {
       return Icon(
         Icons.account_circle,

@@ -2,34 +2,32 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
-import 'package:chat_app_ef1/Screen/chatGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
-class CreateGroupPage extends StatefulWidget {
-  const CreateGroupPage({Key key, this.contact}) : super(key: key);
+class AddMemberPage extends StatefulWidget {
+  const AddMemberPage({Key key, this.groupId, this.members}) : super(key: key);
 
-  final ContactModel contact;
+  final String groupId;
+  final List<dynamic> members;
 
   @override
-  State<StatefulWidget> createState() => _CreateGroupPageState(contact);
+  State<StatefulWidget> createState() => _AddMemberPageState(groupId, members);
 }
 
-class _CreateGroupPageState extends State<CreateGroupPage> {
-  _CreateGroupPageState(this.contact);
-  final ContactModel contact;
+class _AddMemberPageState extends State<AddMemberPage> {
+  _AddMemberPageState(this.groupId, this.currentMembers);
+  final String groupId;
   DatabaseService databaseService;
   final _searchController = TextEditingController();
-  final _groupNameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   final _debouncer = Debouncer(milliseconds: 500);
 
   String alert = '';
   String groupName = '';
+  List<dynamic> currentMembers;
   List<ContactModel> contacts = [];
   List<ContactModel> selectedContacts = [];
   List<ContactModel> searchList = [];
@@ -48,166 +46,29 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       contacts.clear();
       setState(() {
         snap.forEach((element) {
-          contacts.add(element);
-        });
-        if (contact != null) {
-          ContactModel element = new ContactModel(
-              userId: contact.userId,
-              nickname: contact.nickname,
-              photoUrl: contact.photoUrl);
-          selectedContacts.add(element);
-        }
-        contacts.forEach((element) {
-          if (selectedContacts
-              .where((contact) => element.userId == contact.userId)
-              .isNotEmpty) {
-            contactMap[element.userId] = true;
-          } else {
-            contactMap[element.userId] = false;
+          if (!currentMembers.contains(element.userId)) {
+            contacts.add(element);
           }
+        });
+        contacts.forEach((element) {
+          contactMap[element.userId] = false;
         });
       });
     });
   }
 
-  Future<void> createDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            "Create Group",
-            textAlign: TextAlign.center,
-          ),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Form(
-                  key: _formKey,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("New Group name"),
-                        Container(
-                          margin: EdgeInsets.only(top: 12, bottom: 16),
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Please enter a group Name";
-                              }
-                              return null;
-                            },
-                            cursorColor: colorBlue,
-                            style: TextStyle(
-                              color: colorBlack,
-                              fontSize: 12.0,
-                              letterSpacing: 1.2,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Group Name",
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: colorBlack),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: colorBlack),
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: colorBlack),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: colorRed),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: colorRed),
-                              ),
-                              errorStyle: TextStyle(
-                                color: colorRed,
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.w300,
-                                fontStyle: FontStyle.normal,
-                                letterSpacing: 1.2,
-                              ),
-                              hintStyle: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12.0,
-                                letterSpacing: 1.2,
-                              ),
-                              isDense: true,
-                            ),
-                            controller: _groupNameController,
-                            onFieldSubmitted: (value) {},
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            LoginButton(
-                              margin: EdgeInsets.symmetric(vertical: 16),
-                              height: 40,
-                              minWidth: MediaQuery.of(context).size.width / 4,
-                              color: colorMainBG,
-                              borderColor: colorBlack,
-                              borderRadius: 4,
-                              text: "Cancel",
-                              textColor: colorBlack,
-                              onClick: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            LoginButton(
-                              margin: EdgeInsets.symmetric(vertical: 16),
-                              height: 40,
-                              minWidth: MediaQuery.of(context).size.width / 4,
-                              color: colorBlue,
-                              borderColor: colorBlue,
-                              borderRadius: 4,
-                              text: "Create",
-                              onClick: () {
-                                var validate = _formKey.currentState.validate();
-                                if (validate) {
-                                  _formKey.currentState.save();
-                                  groupName = _groupNameController.text;
-                                  handleCreateGroupMessage();
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                            )
-                          ],
-                        )
-                      ]),
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void handleCreateGroupMessage() async {
+  void handleAddMember() async {
     List<String> contactIdList = [];
+    contactIdList.addAll(currentMembers.cast());
     selectedContacts.forEach((element) {
       contactIdList.add(element.userId);
     });
-    contactIdList.add(databaseService.user.userId);
-    GroupModel group = new GroupModel(
-        createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-        createdBy: databaseService.user.userId,
-        members: contactIdList,
-        groupId: "",
-        groupName: groupName,
-        groupPhoto: "",
-        recentMessageContent: "",
-        recentMessageSender: "",
-        recentMessageTime: "",
-        type: 2);
-    DocumentReference groupDocRef = await databaseService.addGroup(group);
-    await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
-      group.groupId = groupDocRef.id;
-      Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(builder: (context) => ChatGroupPage(group: group)));
-    });
+    await FirebaseFirestore.instance
+        .collection("groups")
+        .doc(groupId)
+        .update({'members': contactIdList});
+
+    Navigator.of(context).popUntil(ModalRoute.withName("/message/chatGroup"));
   }
 
   void search(String search) {
@@ -244,7 +105,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Choose Member",
+          "Add Member",
           style: TextStyle(color: colorBlack),
         ),
         leading: BackButton(
@@ -386,15 +247,15 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               alignment: Alignment.center,
               child: LoginButton(
                 margin: EdgeInsets.only(bottom: 32),
-                text: "Create Group",
+                text: "Add Members",
                 textColor:
-                    selectedContacts.length > 1 ? Colors.white : Colors.grey,
+                    selectedContacts.isNotEmpty ? Colors.white : Colors.grey,
                 fontSize: 20,
                 borderColor:
-                    selectedContacts.length > 1 ? colorLightGreen : Colors.grey,
+                    selectedContacts.isNotEmpty ? colorLightGreen : Colors.grey,
                 color:
-                    selectedContacts.length > 1 ? colorLightGreen : colorMainBG,
-                onClick: selectedContacts.length < 1 ? null : createDialog,
+                    selectedContacts.isNotEmpty ? colorLightGreen : colorMainBG,
+                onClick: selectedContacts.isEmpty ? null : handleAddMember,
               ),
             )
           ],

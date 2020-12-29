@@ -290,7 +290,12 @@ class _ChatPageState extends State<ChatPage> {
       width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
-          Divider(),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Divider(
+              color: Colors.grey,
+            ),
+          ),
           Flexible(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),

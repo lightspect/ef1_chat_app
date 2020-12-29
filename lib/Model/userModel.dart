@@ -4,17 +4,18 @@ class UserModel {
   String photoUrl;
   String createdAt;
   String aboutMe;
-  String chattingWith;
   String token;
+  List<dynamic> groups;
 
-  UserModel(
-      {this.userId = "",
-      this.nickname = "",
-      this.photoUrl = "",
-      this.createdAt = "",
-      this.aboutMe = "",
-      this.chattingWith = "",
-      this.token = ""});
+  UserModel({
+    this.userId = "",
+    this.nickname = "",
+    this.photoUrl = "",
+    this.createdAt = "",
+    this.aboutMe = "",
+    this.token = "",
+    this.groups,
+  });
 
   factory UserModel.fromMap(Map data) {
     data = data ?? {};
@@ -24,8 +25,8 @@ class UserModel {
         photoUrl: data['photoUrl'] ?? '',
         createdAt: data['createdAt'] ?? '',
         aboutMe: data['aboutMe'] ?? '',
-        chattingWith: data['chattingWith'] ?? '',
-        token: data['token'] ?? '');
+        token: data['token'] ?? '',
+        groups: data['groups'] != null ? data['groups'].toList() : []);
   }
 
   Map<String, dynamic> toMap() {
@@ -35,8 +36,8 @@ class UserModel {
       'photoUrl': photoUrl,
       'createdAt': createdAt,
       'aboutMe': aboutMe,
-      'chattingWith': chattingWith,
       'token': token,
+      'groups': groups,
     };
   }
 }

@@ -49,10 +49,7 @@ class _UnlockPageState extends State<UnlockPage> {
 
     isLoggedIn = await googleSignIn.isSignedIn();
     if (isLoggedIn) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NavigationMenu()),
-      );
+      Navigator.of(context).pushNamed("/navigationMenu");
     }
 
     this.setState(() {
@@ -94,7 +91,6 @@ class _UnlockPageState extends State<UnlockPage> {
             photoUrl: currentUser.photoURL,
             createdAt: DateTime.now().toString(),
             aboutMe: "",
-            chattingWith: "",
             token: token);
         // Update data to server if new user
         databaseService.setUser(user, currentUser.uid);

@@ -22,12 +22,14 @@ class DatabaseService extends ChangeNotifier {
   Stream<List<GroupModel>> groupStream;
   FirebaseMessaging firebaseMessaging;
   String currentGroupId;
+  Map<String, String> offGroupNotification;
 
   DatabaseService() {
     firebaseMessaging = FirebaseMessaging();
     sharedPref = SharedPref();
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
     currentGroupId = "";
+    offGroupNotification = {};
     readLocal();
   }
 
@@ -256,6 +258,10 @@ class DatabaseService extends ChangeNotifier {
                   .toList())
                 generateGroupMessage(group)
             ]));
+  }
+
+  void turnOffGroupNotification(String groupId, String dateTime) {
+    offGroupNotification[groupId] = dateTime;
   }
 }
 

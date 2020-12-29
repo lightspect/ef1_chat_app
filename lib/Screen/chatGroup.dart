@@ -12,6 +12,7 @@ import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
+import 'package:chat_app_ef1/Screen/groupDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -59,6 +60,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     listScrollController.addListener(_scrollListener);
     getMemberList();
     databaseService.currentGroupId = group.groupId;
+    setState(() {});
   }
 
   _scrollListener() {
@@ -237,6 +239,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   Widget build(BuildContext context) {
+    print(ModalRoute.of(context).settings.name);
     return Scaffold(
         appBar: AppBar(
           title: Padding(
@@ -298,7 +301,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   size: 24,
                   color: colorBlack,
                 ),
-                onPressed: () {})
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              GroupDetailPage(group, members)));
+                })
           ],
           backgroundColor: colorMainBG,
           elevation: 0,
@@ -321,7 +330,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
-          Divider(),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Divider(
+              color: Colors.grey,
+            ),
+          ),
           Flexible(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -1031,7 +1045,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   Widget buildChatAvatar(MessagesModel message, int index) {
     if (isLastMessageLeft(index)) {
       if (members.isNotEmpty) {
-        if (getMemberData(message.sentBy).photoUrl != null) {
+        if (getMemberData(message.sentBy).photoUrl.isNotEmpty) {
           return Material(
             child: CachedNetworkImage(
               placeholder: (context, url) => Container(
