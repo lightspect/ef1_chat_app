@@ -41,7 +41,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   final ScrollController listScrollController = ScrollController();
   PersistentBottomSheetController controller;
 
-  final GroupModel group;
+  GroupModel group;
   List<MessagesModel> messages;
   List<UserModel> members = [];
   List<String> membersToken = [];
@@ -92,9 +92,16 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       members.add(userModel);
       membersToken.add(userModel.token);
     }
-    setState(() {
-      isLoading = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<GroupModel> getGroupData(String groupId) async {
+    GroupModel groupModel = await databaseService.getGroupById(groupId);
+    return groupModel;
   }
 
   UserModel getMemberData(String sentId) {
@@ -239,7 +246,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(ModalRoute.of(context).settings.name);
     return Scaffold(
         appBar: AppBar(
           title: Padding(
@@ -303,10 +309,20 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 ),
                 onPressed: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              GroupDetailPage(group, members)));
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  GroupDetailPage(group, members)))
+                      .then((value) async {
+                    final arguments =
+                        ModalRoute.of(context).settings.arguments as Map;
+                    bool result = arguments['addMember'] ?? false;
+                    if (result) {
+                      group = await getGroupData(group.groupId);
+                      getMemberList();
+                      result = false;
+                    }
+                  });
                 })
           ],
           backgroundColor: colorMainBG,
@@ -678,17 +694,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                   right: 10.0),
                             )
                           // Sticker
-                          : Container(
-                              /*child: Image.asset(
-                        message.messageContent,
-                        width: 100.0,
-                        height: 100.0,
-                        fit: BoxFit.cover,
-                      ),
-                          margin: EdgeInsets.only(
-                              bottom: isLastMessageRight(index) ? 20.0 : 10.0,
-                              right: 10.0),*/
-                              ),
+                          : Container(),
                 ],
                 mainAxisAlignment: MainAxisAlignment.end,
               )
@@ -786,18 +792,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                 ),
                                 margin: EdgeInsets.only(left: 10.0),
                               )
-                            : Container(
-                                /*child: Image.asset(
-                        message.messageContent,
-                        width: 100.0,
-                        height: 100.0,
-                        fit: BoxFit.cover,
-                      ),
-                                margin: EdgeInsets.only(
-                                    bottom:
-                                        isLastMessageRight(index) ? 20.0 : 10.0,
-                                    right: 10.0),*/
-                                ),
+                            : Container(),
                   ],
                 ),
               ],
@@ -1043,7 +1038,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   Widget buildChatAvatar(MessagesModel message, int index) {
-    if (isLastMessageLeft(index)) {
+    if (isLastMessageLeft(index) || isLastMessageYesterday(index)) {
       if (members.isNotEmpty) {
         if (getMemberData(message.sentBy).photoUrl.isNotEmpty) {
           return Material(

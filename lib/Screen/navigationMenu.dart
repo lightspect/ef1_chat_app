@@ -138,7 +138,6 @@ class NavigationMenuState extends State<NavigationMenu> {
 
   @override
   Widget build(BuildContext context) {
-    print(ModalRoute.of(context).settings.name);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => NavigationProvider()),

@@ -191,12 +191,14 @@ class _MessagePageState extends State<MessagePage> {
                 stream: databaseService.groupStream,
                 builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
                   if (!snapshot.hasData) {
+                    print("No data");
                     return Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
                       ),
                     );
                   } else {
+                    print("Has data");
                     groups = List.from(snapshot.data);
                     groups.sort((group1, group2) {
                       if (DateTime.parse(group1.recentMessageTime)
@@ -332,8 +334,8 @@ class _MessagePageState extends State<MessagePage> {
                     case 2:
                       Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
-                              settings:
-                                  RouteSettings(name: "/message/chatGroup"),
+                              settings: RouteSettings(
+                                  name: "/message/chatGroup", arguments: Map()),
                               builder: (context) =>
                                   ChatGroupPage(group: group)));
                       break;

@@ -6,6 +6,7 @@ import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 class AddMemberPage extends StatefulWidget {
@@ -68,7 +69,15 @@ class _AddMemberPageState extends State<AddMemberPage> {
         .doc(groupId)
         .update({'members': contactIdList});
 
-    Navigator.of(context).popUntil(ModalRoute.withName("/message/chatGroup"));
+    Navigator.of(context).popUntil((route) {
+      if (route.settings.name == '/message/chatGroup') {
+        Fluttertoast.showToast(msg: "Add members successful");
+        (route.settings.arguments as Map)['addMember'] = true;
+        return true;
+      } else {
+        return false;
+      }
+    });
   }
 
   void search(String search) {
