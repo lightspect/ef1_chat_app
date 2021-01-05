@@ -228,20 +228,21 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
-    members.remove(user.userId);
+    members.remove(
+        members.where((element) => element.userId == user.userId).first);
     ContactModel contactModel =
-        await getContactById(user.userId, members.first.trim());
+        await getContactById(user.userId, members.first.userId);
     if (contactModel != null && contactModel.userId.isNotEmpty) {
       return contactModel;
     } else {
       return new ContactModel(
-          userId: members.first.trim(), nickname: "", photoUrl: "");
+          userId: members.first.userId, nickname: "", photoUrl: "");
     }
   }
 
   Future<GroupModel> generateGroupMessage(GroupModel group) async {
     if (group.type == 1) {
-      ContactModel contactModel = await getContactDetail(group.members);
+      ContactModel contactModel = await getContactDetail(group.membersList);
       group.groupName = contactModel.nickname.isNotEmpty
           ? contactModel.nickname
           : contactModel.userId;

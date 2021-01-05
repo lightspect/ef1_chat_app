@@ -173,17 +173,29 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   void handleCreateGroupMessage() async {
+    Members peerUser = new Members(
+        userId: contact.userId,
+        nickname: contact.nickname,
+        isActive: true,
+        role: 1);
     final QuerySnapshot checkGroupResult = await FirebaseFirestore.instance
         .collection('groups')
         .where('type', isEqualTo: 1)
-        .where('members', arrayContains: contact.userId)
-        .get();
+        .where('membersList', arrayContains: peerUser.toMap())
+        .where('createdBy',
+            whereIn: [contact.userId, databaseService.user.userId]).get();
     final List<DocumentSnapshot> contactDoc = checkGroupResult.docs;
     if (contactDoc.length == 0) {
+      Members currentUser = new Members(
+          userId: databaseService.user.userId,
+          nickname: databaseService.user.nickname,
+          isActive: true,
+          role: 1);
+      List<Members> membersList = [peerUser, currentUser];
       GroupModel group = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
           createdBy: databaseService.user.userId,
-          members: [databaseService.user.userId, contact.userId],
+          membersList: membersList,
           groupId: "",
           groupName: "",
           groupPhoto: "",
@@ -193,6 +205,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           type: 1);
       DocumentReference groupDocRef = await databaseService.addGroup(group);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
+        group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
         Navigator.of(context, rootNavigator: true).push(

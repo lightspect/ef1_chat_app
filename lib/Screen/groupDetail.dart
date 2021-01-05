@@ -149,8 +149,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     );
   }
 
-  void handleAddMember() {}
-
   void handleUpdateGroupName() async {
     databaseService.updateGroup(group, group.groupId).then((value) {
       Fluttertoast.showToast(msg: "Update success");
@@ -158,11 +156,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleLeaveGroup() async {
-    group.members.remove(databaseService.user.userId);
+    group.membersList.removeWhere(
+        (element) => element.userId == databaseService.user.userId);
     await FirebaseFirestore.instance
         .collection("groups")
         .doc(group.groupId)
-        .update({'members': group.members}).then((value) {
+        .update({'membersList': group.membersList}).then((value) {
       setState(() {
         alert = "success";
       });
@@ -348,7 +347,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => AddMemberPage(
                                       groupId: group.groupId,
-                                      members: group.members,
+                                      members: group.membersList,
                                     )));
                           },
                           child: CircleAvatar(
@@ -416,8 +415,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 onTap: () {
                   Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
-                          builder: (context) =>
-                              GroupMemberScreen(group, members)));
+                          builder: (context) => GroupMemberScreen(
+                              group, members, group.membersList)));
                 },
                 child: Container(
                   height: 28,

@@ -290,7 +290,7 @@ class _MessagePageState extends State<MessagePage> {
                       clipBehavior: Clip.hardEdge,
                     ),
                     SizedBox(
-                      width: 200,
+                      width: 150,
                       child: Container(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,6 +301,7 @@ class _MessagePageState extends State<MessagePage> {
                                   color: colorBlack,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               group.recentMessageContent,

@@ -60,7 +60,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     listScrollController.addListener(_scrollListener);
     getMemberList();
     databaseService.currentGroupId = group.groupId;
-    setState(() {});
   }
 
   _scrollListener() {
@@ -87,8 +86,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     setState(() {
       isLoading = true;
     });
-    for (String id in group.members) {
-      UserModel userModel = await databaseService.getUserById(id);
+    for (Members member in group.membersList) {
+      UserModel userModel = await databaseService.getUserById(member.userId);
       members.add(userModel);
       membersToken.add(userModel.token);
     }

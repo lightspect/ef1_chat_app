@@ -186,15 +186,24 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   }
 
   void handleCreateGroupMessage() async {
-    List<String> contactIdList = [];
+    List<Members> groupMember = [];
     selectedContacts.forEach((element) {
-      contactIdList.add(element.userId);
+      Members member = new Members(
+          userId: element.userId,
+          nickname: element.nickname,
+          isActive: true,
+          role: 1);
+      groupMember.add(member);
     });
-    contactIdList.add(databaseService.user.userId);
+    groupMember.add(new Members(
+        userId: databaseService.user.userId,
+        nickname: databaseService.user.nickname,
+        isActive: true,
+        role: 2));
     GroupModel group = new GroupModel(
         createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
         createdBy: databaseService.user.userId,
-        members: contactIdList,
+        membersList: groupMember,
         groupId: "",
         groupName: groupName,
         groupPhoto: "",

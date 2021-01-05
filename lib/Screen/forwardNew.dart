@@ -75,7 +75,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
 
   Future<GroupModel> generateGroupMessage(GroupModel group) async {
     if (group.type == 1) {
-      ContactModel contactModel = await getContactDetail(group.members);
+      ContactModel contactModel = await getContactDetail(group.membersList);
       group.groupName = contactModel.nickname.isNotEmpty
           ? contactModel.nickname
           : contactModel.userId;

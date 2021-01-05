@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
+import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,7 +14,7 @@ class AddMemberPage extends StatefulWidget {
   const AddMemberPage({Key key, this.groupId, this.members}) : super(key: key);
 
   final String groupId;
-  final List<dynamic> members;
+  final List<Members> members;
 
   @override
   State<StatefulWidget> createState() => _AddMemberPageState(groupId, members);
@@ -28,7 +29,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
 
   String alert = '';
   String groupName = '';
-  List<dynamic> currentMembers;
+  List<Members> currentMembers;
   List<ContactModel> contacts = [];
   List<ContactModel> selectedContacts = [];
   List<ContactModel> searchList = [];
@@ -47,7 +48,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
       contacts.clear();
       setState(() {
         snap.forEach((element) {
-          if (!currentMembers.contains(element.userId)) {
+          if (!currentMembers.contains(currentMembers.firstWhere(
+              (member) => member.userId == element.userId,
+              orElse: () => new Members()))) {
             contacts.add(element);
           }
         });
@@ -59,15 +62,19 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 
   void handleAddMember() async {
-    List<String> contactIdList = [];
-    contactIdList.addAll(currentMembers.cast());
+    List<Members> groupMember = [];
     selectedContacts.forEach((element) {
-      contactIdList.add(element.userId);
+      Members member = new Members(
+          userId: element.userId,
+          nickname: element.nickname,
+          isActive: true,
+          role: 1);
+      groupMember.add(member);
     });
     await FirebaseFirestore.instance
         .collection("groups")
         .doc(groupId)
-        .update({'members': contactIdList});
+        .update({'membersList': groupMember});
 
     Navigator.of(context).popUntil((route) {
       if (route.settings.name == '/message/chatGroup') {

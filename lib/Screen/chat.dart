@@ -259,7 +259,7 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> sendNotificationMessageToPeerUser(
       messageType, textFromTextField, myName, groupId) async {
     UserModel peerUser =
-        await databaseService.getUserById(group.members.first.toString());
+        await databaseService.getUserById(group.membersList.first.toString());
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
