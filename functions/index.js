@@ -42,6 +42,7 @@ exports.sendNotification = functions.firestore
         body: contentMessage,
       },
       data : {
+        click_action: 'FLUTTER_NOTIFICATION_CLICK',
         groupId: groupId,
       },
       tokens: memberToken,

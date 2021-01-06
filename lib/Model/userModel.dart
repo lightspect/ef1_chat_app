@@ -5,7 +5,6 @@ class UserModel {
   String createdAt;
   String aboutMe;
   String token;
-  List<dynamic> groups;
 
   UserModel({
     this.userId = "",
@@ -14,19 +13,18 @@ class UserModel {
     this.createdAt = "",
     this.aboutMe = "",
     this.token = "",
-    this.groups,
   });
 
   factory UserModel.fromMap(Map data) {
     data = data ?? {};
     return UserModel(
-        userId: data['id'] ?? '',
-        nickname: data['nickname'] ?? '',
-        photoUrl: data['photoUrl'] ?? '',
-        createdAt: data['createdAt'] ?? '',
-        aboutMe: data['aboutMe'] ?? '',
-        token: data['token'] ?? '',
-        groups: data['groups'] != null ? data['groups'].toList() : []);
+      userId: data['id'] ?? '',
+      nickname: data['nickname'] ?? '',
+      photoUrl: data['photoUrl'] ?? '',
+      createdAt: data['createdAt'] ?? '',
+      aboutMe: data['aboutMe'] ?? '',
+      token: data['token'] ?? '',
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -37,7 +35,6 @@ class UserModel {
       'createdAt': createdAt,
       'aboutMe': aboutMe,
       'token': token,
-      'groups': groups,
     };
   }
 }

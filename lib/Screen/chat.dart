@@ -84,7 +84,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void sendMessage(String message, int contentType) async {
-    //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
+    //contentType: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
+    //messageType: 1 = normal, 2 = forward, 3 = reply, 4 = notification
     _chatController.text = "";
     setState(() {
       hasContent = false;

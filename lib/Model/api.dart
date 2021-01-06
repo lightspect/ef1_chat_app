@@ -21,6 +21,19 @@ class Api {
         .snapshots();
   }
 
+  Stream<QuerySnapshot> streamCollectionByArrayAny(
+      String path, String field, dynamic condition) {
+    return _db
+        .collection(path)
+        .where(field, arrayContainsAny: condition)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot> streamCollectionFromArray(
+      String path, String field, dynamic condition) {
+    return _db.collection(path).where(field, whereIn: condition).snapshots();
+  }
+
   Future<QuerySnapshot> getCollectionByCondition(
       String path, String field, dynamic condition) {
     return _db.collection(path).where(field, isEqualTo: condition).get();
@@ -29,6 +42,11 @@ class Api {
   Future<QuerySnapshot> getCollectionByArray(
       String path, String field, dynamic condition) {
     return _db.collection(path).where(field, arrayContains: condition).get();
+  }
+
+  Future<QuerySnapshot> getCollectionFromArray(
+      String path, String field, dynamic condition) {
+    return _db.collection(path).where(field, whereIn: condition).get();
   }
 
   Future<DocumentSnapshot> getDocumentById(String path, String id) {

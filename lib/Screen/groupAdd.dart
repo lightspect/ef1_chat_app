@@ -5,7 +5,6 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_list/grouped_list.dart';
@@ -64,17 +63,15 @@ class _AddMemberPageState extends State<AddMemberPage> {
   void handleAddMember() async {
     List<Members> groupMember = [];
     selectedContacts.forEach((element) {
-      Members member = new Members(
-          userId: element.userId,
-          nickname: element.nickname,
-          isActive: true,
-          role: 1);
+      Members member =
+          new Members(userId: element.userId, isActive: true, role: 1);
       groupMember.add(member);
     });
-    await FirebaseFirestore.instance
-        .collection("groups")
-        .doc(groupId)
-        .update({'membersList': groupMember});
+    await databaseService.updateGroupField({
+      'membersList': groupMember
+          .map<Map<String, dynamic>>((member) => member.toMap())
+          .toList()
+    }, groupId);
 
     Navigator.of(context).popUntil((route) {
       if (route.settings.name == '/message/chatGroup') {
@@ -218,10 +215,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
                             selectedContacts.add(element);
                           }
                         } else {
-                          selectedContacts.remove(selectedContacts
-                              .where((contactModel) =>
-                                  contactModel.userId == element.userId)
-                              .first);
+                          selectedContacts.removeWhere((selectedContact) =>
+                              selectedContact.userId == element.userId);
                         }
                       });
                     },
@@ -321,11 +316,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            selectedContacts.remove(selectedContacts
-                                .where((currentContact) =>
-                                    currentContact.userId ==
-                                    contactModel.userId)
-                                .first);
+                            selectedContacts.removeWhere((element) =>
+                                element.userId == contactModel.userId);
                             contactMap[contactModel.userId] = false;
                           });
                         },

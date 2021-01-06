@@ -188,18 +188,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   void handleCreateGroupMessage() async {
     List<Members> groupMember = [];
     selectedContacts.forEach((element) {
-      Members member = new Members(
-          userId: element.userId,
-          nickname: element.nickname,
-          isActive: true,
-          role: 1);
+      Members member =
+          new Members(userId: element.userId, isActive: true, role: 1);
       groupMember.add(member);
     });
     groupMember.add(new Members(
-        userId: databaseService.user.userId,
-        nickname: databaseService.user.nickname,
-        isActive: true,
-        role: 2));
+        userId: databaseService.user.userId, isActive: true, role: 2));
     GroupModel group = new GroupModel(
         createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
         createdBy: databaseService.user.userId,
@@ -350,10 +344,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                             selectedContacts.add(element);
                           }
                         } else {
-                          selectedContacts.remove(selectedContacts
-                              .where((contactModel) =>
-                                  contactModel.userId == element.userId)
-                              .first);
+                          selectedContacts.removeWhere((selectedContact) =>
+                              selectedContact.userId == element.userId);
                         }
                       });
                     },
@@ -453,11 +445,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            selectedContacts.remove(selectedContacts
-                                .where((currentContact) =>
-                                    currentContact.userId ==
-                                    contactModel.userId)
-                                .first);
+                            selectedContacts.removeWhere((element) =>
+                                element.userId == contactModel.userId);
                             contactMap[contactModel.userId] = false;
                           });
                         },

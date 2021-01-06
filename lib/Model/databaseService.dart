@@ -59,6 +59,19 @@ class DatabaseService extends ChangeNotifier {
     readContactsList();
   }
 
+  Future readGroupsList() async {
+    List<dynamic> groupList = await sharedPref.read("groupList");
+    groups = groupList
+        .map<GroupModel>((group) => GroupModel.fromMap(group))
+        .toList();
+  }
+
+  Future setGroupList() async {
+    await sharedPref.save("groupList",
+        groups.map<Map<String, dynamic>>((group) => group.toMap()).toList());
+    readGroupsList();
+  }
+
   Future<List<UserModel>> fetchUsers() async {
     var result = await _api.getDataCollection('users');
     users = result.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
@@ -71,8 +84,10 @@ class DatabaseService extends ChangeNotifier {
     return users;
   }
 
-  Stream<QuerySnapshot> fetchUsersAsStream() {
-    return _api.streamDataCollection('users');
+  Future<List<UserModel>> fetchUsersByArray(List<String> id) async {
+    var result = await _api.getCollectionFromArray('users', 'id', id);
+    users = result.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+    return users;
   }
 
   Future<UserModel> getUserById(String id) async {
@@ -87,6 +102,11 @@ class DatabaseService extends ChangeNotifier {
 
   Future updateUser(UserModel data, String id) async {
     await _api.updateDocument('users', data.toMap(), id);
+    return;
+  }
+
+  Future updateUserField(Map<String, dynamic> data, String id) async {
+    await _api.updateDocument('users', data, id);
     return;
   }
 
@@ -129,6 +149,12 @@ class DatabaseService extends ChangeNotifier {
     return;
   }
 
+  Future updateContactField(
+      Map<String, dynamic> data, String id, String subId) async {
+    await _api.updateSubDocument('users', 'contacts', id, subId, data);
+    return;
+  }
+
   Future<DocumentReference> addContact(ContactModel data, String id) async {
     return await _api.addSubDocument('users', 'contacts', id, data.toMap());
   }
@@ -161,6 +187,11 @@ class DatabaseService extends ChangeNotifier {
     return _api.streamCollectionByArray('groups', field, userId);
   }
 
+  Stream<QuerySnapshot> fetchGroupsByMemberArrayAsStream(
+      String field, dynamic condition) {
+    return _api.streamCollectionByArrayAny('groups', field, condition);
+  }
+
   Future<GroupModel> getGroupById(String id) async {
     var doc = await _api.getDocumentById('groups', id);
     return GroupModel.fromMap(doc.data());
@@ -173,6 +204,11 @@ class DatabaseService extends ChangeNotifier {
 
   Future updateGroup(GroupModel data, String id) async {
     await _api.updateDocument('groups', data.toMap(), id);
+    return;
+  }
+
+  Future updateGroupField(Map<String, dynamic> data, String id) async {
+    await _api.updateDocument('groups', data, id);
     return;
   }
 
@@ -228,8 +264,7 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
-    members.remove(
-        members.where((element) => element.userId == user.userId).first);
+    members.removeWhere((element) => element.userId == user.userId);
     ContactModel contactModel =
         await getContactById(user.userId, members.first.userId);
     if (contactModel != null && contactModel.userId.isNotEmpty) {
@@ -252,13 +287,15 @@ class DatabaseService extends ChangeNotifier {
   }
 
   void refreshMessageList() {
-    groupStream = fetchGroupsByUserIdAsStream('members', user.userId)
-        .asyncMap((docs) => Future.wait([
-              for (GroupModel group in docs.docs
-                  .map((doc) => GroupModel.fromMap(doc.data()))
-                  .toList())
-                generateGroupMessage(group)
-            ]));
+    groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
+      {"isActive": true, "role": 1, "userId": user.userId},
+      {"isActive": true, "role": 2, "userId": user.userId}
+    ]).asyncMap((docs) => Future.wait([
+          for (GroupModel group in docs.docs
+              .map((doc) => GroupModel.fromMap(doc.data()))
+              .toList())
+            generateGroupMessage(group)
+        ]));
   }
 
   void turnOffGroupNotification(String groupId, String dateTime) {

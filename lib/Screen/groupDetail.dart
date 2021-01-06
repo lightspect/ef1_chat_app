@@ -5,12 +5,11 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
+import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
-import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
 import 'package:chat_app_ef1/locator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -150,7 +149,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleUpdateGroupName() async {
-    databaseService.updateGroup(group, group.groupId).then((value) {
+    await databaseService.updateGroupField(
+        {"groupName": group.groupName}, group.groupId).then((value) {
       Fluttertoast.showToast(msg: "Update success");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
@@ -158,16 +158,24 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void handleLeaveGroup() async {
     group.membersList.removeWhere(
         (element) => element.userId == databaseService.user.userId);
-    await FirebaseFirestore.instance
-        .collection("groups")
-        .doc(group.groupId)
-        .update({'membersList': group.membersList}).then((value) {
+    await databaseService.updateGroupField({
+      'membersList': group.membersList
+          .map<Map<String, dynamic>>((member) => member.toMap())
+          .toList()
+    }, group.groupId).then((value) {
       setState(() {
         alert = "success";
       });
       _alertDialog(context);
       databaseService.refreshMessageList();
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    MessagesModel message = new MessagesModel(
+        messageContent: "has left the group",
+        contentType: 1,
+        type: 4,
+        sentAt: DateTime.now().toString(),
+        sentBy: databaseService.user.userId);
+    await databaseService.addMessage(message, group.groupId);
   }
 
   Future<void> _alertDialog(BuildContext parentContext) async {

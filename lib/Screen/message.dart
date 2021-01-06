@@ -200,6 +200,8 @@ class _MessagePageState extends State<MessagePage> {
                   } else {
                     print("Has data");
                     groups = List.from(snapshot.data);
+                    groups.removeWhere(
+                        (element) => element.recentMessageContent.isEmpty);
                     groups.sort((group1, group2) {
                       if (DateTime.parse(group1.recentMessageTime)
                           .isAfter(DateTime.parse(group2.recentMessageTime))) {
@@ -220,9 +222,9 @@ class _MessagePageState extends State<MessagePage> {
                           } else if (mode == LoadStatus.loading) {
                             body = Text("Loading");
                           } else if (mode == LoadStatus.failed) {
-                            body = Text("Load Failed!Click retry!");
+                            body = Text("Load Failed! Click retry!");
                           } else if (mode == LoadStatus.canLoading) {
-                            body = Text("release to load more");
+                            body = Text("Release to load more");
                           } else {
                             body = Text("No more Data");
                           }

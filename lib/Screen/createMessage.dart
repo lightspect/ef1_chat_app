@@ -37,11 +37,8 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
   }
 
   void handleCreateGroupMessage(ContactModel contact) async {
-    Members peerUser = new Members(
-        userId: contact.userId,
-        nickname: contact.nickname,
-        isActive: true,
-        role: 1);
+    Members peerUser =
+        new Members(userId: contact.userId, isActive: true, role: 1);
     final QuerySnapshot checkGroupResult = await FirebaseFirestore.instance
         .collection('groups')
         .where('type', isEqualTo: 1)
@@ -51,10 +48,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
     final List<DocumentSnapshot> contactDoc = checkGroupResult.docs;
     if (contactDoc.length == 0) {
       Members currentUser = new Members(
-          userId: databaseService.user.userId,
-          nickname: databaseService.user.nickname,
-          isActive: true,
-          role: 1);
+          userId: databaseService.user.userId, isActive: true, role: 1);
       List<Members> membersList = [peerUser, currentUser];
       GroupModel group = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),

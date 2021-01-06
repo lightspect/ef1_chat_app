@@ -63,27 +63,21 @@ class GroupModel {
 
 class Members {
   String userId;
-  String nickname;
   bool isActive;
   int role;
 
-  Members({this.userId, this.nickname, this.isActive, this.role});
+  Members({this.userId, this.isActive, this.role});
 
   Map<String, dynamic> toMap() {
-    return {
-      'userId': userId,
-      'nickname': nickname,
-      'isActive': isActive,
-      'role': role
-    };
+    return {'userId': userId, 'isActive': isActive, 'role': role};
   }
 
   factory Members.fromMap(Map data) {
     data = data ?? {};
     return Members(
-        userId: data['userId'],
-        nickname: data['nickname'],
-        isActive: data['isActive'],
-        role: data['role']);
+      userId: data['userId'] ?? '',
+      isActive: data['isActive'] ?? false,
+      role: data['role'] ?? 1,
+    );
   }
 }
