@@ -36,10 +36,11 @@ class _MessagePageState extends State<MessagePage> {
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    databaseService.refreshMessageList();
+    _onRefresh();
   }
 
   void _onRefresh() async {
+    print("onRefresh");
     databaseService.refreshMessageList();
     setState(() {});
     _refreshController.refreshCompleted();
@@ -328,19 +329,21 @@ class _MessagePageState extends State<MessagePage> {
                 onTap: () {
                   switch (group.type) {
                     case 1:
-                      Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
+                      Navigator.of(context, rootNavigator: true)
+                          .push(MaterialPageRoute(
                               settings:
                                   RouteSettings(name: "/message/chatPage"),
-                              builder: (context) => ChatPage(group: group)));
+                              builder: (context) => ChatPage(group: group)))
+                          .then((value) => setState);
                       break;
                     case 2:
-                      Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
-                              settings: RouteSettings(
-                                  name: "/message/chatGroup", arguments: Map()),
+                      Navigator.of(context, rootNavigator: true)
+                          .push(MaterialPageRoute(
+                              settings:
+                                  RouteSettings(name: "/message/chatGroup"),
                               builder: (context) =>
-                                  ChatGroupPage(group: group)));
+                                  ChatGroupPage(group: group)))
+                          .then((value) => {setState(() {})});
                       break;
                   }
                 }),

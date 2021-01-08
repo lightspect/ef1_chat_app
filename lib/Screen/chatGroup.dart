@@ -91,11 +91,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       groupMemberId.add(member.userId);
     }
     members = await databaseService.fetchUsersByArray(groupMemberId);
-    members.forEach((element) {
-      if (element.userId != databaseService.user.userId) {
-        membersToken.add(element.token);
-      }
-    });
+    for (Members member in group.membersList) {
+      if (member.isActive && member.userId != databaseService.user.userId)
+        membersToken.add(members
+            .where((element) => element.userId == member.userId)
+            .first
+            .token);
+    }
     if (this.mounted) {
       setState(() {
         isLoading = false;
@@ -314,14 +316,16 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 ),
                 onPressed: () {
                   Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  GroupDetailPage(group, members)))
-                      .then((value) async {
+                      context,
+                      MaterialPageRoute(
+                          settings: RouteSettings(name: "/chatGroup/detail"),
+                          builder: (context) =>
+                              GroupDetailPage(group, members))).then(
+                      (value) async {
                     final arguments =
                         ModalRoute.of(context).settings.arguments as Map;
-                    bool result = arguments['addMember'] ?? false;
+                    bool result =
+                        arguments != null ? arguments['addMember'] : false;
                     if (result) {
                       group = await getGroupData(group.groupId);
                       getMemberList();

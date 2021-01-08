@@ -498,13 +498,10 @@ class _ContactPageState extends State<ContactPage> {
                       ),
                       itemBuilder: (context, element) => InkWell(
                         onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  settings:
-                                      RouteSettings(name: "/contact/detail"),
-                                  builder: (context) =>
-                                      ContactDetailPage(element)));
+                          Navigator.of(context).push(MaterialPageRoute(
+                              settings: RouteSettings(name: "/contact/detail"),
+                              builder: (context) =>
+                                  ContactDetailPage(element, false)));
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,

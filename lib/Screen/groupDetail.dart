@@ -156,8 +156,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleLeaveGroup() async {
-    group.membersList.removeWhere(
-        (element) => element.userId == databaseService.user.userId);
+    Members memberToBeRemove = group.membersList[group.membersList.indexWhere(
+        (element) => element.userId == databaseService.user.userId)];
+    memberToBeRemove.isActive = false;
+    group.membersList[group.membersList.indexWhere(
+            (element) => element.userId == databaseService.user.userId)] =
+        memberToBeRemove;
     await databaseService.updateGroupField({
       'membersList': group.membersList
           .map<Map<String, dynamic>>((member) => member.toMap())
@@ -423,6 +427,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 onTap: () {
                   Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
+                          settings:
+                              RouteSettings(name: "/chatGroup/detail/members"),
                           builder: (context) => GroupMemberScreen(
                               group, members, group.membersList)));
                 },

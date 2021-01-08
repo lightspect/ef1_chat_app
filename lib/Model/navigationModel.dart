@@ -47,7 +47,9 @@ class NavigationProvider extends ChangeNotifier {
         print('Generating route: ${settings.name}');
         switch (settings.name) {
           default:
-            return MaterialPageRoute(builder: (_) => HomePage());
+            return MaterialPageRoute(
+                settings: RouteSettings(name: "/home"),
+                builder: (_) => HomePage());
         }
       },
     ),
@@ -63,10 +65,10 @@ class NavigationProvider extends ChangeNotifier {
       onGenerateRoute: (settings) {
         print('Generating route: ${settings.name}');
         switch (settings.name) {
-          case ChatPage.route:
-            return MaterialPageRoute(builder: (_) => ChatPage());
           default:
-            return MaterialPageRoute(builder: (_) => MessagePage());
+            return MaterialPageRoute(
+                settings: RouteSettings(name: "/message"),
+                builder: (_) => MessagePage());
         }
       },
       //scrollController: ScrollController(),
@@ -84,7 +86,9 @@ class NavigationProvider extends ChangeNotifier {
         print('Generating route: ${settings.name}');
         switch (settings.name) {
           default:
-            return MaterialPageRoute(builder: (_) => WalletPage());
+            return MaterialPageRoute(
+                settings: RouteSettings(name: "/wallet"),
+                builder: (_) => WalletPage());
         }
       },
       //scrollController: ScrollController(),
@@ -102,7 +106,9 @@ class NavigationProvider extends ChangeNotifier {
         print('Generating route: ${settings.name}');
         switch (settings.name) {
           default:
-            return MaterialPageRoute(builder: (_) => ContactPage());
+            return MaterialPageRoute(
+                settings: RouteSettings(name: "/contact"),
+                builder: (_) => ContactPage());
         }
       },
       //scrollController: ScrollController(),

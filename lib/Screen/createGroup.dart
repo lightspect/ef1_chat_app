@@ -47,9 +47,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     databaseService.fetchContacts(databaseService.user.userId).then((snap) {
       contacts.clear();
       setState(() {
-        snap.forEach((element) {
+        for (ContactModel element in snap) {
           contacts.add(element);
-        });
+        }
         if (contact != null) {
           ContactModel element = new ContactModel(
               userId: contact.userId,
@@ -57,7 +57,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               photoUrl: contact.photoUrl);
           selectedContacts.add(element);
         }
-        contacts.forEach((element) {
+        for (ContactModel element in contacts) {
           if (selectedContacts
               .where((contact) => element.userId == contact.userId)
               .isNotEmpty) {
@@ -65,7 +65,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           } else {
             contactMap[element.userId] = false;
           }
-        });
+        }
       });
     });
   }
@@ -187,11 +187,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   void handleCreateGroupMessage() async {
     List<Members> groupMember = [];
-    selectedContacts.forEach((element) {
+    for (ContactModel element in selectedContacts) {
       Members member =
           new Members(userId: element.userId, isActive: true, role: 1);
       groupMember.add(member);
-    });
+    }
     groupMember.add(new Members(
         userId: databaseService.user.userId, isActive: true, role: 2));
     GroupModel group = new GroupModel(

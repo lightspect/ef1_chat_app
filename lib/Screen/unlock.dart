@@ -1,8 +1,6 @@
 import 'package:chat_app_ef1/Common/loading.dart';
-import 'package:chat_app_ef1/Common/share_prefs.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
-import 'package:chat_app_ef1/Screen/navigationMenu.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,7 +23,6 @@ class _UnlockPageState extends State<UnlockPage> {
   Color _buttonTextColor = Colors.white;
   final GoogleSignIn googleSignIn = GoogleSignIn();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  SharedPref sharedPref;
   DatabaseService databaseService;
 
   bool isLoading = false;
@@ -45,8 +42,6 @@ class _UnlockPageState extends State<UnlockPage> {
       isLoading = true;
     });
 
-    sharedPref = SharedPref();
-
     isLoggedIn = await googleSignIn.isSignedIn();
     if (isLoggedIn) {
       Navigator.of(context).pushNamed("/navigationMenu");
@@ -58,8 +53,6 @@ class _UnlockPageState extends State<UnlockPage> {
   }
 
   Future<Null> handleSignIn() async {
-    sharedPref = SharedPref();
-
     this.setState(() {
       isLoading = true;
     });
@@ -93,14 +86,15 @@ class _UnlockPageState extends State<UnlockPage> {
             aboutMe: "",
             token: token);
         // Update data to server if new user
-        databaseService.setUser(user, currentUser.uid);
+        await databaseService.setUser(user, currentUser.uid);
 
         // Write data to local
-        sharedPref.save("user", user.toMap());
+        await databaseService.setLocal();
       } else {
         // Write data to local
         user = UserModel.fromMap(documents[0].data());
-        sharedPref.save("user", user.toMap());
+        databaseService.user = user;
+        await databaseService.setLocal();
       }
       Fluttertoast.showToast(msg: "Sign in success");
       this.setState(() {

@@ -39,14 +39,9 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
   void handleCreateGroupMessage(ContactModel contact) async {
     Members peerUser =
         new Members(userId: contact.userId, isActive: true, role: 1);
-    final QuerySnapshot checkGroupResult = await FirebaseFirestore.instance
-        .collection('groups')
-        .where('type', isEqualTo: 1)
-        .where('membersList', arrayContains: peerUser.toMap())
-        .where('createdBy',
-            whereIn: [contact.userId, databaseService.user.userId]).get();
-    final List<DocumentSnapshot> contactDoc = checkGroupResult.docs;
-    if (contactDoc.length == 0) {
+    if (databaseService.groups.any((element) =>
+        element.type == 1 &&
+        element.membersList.any((member) => member.userId == contact.userId))) {
       Members currentUser = new Members(
           userId: databaseService.user.userId, isActive: true, role: 1);
       List<Members> membersList = [peerUser, currentUser];
@@ -70,11 +65,14 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data());
-      if (group.type == 1) {
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
-      }
+      GroupModel group = databaseService.groups
+          .where((element) =>
+              element.type == 1 &&
+              element.membersList
+                  .any((member) => member.userId == contact.userId))
+          .first;
+      group.groupName = contact.nickname;
+      group.groupPhoto = contact.photoUrl;
       Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
     }

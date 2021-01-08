@@ -46,13 +46,12 @@ class _AddMemberPageState extends State<AddMemberPage> {
     databaseService.fetchContacts(databaseService.user.userId).then((snap) {
       contacts.clear();
       setState(() {
-        snap.forEach((element) {
-          if (!currentMembers.contains(currentMembers.firstWhere(
-              (member) => member.userId == element.userId,
-              orElse: () => new Members()))) {
-            contacts.add(element);
+        for (Members member in currentMembers) {
+          if (!member.isActive) {
+            contacts.add(
+                snap.where((element) => element.userId == member.userId).first);
           }
-        });
+        }
         contacts.forEach((element) {
           contactMap[element.userId] = false;
         });
@@ -61,14 +60,23 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 
   void handleAddMember() async {
-    List<Members> groupMember = [];
-    selectedContacts.forEach((element) {
-      Members member =
-          new Members(userId: element.userId, isActive: true, role: 1);
-      groupMember.add(member);
+    selectedContacts.forEach((contact) {
+      if (currentMembers
+          .where((member) => member.userId == contact.userId)
+          .isNotEmpty) {
+        Members memberToBeAdd = currentMembers[currentMembers
+            .indexWhere((element) => element.userId == contact.userId)];
+        memberToBeAdd.isActive = true;
+        currentMembers[currentMembers.indexWhere(
+            (element) => element.userId == contact.userId)] = memberToBeAdd;
+      } else {
+        Members member =
+            new Members(userId: contact.userId, isActive: true, role: 1);
+        currentMembers.add(member);
+      }
     });
     await databaseService.updateGroupField({
-      'membersList': groupMember
+      'membersList': currentMembers
           .map<Map<String, dynamic>>((member) => member.toMap())
           .toList()
     }, groupId);

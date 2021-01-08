@@ -256,7 +256,7 @@ class _ScanState extends State<ScanScreen> {
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     ContactDetailPage(
-                                                        contactModel)));
+                                                        contactModel, false)));
                                       }
                                     },
                                   ),

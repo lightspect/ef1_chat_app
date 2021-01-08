@@ -276,6 +276,7 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future<GroupModel> generateGroupMessage(GroupModel group) async {
+    groups.add(group);
     if (group.type == 1) {
       ContactModel contactModel = await getContactDetail(group.membersList);
       group.groupName = contactModel.nickname.isNotEmpty
@@ -287,6 +288,7 @@ class DatabaseService extends ChangeNotifier {
   }
 
   void refreshMessageList() {
+    groups = [];
     groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
       {"isActive": true, "role": 1, "userId": user.userId},
       {"isActive": true, "role": 2, "userId": user.userId}

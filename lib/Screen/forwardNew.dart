@@ -62,14 +62,15 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
   }
 
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
-    members.remove(databaseService.user.userId);
+    members.removeWhere(
+        (element) => element.userId == databaseService.user.userId);
     ContactModel contactModel = await databaseService.getContactById(
-        databaseService.user.userId, members.first.trim());
+        databaseService.user.userId, members.first.userId);
     if (contactModel != null && contactModel.userId.isNotEmpty) {
       return contactModel;
     } else {
       return new ContactModel(
-          userId: members.first.trim(), nickname: "", photoUrl: "");
+          userId: members.first.userId, nickname: "", photoUrl: "");
     }
   }
 

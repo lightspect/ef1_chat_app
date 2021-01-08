@@ -1,4 +1,3 @@
-import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
@@ -58,6 +57,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
         }
       }
     }
+    setState(() {});
   }
 
   void removeMember(UserModel member) async {
@@ -72,6 +72,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
           .toList()
     }, group.groupId).then((value) {
       alert = "success";
+      handleSelectMemberType();
       _alertDialog(context, member);
     }).catchError((onError) {
       Fluttertoast.showToast(msg: onError.toString());
@@ -114,7 +115,6 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                 text: alert == "success" ? "Back" : "Confirm",
                 onClick: () {
                   if (alert == "success") {
-                    setState(() {});
                     Navigator.of(context).pop();
                   } else {
                     Navigator.of(context).pop();
@@ -184,13 +184,14 @@ class _GroupMemberState extends State<GroupMemberScreen> {
         child: Row(
           children: [
             InkWell(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        settings: RouteSettings(name: "/contact/detail"),
-                        builder: (context) => ContactDetailPage(contact)));
-              },
+              onTap: () => member.userId == databaseService.user.userId
+                  ? null
+                  : Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          settings: RouteSettings(name: "/contact/detail"),
+                          builder: (context) =>
+                              ContactDetailPage(contact, true))),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
