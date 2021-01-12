@@ -294,7 +294,7 @@ class DatabaseService extends ChangeNotifier {
     return group;
   }
 
-  void refreshMessageList() {
+  Future<void> refreshMessageList() async {
     groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
       {"isActive": true, "role": 1, "userId": user.userId},
       {"isActive": true, "role": 2, "userId": user.userId}

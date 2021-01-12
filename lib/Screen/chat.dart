@@ -11,6 +11,7 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -103,14 +104,11 @@ class _ChatPageState extends State<ChatPage> {
       );
       await databaseService
           .addMessage(messagesModel, group.groupId)
-          .then((value) => FirebaseFirestore.instance
-                  .collection('groups')
-                  .doc(group.groupId)
-                  .update({
+          .then((value) => databaseService.updateGroupField({
                 'recentMessage': contentType == 2 ? "Photo" : message,
                 'recentMessageSender': databaseService.user.userId,
                 'recentMessageTime': dateTime,
-              }).catchError((onError) {
+              }, group.groupId).catchError((onError) {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {
@@ -243,7 +241,18 @@ class _ChatPageState extends State<ChatPage> {
                   size: 24,
                   color: colorBlack,
                 ),
-                onPressed: () {})
+                onPressed: () {
+                  ContactModel contact = new ContactModel(
+                      userId: group.membersList[0].userId,
+                      nickname: group.groupName,
+                      photoUrl: group.groupPhoto);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          settings: RouteSettings(name: "/contact/detail"),
+                          builder: (context) =>
+                              ContactDetailPage(contact, false)));
+                })
           ],
           backgroundColor: colorMainBG,
           elevation: 0,

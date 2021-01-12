@@ -147,14 +147,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       );
       await databaseService
           .addMessage(messagesModel, group.groupId)
-          .then((value) => FirebaseFirestore.instance
-                  .collection('groups')
-                  .doc(group.groupId)
-                  .update({
+          .then((value) => databaseService.updateGroupField({
                 'recentMessage': contentType == 2 ? "Photo" : message,
                 'recentMessageSender': databaseService.user.userId,
                 'recentMessageTime': dateTime,
-              }).catchError((onError) {
+              }, group.groupId).catchError((onError) {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {

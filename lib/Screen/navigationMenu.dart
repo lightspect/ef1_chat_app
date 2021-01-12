@@ -54,9 +54,11 @@ class NavigationMenuState extends State<NavigationMenu> {
           !databaseService.offGroupNotification.containsKey(groupId)) {
         showNotification(notification, groupId);
       } else if (databaseService.offGroupNotification.containsKey(groupId)) {
-        if (DateTime.now().isAfter(
-            DateTime.parse(databaseService.offGroupNotification[groupId]))) {
-          databaseService.offGroupNotification.remove(groupId);
+        if (databaseService.offGroupNotification[groupId].isNotEmpty) {
+          if (DateTime.now().isAfter(
+              DateTime.parse(databaseService.offGroupNotification[groupId]))) {
+            databaseService.offGroupNotification.remove(groupId);
+          }
         }
       }
       return;

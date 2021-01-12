@@ -23,11 +23,15 @@ class GroupDetailPage extends StatefulWidget {
   State<StatefulWidget> createState() => _GroupDetailPageState(group, members);
 }
 
+enum OffNotificationTime { minutes10, hour1, hour8, hour24, forever }
+
 class _GroupDetailPageState extends State<GroupDetailPage> {
   _GroupDetailPageState(this.group, this.members);
   DatabaseService databaseService;
   final _nicknameController = TextEditingController();
+  final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  OffNotificationTime _time = OffNotificationTime.minutes10;
 
   bool isLoading = false;
   File avatarImageFile;
@@ -78,7 +82,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               letterSpacing: 1.2,
                             ),
                             decoration: InputDecoration(
-                              hintText: "Alias",
+                              hintText: "Group Name",
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: colorBlack),
                               ),
@@ -147,6 +151,256 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       },
     );
   }
+
+  Future<void> _searchMessageDialog() async {
+    _messageController.text = "";
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Search Message",
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Container(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Enter Keyword"),
+                        Container(
+                          margin: EdgeInsets.only(top: 12, bottom: 16),
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return "Please enter a keyword to search for message";
+                              }
+                              return null;
+                            },
+                            cursorColor: colorBlue,
+                            style: TextStyle(
+                              color: colorBlack,
+                              fontSize: 12.0,
+                              letterSpacing: 1.2,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Keyword",
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              hintStyle: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12.0,
+                                letterSpacing: 1.2,
+                              ),
+                              isDense: true,
+                            ),
+                            controller: _messageController,
+                            onFieldSubmitted: (value) {},
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorMainBG,
+                              borderColor: colorBlack,
+                              borderRadius: 4,
+                              text: "Cancel",
+                              textColor: colorBlack,
+                              onClick: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorBlue,
+                              borderColor: colorBlue,
+                              borderRadius: 4,
+                              text: "Search",
+                              onClick: () {
+                                var validate = _formKey.currentState.validate();
+                                if (validate) {
+                                  handleMessageSearch();
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _offNotificationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Change Group Name",
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Container(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RadioListTile<OffNotificationTime>(
+                          title: const Text('10 minutes'),
+                          value: OffNotificationTime.minutes10,
+                          groupValue: _time,
+                          onChanged: (OffNotificationTime value) {
+                            setState(() {
+                              _time = value;
+                            });
+                          },
+                        ),
+                        RadioListTile<OffNotificationTime>(
+                          title: const Text('1 hour'),
+                          value: OffNotificationTime.hour1,
+                          groupValue: _time,
+                          onChanged: (OffNotificationTime value) {
+                            setState(() {
+                              _time = value;
+                            });
+                          },
+                        ),
+                        RadioListTile<OffNotificationTime>(
+                          title: const Text('8 hours'),
+                          value: OffNotificationTime.hour8,
+                          groupValue: _time,
+                          onChanged: (OffNotificationTime value) {
+                            setState(() {
+                              _time = value;
+                            });
+                          },
+                        ),
+                        RadioListTile<OffNotificationTime>(
+                          title: const Text('24 hours'),
+                          value: OffNotificationTime.hour24,
+                          groupValue: _time,
+                          onChanged: (OffNotificationTime value) {
+                            setState(() {
+                              _time = value;
+                            });
+                          },
+                        ),
+                        RadioListTile<OffNotificationTime>(
+                          title: const Text('Until I turn back on'),
+                          value: OffNotificationTime.forever,
+                          groupValue: _time,
+                          onChanged: (OffNotificationTime value) {
+                            setState(() {
+                              _time = value;
+                            });
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorMainBG,
+                              borderColor: colorBlack,
+                              borderRadius: 4,
+                              text: "Cancel",
+                              textColor: colorBlack,
+                              onClick: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorBlue,
+                              borderColor: colorBlue,
+                              borderRadius: 4,
+                              text: "Save",
+                              onClick: () {
+                                var validate = _formKey.currentState.validate();
+                                if (validate) {
+                                  handleTurnOffNotification();
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void handleTurnOffNotification() {
+    String timeOff = _time.toString().split(".")[1];
+    Duration duration = new Duration(days: 0);
+    switch (timeOff) {
+      case "minutes10":
+        duration = Duration(minutes: 10);
+        break;
+      case "hour1":
+        duration = Duration(hours: 1);
+        break;
+      case "hour8":
+        duration = Duration(hours: 8);
+        break;
+      case "hour24":
+        duration = Duration(hours: 24);
+        break;
+      default:
+        duration = new Duration(days: 0);
+        break;
+    }
+    if (timeOff == "forever") {
+      databaseService.offGroupNotification[group.groupId] = "";
+    } else {
+      databaseService.offGroupNotification[group.groupId] =
+          DateTime.now().add(duration).toString();
+    }
+    setState(() {});
+  }
+
+  void handleMessageSearch() async {}
 
   void handleUpdateGroupName() async {
     await databaseService.updateGroupField(
@@ -335,13 +589,18 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          child: Icon(
-                            Icons.search,
-                            color: colorBlack,
+                        InkWell(
+                          onTap: () {
+                            _searchMessageDialog();
+                          },
+                          child: CircleAvatar(
+                            child: Icon(
+                              Icons.search,
+                              color: colorBlack,
+                            ),
+                            backgroundColor: Color(0xffE5E5E5),
+                            radius: 15,
                           ),
-                          backgroundColor: Color(0xffE5E5E5),
-                          radius: 15,
                         ),
                         Text(
                           "  Search\nMessage",
@@ -383,13 +642,28 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     width: 100,
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          child: Icon(
-                            Icons.notifications,
-                            color: colorBlack,
+                        InkWell(
+                          onTap: () {
+                            if (databaseService.offGroupNotification
+                                .containsKey(group.groupId)) {
+                              databaseService.offGroupNotification
+                                  .remove(group.groupId);
+                              setState(() {});
+                            } else {
+                              _offNotificationDialog();
+                            }
+                          },
+                          child: CircleAvatar(
+                            child: Icon(
+                              databaseService.offGroupNotification
+                                      .containsKey(group.groupId)
+                                  ? Icons.notifications_off
+                                  : Icons.notifications,
+                              color: colorBlack,
+                            ),
+                            backgroundColor: Color(0xffE5E5E5),
+                            radius: 15,
                           ),
-                          backgroundColor: Color(0xffE5E5E5),
-                          radius: 15,
                         ),
                         Text(
                           "Notification",

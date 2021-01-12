@@ -232,6 +232,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   void handleCreateGroupMessage() async {
     peerUser = new Members(userId: contact.userId, isActive: true, role: 1);
+    await databaseService.refreshMessageList();
     if (!databaseService.groups.any((element) =>
         element.type == 1 &&
         element.membersList.any((member) => member.userId == contact.userId))) {
