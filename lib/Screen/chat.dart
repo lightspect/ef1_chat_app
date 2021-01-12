@@ -128,10 +128,14 @@ class _ChatPageState extends State<ChatPage> {
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
     PickedFile pickedFile;
+    File image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
-    File image = File(pickedFile.path);
+    if (pickedFile != null) {
+      image = File(pickedFile.path);
+    }
+
     if (image != null) {
       setState(() {
         isLoading = true;

@@ -28,9 +28,12 @@ class DatabaseService extends ChangeNotifier {
     firebaseMessaging = FirebaseMessaging();
     sharedPref = SharedPref();
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
+    contacts = [];
+    groups = [];
     currentGroupId = "";
     offGroupNotification = {};
     readLocal();
+    readContactsList();
   }
 
   Future readLocal() async {
@@ -265,8 +268,9 @@ class DatabaseService extends ChangeNotifier {
 
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
     members.removeWhere((element) => element.userId == user.userId);
-    ContactModel contactModel =
-        await getContactById(user.userId, members.first.userId);
+    ContactModel contactModel = contacts.firstWhere(
+        (element) => element.userId == members.first.userId,
+        orElse: () => null);
     if (contactModel != null && contactModel.userId.isNotEmpty) {
       return contactModel;
     } else {
@@ -276,7 +280,6 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future<GroupModel> generateGroupMessage(GroupModel group) async {
-    groups.add(group);
     if (group.type == 1) {
       ContactModel contactModel = await getContactDetail(group.membersList);
       group.groupName = contactModel.nickname.isNotEmpty
@@ -284,11 +287,14 @@ class DatabaseService extends ChangeNotifier {
           : contactModel.userId;
       group.groupPhoto = contactModel.photoUrl;
     }
+    if (groups.length == 0 ||
+        groups.where((element) => element.groupId == group.groupId).isEmpty) {
+      groups.add(group);
+    }
     return group;
   }
 
   void refreshMessageList() {
-    groups = [];
     groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
       {"isActive": true, "role": 1, "userId": user.userId},
       {"isActive": true, "role": 2, "userId": user.userId}

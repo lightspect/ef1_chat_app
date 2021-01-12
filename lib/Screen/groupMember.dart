@@ -3,6 +3,7 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
+import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +71,14 @@ class _GroupMemberState extends State<GroupMemberScreen> {
       "membersList": groupMembers
           .map<Map<String, dynamic>>((member) => member.toMap())
           .toList()
-    }, group.groupId).then((value) {
+    }, group.groupId).then((value) async {
+      MessagesModel message = new MessagesModel(
+          messageContent: "remove " + member.nickname + " from the group",
+          contentType: 1,
+          type: 4,
+          sentAt: DateTime.now().toString(),
+          sentBy: databaseService.user.userId);
+      await databaseService.addMessage(message, group.groupId);
       alert = "success";
       handleSelectMemberType();
       _alertDialog(context, member);
@@ -167,10 +175,21 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   }
 
   Widget buildItem(BuildContext context, UserModel member) {
-    ContactModel contact = new ContactModel(
-        nickname: member.nickname,
-        photoUrl: member.photoUrl,
-        userId: member.userId);
+    ContactModel contact;
+    int contactIndex = databaseService.contacts
+        .indexWhere((element) => element.userId == member.userId);
+    print(contactIndex);
+    if (contactIndex >= 0) {
+      contact = new ContactModel(
+          nickname: databaseService.contacts[contactIndex].nickname,
+          photoUrl: member.photoUrl,
+          userId: member.userId);
+    } else {
+      contact = new ContactModel(
+          nickname: member.nickname,
+          photoUrl: member.photoUrl,
+          userId: member.userId);
+    }
     return Container(
         margin: EdgeInsets.only(top: 12),
         padding: EdgeInsets.symmetric(vertical: 4),
@@ -224,7 +243,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                   Container(
                     padding: EdgeInsets.only(left: 12),
                     child: Text(
-                      member.nickname,
+                      contact.nickname,
                       style: TextStyle(fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),

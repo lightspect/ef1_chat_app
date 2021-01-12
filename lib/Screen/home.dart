@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage> {
     await databaseService.readLocal();
     await databaseService.fetchContacts(databaseService.user.userId);
     await databaseService.setContactsList();
+    databaseService.refreshMessageList();
     // Force refresh input
     setState(() {});
   }
@@ -88,18 +89,21 @@ class _HomePageState extends State<HomePage> {
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
     PickedFile pickedFile;
+    File image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
-    File image = File(pickedFile.path);
+    if (pickedFile != null) {
+      image = File(pickedFile.path);
+    }
 
     if (image != null) {
       setState(() {
         avatarImageFile = image;
         isLoading = true;
       });
+      uploadFile();
     }
-    uploadFile();
   }
 
   Future uploadFile() async {

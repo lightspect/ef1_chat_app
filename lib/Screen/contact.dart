@@ -333,6 +333,8 @@ class _ContactPageState extends State<ContactPage> {
               .setContact(contact, databaseService.user.userId, contact.userId)
               .then((value) {
             setState(() {
+              databaseService.contacts.add(contact);
+              databaseService.setContactsList();
               alert = "success";
               isEnterID = false;
               _idController.text = "";

@@ -33,6 +33,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
   void readLocal() async {
     databaseService = locator<DatabaseService>();
     // Force refresh input
+    contacts = databaseService.contacts;
     setState(() {});
   }
 
@@ -158,82 +159,62 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
               ),
             ),
             Flexible(
-              child: StreamBuilder(
-                stream: databaseService
-                    .fetchContactsAsStream(databaseService.user.userId),
-                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                    );
-                  } else {
-                    contacts = snapshot.data.docs
-                        .map((doc) => ContactModel.fromMap(doc.data()))
-                        .toList();
-                    return GroupedListView<ContactModel, String>(
-                      elements: searchList.isEmpty ? contacts : searchList,
-                      groupBy: (element) => element.nickname.substring(0, 1),
-                      groupSeparatorBuilder: (String groupByValue) => Container(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Text(groupByValue),
-                      ),
-                      itemBuilder: (context, element) => InkWell(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          handleCreateGroupMessage(element);
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Material(
-                              child: element.photoUrl != null
-                                  ? CachedNetworkImage(
-                                      placeholder: (context, url) => Container(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.0,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.grey),
-                                        ),
-                                        width: 40.0,
-                                        height: 40.0,
-                                        padding: EdgeInsets.all(10.0),
-                                      ),
-                                      imageUrl: element.photoUrl,
-                                      width: 40.0,
-                                      height: 40.0,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Icon(
-                                      Icons.account_circle,
-                                      size: 40.0,
-                                      color: Colors.grey,
-                                    ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            Container(
-                              padding: EdgeInsets.only(left: 12),
-                              child: Text(
-                                element.nickname,
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      useStickyGroupSeparators: true,
-                      floatingHeader: false,
-                      order: GroupedListOrder.ASC,
-                      separator: Divider(),
-                    );
-                  }
-                },
+                child: GroupedListView<ContactModel, String>(
+              elements: searchList.isEmpty ? contacts : searchList,
+              groupBy: (element) => element.nickname.substring(0, 1),
+              groupSeparatorBuilder: (String groupByValue) => Container(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(groupByValue),
               ),
-            ),
+              itemBuilder: (context, element) => InkWell(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  handleCreateGroupMessage(element);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Material(
+                      child: element.photoUrl != null
+                          ? CachedNetworkImage(
+                              placeholder: (context, url) => Container(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.0,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey),
+                                ),
+                                width: 40.0,
+                                height: 40.0,
+                                padding: EdgeInsets.all(10.0),
+                              ),
+                              imageUrl: element.photoUrl,
+                              width: 40.0,
+                              height: 40.0,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              Icons.account_circle,
+                              size: 40.0,
+                              color: Colors.grey,
+                            ),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      clipBehavior: Clip.hardEdge,
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(left: 12),
+                      child: Text(
+                        element.nickname,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              useStickyGroupSeparators: true,
+              floatingHeader: false,
+              order: GroupedListOrder.ASC,
+              separator: Divider(),
+            )),
           ],
         ),
       ),

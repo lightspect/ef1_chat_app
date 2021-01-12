@@ -44,30 +44,23 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   }
 
   void getContacts() {
-    databaseService.fetchContacts(databaseService.user.userId).then((snap) {
-      contacts.clear();
-      setState(() {
-        for (ContactModel element in snap) {
-          contacts.add(element);
-        }
-        if (contact != null) {
-          ContactModel element = new ContactModel(
-              userId: contact.userId,
-              nickname: contact.nickname,
-              photoUrl: contact.photoUrl);
-          selectedContacts.add(element);
-        }
-        for (ContactModel element in contacts) {
-          if (selectedContacts
-              .where((contact) => element.userId == contact.userId)
-              .isNotEmpty) {
-            contactMap[element.userId] = true;
-          } else {
-            contactMap[element.userId] = false;
-          }
-        }
-      });
-    });
+    contacts = databaseService.contacts;
+    if (contact != null) {
+      ContactModel element = new ContactModel(
+          userId: contact.userId,
+          nickname: contact.nickname,
+          photoUrl: contact.photoUrl);
+      selectedContacts.add(element);
+    }
+    for (ContactModel element in contacts) {
+      if (selectedContacts
+          .where((contact) => element.userId == contact.userId)
+          .isNotEmpty) {
+        contactMap[element.userId] = true;
+      } else {
+        contactMap[element.userId] = false;
+      }
+    }
   }
 
   Future<void> createDialog() async {

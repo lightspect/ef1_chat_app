@@ -3,6 +3,7 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
+import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
@@ -43,18 +44,17 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 
   void getContacts() {
-    databaseService.fetchContacts(databaseService.user.userId).then((snap) {
-      contacts.clear();
-      setState(() {
-        for (Members member in currentMembers) {
-          if (!member.isActive) {
-            contacts.add(
-                snap.where((element) => element.userId == member.userId).first);
-          }
+    contacts.clear();
+    setState(() {
+      for (Members member in currentMembers) {
+        if (!member.isActive) {
+          contacts.add(databaseService.contacts
+              .where((element) => element.userId == member.userId)
+              .first);
         }
-        contacts.forEach((element) {
-          contactMap[element.userId] = false;
-        });
+      }
+      contacts.forEach((element) {
+        contactMap[element.userId] = false;
       });
     });
   }
@@ -80,6 +80,16 @@ class _AddMemberPageState extends State<AddMemberPage> {
           .map<Map<String, dynamic>>((member) => member.toMap())
           .toList()
     }, groupId);
+
+    MessagesModel message = new MessagesModel(
+        messageContent:
+            "added " + selectedContacts.length.toString() + " member(s)",
+        contentType: 1,
+        type: 4,
+        sentAt: DateTime.now().toString(),
+        sentBy: databaseService.user.userId);
+
+    await databaseService.addMessage(message, groupId);
 
     Navigator.of(context).popUntil((route) {
       if (route.settings.name == '/message/chatGroup') {
