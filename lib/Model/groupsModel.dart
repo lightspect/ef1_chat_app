@@ -11,15 +11,15 @@ class GroupModel {
   List<Members> membersList;
 
   GroupModel({
-    this.groupId,
-    this.groupName,
-    this.groupPhoto,
-    this.createdAt,
-    this.createdBy,
-    this.recentMessageContent,
-    this.recentMessageSender,
-    this.recentMessageTime,
-    this.type,
+    this.groupId = "",
+    this.groupName = "",
+    this.groupPhoto = "",
+    this.createdAt = "",
+    this.createdBy = "",
+    this.recentMessageContent = "",
+    this.recentMessageSender = "",
+    this.recentMessageTime = "",
+    this.type = 0,
     this.membersList,
   });
 
@@ -66,7 +66,7 @@ class Members {
   bool isActive;
   int role;
 
-  Members({this.userId, this.isActive, this.role});
+  Members({this.userId = "", this.isActive = false, this.role = 0});
 
   Map<String, dynamic> toMap() {
     return {'userId': userId, 'isActive': isActive, 'role': role};

@@ -58,6 +58,7 @@ class NavigationMenuState extends State<NavigationMenu> {
           if (DateTime.now().isAfter(
               DateTime.parse(databaseService.offGroupNotification[groupId]))) {
             databaseService.offGroupNotification.remove(groupId);
+            showNotification(notification, groupId);
           }
         }
       }

@@ -291,10 +291,12 @@ class DatabaseService extends ChangeNotifier {
         groups.where((element) => element.groupId == group.groupId).isEmpty) {
       groups.add(group);
     }
+    print(group.groupName);
     return group;
   }
 
   Future<void> refreshMessageList() async {
+    print("refresh");
     groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
       {"isActive": true, "role": 1, "userId": user.userId},
       {"isActive": true, "role": 2, "userId": user.userId}

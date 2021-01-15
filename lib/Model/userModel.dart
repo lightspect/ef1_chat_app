@@ -5,6 +5,7 @@ class UserModel {
   String createdAt;
   String aboutMe;
   String token;
+  Map<String, String> offNotification;
 
   UserModel({
     this.userId = "",
@@ -13,6 +14,7 @@ class UserModel {
     this.createdAt = "",
     this.aboutMe = "",
     this.token = "",
+    this.offNotification,
   });
 
   factory UserModel.fromMap(Map data) {
@@ -24,6 +26,11 @@ class UserModel {
       createdAt: data['createdAt'] ?? '',
       aboutMe: data['aboutMe'] ?? '',
       token: data['token'] ?? '',
+      offNotification: data['offNotification'] != null
+          ? data['offNotification'].map((k, v) {
+              return MapEntry(k.toString(), v.toString());
+            })
+          : {},
     );
   }
 
@@ -35,6 +42,7 @@ class UserModel {
       'createdAt': createdAt,
       'aboutMe': aboutMe,
       'token': token,
+      'offNotification': offNotification
     };
   }
 }
@@ -44,7 +52,7 @@ class ContactModel {
   String nickname;
   String photoUrl;
 
-  ContactModel({this.userId, this.nickname, this.photoUrl});
+  ContactModel({this.userId = "", this.nickname = "", this.photoUrl = ""});
 
   factory ContactModel.fromMap(Map data) {
     data = data ?? {};
@@ -60,6 +68,28 @@ class ContactModel {
       'id': userId,
       'nickname': nickname,
       'photoUrl': photoUrl,
+    };
+  }
+}
+
+class GroupSettingModel {
+  String groupId;
+  String offNotificationUntil;
+
+  GroupSettingModel({this.groupId = "", this.offNotificationUntil = ""});
+
+  factory GroupSettingModel.fromMap(Map data) {
+    data = data ?? {};
+    return GroupSettingModel(
+      groupId: data['groupId'] ?? '',
+      offNotificationUntil: data[''] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'groupId': groupId,
+      'offNotificationUntil': offNotificationUntil,
     };
   }
 }

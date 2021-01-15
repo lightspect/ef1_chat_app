@@ -13,32 +13,47 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 class ContactDetailPage extends StatefulWidget {
   final ContactModel contact;
-  final bool fromGroup;
-  ContactDetailPage(this.contact, this.fromGroup);
+  final GroupModel groupChat;
+  final bool chatDetail;
+  ContactDetailPage(this.contact, this.groupChat, this.chatDetail);
   @override
   State<StatefulWidget> createState() =>
-      _ContactDetailPageState(contact, fromGroup);
+      _ContactDetailPageState(contact, groupChat, chatDetail);
 }
 
+enum OffNotificationTime { minutes10, hour1, hour8, hour24, forever }
+
 class _ContactDetailPageState extends State<ContactDetailPage> {
-  _ContactDetailPageState(this.contact, this.fromGroup);
+  _ContactDetailPageState(this.contact, this.groupChat, this.chatDetail);
   DatabaseService databaseService;
   QuerySnapshot checkGroupResult;
   final _nicknameController = TextEditingController();
+  final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  OffNotificationTime _time = OffNotificationTime.minutes10;
 
   ContactModel contact;
   UserModel contactUser;
-  String alert = '';
-  bool fromGroup;
+  GroupModel privateChat, groupChat;
   Members currentUser, peerUser;
+  String alert = '';
+  bool chatDetail;
 
   @override
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
     getContactDetail();
-    groupChatExist();
+    if (privateChatExist()) {
+      privateChat = databaseService.groups
+          .where((element) =>
+              element.type == 1 &&
+              element.membersList
+                  .any((member) => member.userId == contact.userId))
+          .first;
+    } else {
+      privateChat = new GroupModel();
+    }
     currentUser = new Members(
         userId: databaseService.user.userId, isActive: true, role: 1);
   }
@@ -53,6 +68,19 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     setState(() {});
   }
 
+  bool checkUserAdmin(String userId) {
+    if (groupChat.membersList
+            .firstWhere(
+              (element) => element.userId == userId,
+              orElse: () => Members(),
+            )
+            .role ==
+        2) {
+      return true;
+    } else
+      return false;
+  }
+
   bool inContact() {
     if (databaseService.contacts
         .where((element) => element.userId == contact.userId)
@@ -63,7 +91,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     }
   }
 
-  bool groupChatExist() {
+  bool privateChatExist() {
     bool check = false;
     for (GroupModel groupModel in databaseService.groups) {
       if (groupModel.type == 1) {
@@ -194,6 +222,259 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     );
   }
 
+  Future<void> _searchMessageDialog() async {
+    _messageController.text = "";
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Search Message",
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Container(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Enter Keyword"),
+                        Container(
+                          margin: EdgeInsets.only(top: 12, bottom: 16),
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return "Please enter a keyword to search for message";
+                              }
+                              return null;
+                            },
+                            cursorColor: colorBlue,
+                            style: TextStyle(
+                              color: colorBlack,
+                              fontSize: 12.0,
+                              letterSpacing: 1.2,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Keyword",
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: colorBlack),
+                              ),
+                              hintStyle: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12.0,
+                                letterSpacing: 1.2,
+                              ),
+                              isDense: true,
+                            ),
+                            controller: _messageController,
+                            onFieldSubmitted: (value) {},
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorMainBG,
+                              borderColor: colorBlack,
+                              borderRadius: 4,
+                              text: "Cancel",
+                              textColor: colorBlack,
+                              onClick: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            LoginButton(
+                              margin: EdgeInsets.symmetric(vertical: 16),
+                              height: 40,
+                              minWidth: MediaQuery.of(context).size.width / 4,
+                              color: colorBlue,
+                              borderColor: colorBlue,
+                              borderRadius: 4,
+                              text: "Search",
+                              onClick: () {
+                                var validate = _formKey.currentState.validate();
+                                if (validate) {
+                                  handleMessageSearch();
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _offNotificationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Turn off notification",
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Container(
+                  child: Form(
+                    key: _formKey,
+                    child: StatefulBuilder(
+                      builder: (context, radioListState) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('10 minutes'),
+                            value: OffNotificationTime.minutes10,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('1 hour'),
+                            value: OffNotificationTime.hour1,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('8 hours'),
+                            value: OffNotificationTime.hour8,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('24 hours'),
+                            value: OffNotificationTime.hour24,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('Until I turn back on'),
+                            value: OffNotificationTime.forever,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              LoginButton(
+                                margin: EdgeInsets.symmetric(vertical: 16),
+                                height: 40,
+                                minWidth: MediaQuery.of(context).size.width / 4,
+                                color: colorMainBG,
+                                borderColor: colorBlack,
+                                borderRadius: 4,
+                                text: "Cancel",
+                                textColor: colorBlack,
+                                onClick: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              LoginButton(
+                                margin: EdgeInsets.symmetric(vertical: 16),
+                                height: 40,
+                                minWidth: MediaQuery.of(context).size.width / 4,
+                                color: colorBlue,
+                                borderColor: colorBlue,
+                                borderRadius: 4,
+                                text: "Save",
+                                onClick: () {
+                                  var validate =
+                                      _formKey.currentState.validate();
+                                  if (validate) {
+                                    handleTurnOffNotification();
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void handleTurnOffNotification() {
+    String timeOff = _time.toString().split(".")[1];
+    Duration duration = new Duration(days: 0);
+    switch (timeOff) {
+      case "minutes10":
+        duration = Duration(minutes: 10);
+        break;
+      case "hour1":
+        duration = Duration(hours: 1);
+        break;
+      case "hour8":
+        duration = Duration(hours: 8);
+        break;
+      case "hour24":
+        duration = Duration(hours: 24);
+        break;
+      default:
+        duration = new Duration(days: 0);
+        break;
+    }
+    if (timeOff == "forever") {
+      databaseService.offGroupNotification[privateChat.groupId] = "";
+    } else {
+      databaseService.offGroupNotification[privateChat.groupId] =
+          DateTime.now().add(duration).toString();
+    }
+    setState(() {});
+  }
+
+  void handleMessageSearch() async {}
+
   void handleUpdateNickName() async {
     await databaseService
         .updateContact(contact, databaseService.user.userId, contact.userId)
@@ -216,11 +497,17 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         databaseService.setContactsList();
         alert = "Success";
       });
-      _alertDialog(
-          context,
-          () => fromGroup
-              ? goBackUntil("/chatGroup/detail/members", false)
-              : goBackUntil("/contact", false),
+      _alertDialog(context, () {
+        if (groupChat != null) {
+          goBackUntil("/chatGroup/detail/members", false);
+        } else {
+          Map<String, dynamic> arguments = {};
+          arguments["action"] = "remove";
+          arguments["data"] = new ContactModel(
+              userId: contact.userId, nickname: contact.userId, photoUrl: "");
+          Navigator.of(context).pop(arguments);
+        }
+      },
           "Removed successfully",
           alert,
           Icon(Icons.check_circle, size: 60, color: colorGreen),
@@ -232,12 +519,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   void handleCreateGroupMessage() async {
     peerUser = new Members(userId: contact.userId, isActive: true, role: 1);
-    await databaseService.refreshMessageList();
-    if (!databaseService.groups.any((element) =>
-        element.type == 1 &&
-        element.membersList.any((member) => member.userId == contact.userId))) {
+    if (!privateChatExist()) {
       List<Members> membersList = [peerUser, currentUser];
-      GroupModel group = new GroupModel(
+      privateChat = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
           createdBy: databaseService.user.userId,
           membersList: membersList,
@@ -248,41 +532,93 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           recentMessageSender: "",
           recentMessageTime: "",
           type: 1);
-      DocumentReference groupDocRef = await databaseService.addGroup(group);
+      DocumentReference groupDocRef =
+          await databaseService.addGroup(privateChat);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
-        group.groupId = groupDocRef.id;
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
-        Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(builder: (context) => ChatPage(group: group)));
+        privateChat.groupId = groupDocRef.id;
+        privateChat.groupName = contact.nickname;
+        privateChat.groupPhoto = contact.photoUrl;
+        if (groupChat != null) {
+          goBackUntil("/navigationMenu", false);
+        } else {
+          Navigator.of(context).pop();
+        }
+        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+            builder: (context) => ChatPage(group: privateChat)));
       });
       databaseService.refreshMessageList();
     } else {
-      GroupModel group = databaseService.groups
-          .where((element) =>
-              element.type == 1 &&
-              element.membersList
-                  .any((member) => member.userId == contact.userId))
-          .first;
-      group.groupName = contact.nickname;
-      group.groupPhoto = contact.photoUrl;
-      Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(builder: (context) => ChatPage(group: group)));
+      privateChat.groupName = contact.nickname;
+      privateChat.groupPhoto = contact.photoUrl;
+      if (groupChat != null) {
+        goBackUntil("/navigationMenu", false);
+      } else {
+        Navigator.of(context).pop();
+      }
+      Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+          builder: (context) => ChatPage(group: privateChat)));
     }
   }
 
   void handleAddNewContact() async {
+    ContactModel newContact = new ContactModel(
+        userId: contact.userId,
+        nickname: contactUser.nickname,
+        photoUrl: contactUser.photoUrl);
     await databaseService
-        .setContact(contact, databaseService.user.userId, contact.userId)
+        .setContact(newContact, databaseService.user.userId, contact.userId)
         .then((value) {
       setState(() {
-        databaseService.contacts.add(contact);
+        databaseService.contacts.add(newContact);
         databaseService.setContactsList();
       });
       Fluttertoast.showToast(msg: "Add Contact Successfully");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
-    databaseService.refreshMessageList();
-    goBackUntil("/chatGroup/detail/members", false);
+    await databaseService.refreshMessageList();
+    if (groupChat != null) {
+      goBackUntil("/chatGroup/detail/members", false);
+    } else {
+      Map<String, dynamic> arguments = {};
+      arguments["action"] = "add";
+      arguments["data"] = new ContactModel(
+          userId: newContact.userId,
+          nickname: newContact.nickname,
+          photoUrl: newContact.photoUrl);
+      Navigator.of(context).pop(arguments);
+    }
+  }
+
+  void handleChangeMemberRole() async {
+    if (checkUserAdmin(contact.userId)) {
+      groupChat
+          .membersList[groupChat.membersList
+              .indexWhere((element) => element.userId == contact.userId)]
+          .role = 1;
+    } else {
+      groupChat
+          .membersList[groupChat.membersList
+              .indexWhere((element) => element.userId == contact.userId)]
+          .role = 2;
+    }
+    await databaseService.updateGroupField({
+      "membersList": groupChat.membersList
+          .map<Map<String, dynamic>>((member) => member.toMap())
+          .toList()
+    }, groupChat.groupId).then((value) {
+      setState(() {
+        alert = "Change Role successfully";
+      });
+      _alertDialog(
+          context,
+          Navigator.of(context).pop,
+          "Update successfully",
+          alert,
+          Icon(Icons.check_circle, size: 60, color: colorGreen),
+          false,
+          colorGreen);
+      databaseService.refreshMessageList();
+      setState(() {});
+    });
   }
 
   Future<void> _alertDialog(
@@ -340,7 +676,12 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          contact.nickname,
+          inContact()
+              ? databaseService.contacts
+                  .firstWhere((element) => element.userId == contact.userId,
+                      orElse: () => ContactModel())
+                  .nickname
+              : (contactUser != null ? contactUser.nickname : ""),
           style: TextStyle(color: colorBlack),
         ),
         leading: BackButton(
@@ -361,21 +702,28 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
               Padding(
                 padding: EdgeInsets.all(16),
                 child: Material(
-                  child: CachedNetworkImage(
-                    placeholder: (context, url) => Container(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                      width: 60.0,
-                      height: 60.0,
-                      padding: EdgeInsets.all(10.0),
-                    ),
-                    imageUrl: contact.photoUrl,
-                    width: 60.0,
-                    height: 60.0,
-                    fit: BoxFit.cover,
-                  ),
+                  child: contactUser != null
+                      ? CachedNetworkImage(
+                          placeholder: (context, url) => Container(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.grey),
+                            ),
+                            width: 60.0,
+                            height: 60.0,
+                            padding: EdgeInsets.all(10.0),
+                          ),
+                          imageUrl: contactUser.photoUrl,
+                          width: 60.0,
+                          height: 60.0,
+                          fit: BoxFit.cover,
+                        )
+                      : Icon(
+                          Icons.account_circle,
+                          size: 60.0,
+                          color: Colors.grey,
+                        ),
                   borderRadius: BorderRadius.all(Radius.circular(30.0)),
                   clipBehavior: Clip.hardEdge,
                 ),
@@ -391,19 +739,22 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    groupChatExist()
+                    privateChatExist()
                         ? SizedBox(
                             width: 100,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                CircleAvatar(
-                                  child: Icon(
-                                    Icons.search,
-                                    color: colorBlack,
+                                InkWell(
+                                  onTap: _searchMessageDialog,
+                                  child: CircleAvatar(
+                                    child: Icon(
+                                      Icons.search,
+                                      color: colorBlack,
+                                    ),
+                                    backgroundColor: Color(0xffE5E5E5),
+                                    radius: 15,
                                   ),
-                                  backgroundColor: Color(0xffE5E5E5),
-                                  radius: 15,
                                 ),
                                 Text(
                                   "Search",
@@ -414,28 +765,30 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                           )
                         : Container(),
                     inContact()
-                        ? SizedBox(
-                            width: 100,
-                            child: Column(
-                              children: [
-                                InkWell(
-                                  onTap: handleCreateGroupMessage,
-                                  child: CircleAvatar(
-                                    child: Icon(
-                                      Icons.message,
-                                      color: colorBlack,
+                        ? (!chatDetail
+                            ? SizedBox(
+                                width: 100,
+                                child: Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: handleCreateGroupMessage,
+                                      child: CircleAvatar(
+                                        child: Icon(
+                                          Icons.message,
+                                          color: colorBlack,
+                                        ),
+                                        backgroundColor: Color(0xffE5E5E5),
+                                        radius: 15,
+                                      ),
                                     ),
-                                    backgroundColor: Color(0xffE5E5E5),
-                                    radius: 15,
-                                  ),
+                                    Text(
+                                      "Message",
+                                      style: TextStyle(fontSize: 10),
+                                    )
+                                  ],
                                 ),
-                                Text(
-                                  "Message",
-                                  style: TextStyle(fontSize: 10),
-                                )
-                              ],
-                            ),
-                          )
+                              )
+                            : Container())
                         : SizedBox(
                             width: 100,
                             child: Column(
@@ -471,18 +824,21 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               ],
                             ),
                           ),
-                    groupChatExist()
+                    privateChatExist()
                         ? SizedBox(
                             width: 100,
                             child: Column(
                               children: [
-                                CircleAvatar(
-                                  child: Icon(
-                                    Icons.notifications,
-                                    color: colorBlack,
+                                InkWell(
+                                  onTap: _offNotificationDialog,
+                                  child: CircleAvatar(
+                                    child: Icon(
+                                      Icons.notifications,
+                                      color: colorBlack,
+                                    ),
+                                    backgroundColor: Color(0xffE5E5E5),
+                                    radius: 15,
                                   ),
-                                  backgroundColor: Color(0xffE5E5E5),
-                                  radius: 15,
                                 ),
                                 Text(
                                   "Notification",
@@ -521,8 +877,49 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             ),
                           )),
                       Divider(),
-                      fromGroup
-                          ? Container()
+                      groupChat != null
+                          ? (checkUserAdmin(databaseService.user.userId)
+                              ? InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      alert = checkUserAdmin(contact.userId)
+                                          ? "Do you want to change this User Role to Member?"
+                                          : "Do you want to promote this Member to Admin?";
+                                    });
+                                    _alertDialog(
+                                        context,
+                                        handleChangeMemberRole,
+                                        "Notice",
+                                        alert,
+                                        Icon(
+                                          Icons.info,
+                                          size: 60,
+                                          color: colorBlue,
+                                        ),
+                                        true,
+                                        colorBlue);
+                                  },
+                                  child: Container(
+                                    height: 28,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.group_add,
+                                          color: colorBlack,
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 40),
+                                          child: Text(
+                                              checkUserAdmin(contact.userId)
+                                                  ? "Demote to Member"
+                                                  : "Promote to Group Admin"),
+                                        ),
+                                      ],
+                                    ),
+                                  ))
+                              : Container())
                           : InkWell(
                               onTap: () {
                                 Navigator.of(context, rootNavigator: true)
@@ -547,7 +944,11 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                   ],
                                 ),
                               )),
-                      fromGroup ? Container() : Divider(),
+                      groupChat != null
+                          ? (checkUserAdmin(databaseService.user.userId)
+                              ? Divider()
+                              : Container())
+                          : Divider(),
                       InkWell(
                           onTap: () {
                             setState(() {

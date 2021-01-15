@@ -206,11 +206,12 @@ class _GroupMemberState extends State<GroupMemberScreen> {
               onTap: () => member.userId == databaseService.user.userId
                   ? null
                   : Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          settings: RouteSettings(name: "/contact/detail"),
-                          builder: (context) =>
-                              ContactDetailPage(contact, true))),
+                          context,
+                          MaterialPageRoute(
+                              settings: RouteSettings(name: "/contact/detail"),
+                              builder: (context) =>
+                                  ContactDetailPage(contact, group, false)))
+                      .then((value) => handleSelectMemberType()),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -253,11 +254,14 @@ class _GroupMemberState extends State<GroupMemberScreen> {
             ),
             Spacer(),
             (groupMembers
-                        .where((element) =>
-                            element.userId == databaseService.user.userId)
-                        .first
-                        .role ==
-                    2)
+                            .firstWhere(
+                              (element) =>
+                                  element.userId == databaseService.user.userId,
+                              orElse: () => Members(),
+                            )
+                            .role ==
+                        2 &&
+                    member.userId != databaseService.user.userId)
                 ? IconButton(
                     icon: Icon(Icons.logout),
                     onPressed: () {

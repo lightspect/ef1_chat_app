@@ -503,7 +503,7 @@ class _ContactPageState extends State<ContactPage> {
                           Navigator.of(context).push(MaterialPageRoute(
                               settings: RouteSettings(name: "/contact/detail"),
                               builder: (context) =>
-                                  ContactDetailPage(element, false)));
+                                  ContactDetailPage(element, null, false)));
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,

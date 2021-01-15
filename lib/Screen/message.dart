@@ -334,7 +334,9 @@ class _MessagePageState extends State<MessagePage> {
                               settings:
                                   RouteSettings(name: "/message/chatPage"),
                               builder: (context) => ChatPage(group: group)))
-                          .then((value) => setState);
+                          .then((value) {
+                        setState(() {});
+                      });
                       break;
                     case 2:
                       Navigator.of(context, rootNavigator: true)

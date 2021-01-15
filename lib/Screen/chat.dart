@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,7 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key key, this.group}) : super(key: key);
@@ -40,7 +38,7 @@ class _ChatPageState extends State<ChatPage> {
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
 
-  final GroupModel group;
+  GroupModel group;
   List<MessagesModel> messages;
 
   MessagesModel replyMessage = new MessagesModel();
@@ -75,6 +73,29 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         print("reach the top");
       });
+    }
+  }
+
+  void refreshPrivateChat(ContactModel contact) {
+    setState(() {
+      group.groupName = contact.nickname;
+      group.groupPhoto = contact.photoUrl;
+    });
+  }
+
+  void passAndReturnDataFromDetail(BuildContext context) async {
+    ContactModel contact = new ContactModel(
+        userId: group.membersList[0].userId,
+        nickname: group.groupName,
+        photoUrl: group.groupPhoto);
+    var result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            settings: RouteSettings(name: "/contact/detail"),
+            builder: (context) => ContactDetailPage(contact, null, true)));
+    print(result);
+    if (result != null) {
+      refreshPrivateChat(result["data"]);
     }
   }
 
@@ -118,8 +139,6 @@ class _ChatPageState extends State<ChatPage> {
         replyMessage = new MessagesModel();
         replyVisibility = false;
       });
-      sendNotificationMessageToPeerUser(
-          contentType, message, group.groupName, group.groupId);
     }
   }
 
@@ -242,16 +261,7 @@ class _ChatPageState extends State<ChatPage> {
                   color: colorBlack,
                 ),
                 onPressed: () {
-                  ContactModel contact = new ContactModel(
-                      userId: group.membersList[0].userId,
-                      nickname: group.groupName,
-                      photoUrl: group.groupPhoto);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          settings: RouteSettings(name: "/contact/detail"),
-                          builder: (context) =>
-                              ContactDetailPage(contact, false)));
+                  passAndReturnDataFromDetail(context);
                 })
           ],
           backgroundColor: colorMainBG,
@@ -268,35 +278,6 @@ class _ChatPageState extends State<ChatPage> {
               databaseService.currentGroupId = "";
               return Future.value(true);
             }));
-  }
-
-  Future<void> sendNotificationMessageToPeerUser(
-      messageType, textFromTextField, myName, groupId) async {
-    UserModel peerUser =
-        await databaseService.getUserById(group.membersList.first.toString());
-    await http.post(
-      'https://fcm.googleapis.com/fcm/send',
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': 'key=' +
-            'AAAA82yclUs:APA91bGwko4n5s8Jctyx_4wQZjuJ4-L8thKuDJT8cQK-RxIjAo9AMROZFWJ6kHpYik6TeCxIsNV9t2IlSldnZjmYImSADJq7_1G3VGxZBEkRc6nYxHzBDT1rmTsd93zNNQj4M5Al_Xa_',
-      },
-      body: json.encode(
-        <String, dynamic>{
-          'notification': <String, dynamic>{
-            'body': messageType == 1 ? '$textFromTextField' : '(Photo)',
-            'title': '$myName',
-            "sound": "default"
-          },
-          'priority': 'high',
-          'data': <String, dynamic>{
-            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            'groupId': groupId,
-          },
-          'to': peerUser.token,
-        },
-      ),
-    );
   }
 
   Widget buildBody() {

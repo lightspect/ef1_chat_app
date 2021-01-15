@@ -43,6 +43,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
+    if (databaseService.offGroupNotification.containsKey(group.groupId)) {
+      if (databaseService.offGroupNotification[group.groupId].isNotEmpty) {
+        if (DateTime.now().isAfter(DateTime.parse(
+            databaseService.offGroupNotification[group.groupId]))) {
+          databaseService.offGroupNotification.remove(group.groupId);
+          setState(() {});
+        }
+      }
+    }
   }
 
   Future<void> _changeNicknameDialog() async {
@@ -263,7 +272,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            "Change Group Name",
+            "Turn off notification",
             textAlign: TextAlign.center,
           ),
           content: SingleChildScrollView(
@@ -272,94 +281,97 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 Container(
                   child: Form(
                     key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        RadioListTile<OffNotificationTime>(
-                          title: const Text('10 minutes'),
-                          value: OffNotificationTime.minutes10,
-                          groupValue: _time,
-                          onChanged: (OffNotificationTime value) {
-                            setState(() {
-                              _time = value;
-                            });
-                          },
-                        ),
-                        RadioListTile<OffNotificationTime>(
-                          title: const Text('1 hour'),
-                          value: OffNotificationTime.hour1,
-                          groupValue: _time,
-                          onChanged: (OffNotificationTime value) {
-                            setState(() {
-                              _time = value;
-                            });
-                          },
-                        ),
-                        RadioListTile<OffNotificationTime>(
-                          title: const Text('8 hours'),
-                          value: OffNotificationTime.hour8,
-                          groupValue: _time,
-                          onChanged: (OffNotificationTime value) {
-                            setState(() {
-                              _time = value;
-                            });
-                          },
-                        ),
-                        RadioListTile<OffNotificationTime>(
-                          title: const Text('24 hours'),
-                          value: OffNotificationTime.hour24,
-                          groupValue: _time,
-                          onChanged: (OffNotificationTime value) {
-                            setState(() {
-                              _time = value;
-                            });
-                          },
-                        ),
-                        RadioListTile<OffNotificationTime>(
-                          title: const Text('Until I turn back on'),
-                          value: OffNotificationTime.forever,
-                          groupValue: _time,
-                          onChanged: (OffNotificationTime value) {
-                            setState(() {
-                              _time = value;
-                            });
-                          },
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            LoginButton(
-                              margin: EdgeInsets.symmetric(vertical: 16),
-                              height: 40,
-                              minWidth: MediaQuery.of(context).size.width / 4,
-                              color: colorMainBG,
-                              borderColor: colorBlack,
-                              borderRadius: 4,
-                              text: "Cancel",
-                              textColor: colorBlack,
-                              onClick: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            LoginButton(
-                              margin: EdgeInsets.symmetric(vertical: 16),
-                              height: 40,
-                              minWidth: MediaQuery.of(context).size.width / 4,
-                              color: colorBlue,
-                              borderColor: colorBlue,
-                              borderRadius: 4,
-                              text: "Save",
-                              onClick: () {
-                                var validate = _formKey.currentState.validate();
-                                if (validate) {
-                                  handleTurnOffNotification();
+                    child: StatefulBuilder(
+                      builder: (context, radioListState) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('10 minutes'),
+                            value: OffNotificationTime.minutes10,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('1 hour'),
+                            value: OffNotificationTime.hour1,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('8 hours'),
+                            value: OffNotificationTime.hour8,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('24 hours'),
+                            value: OffNotificationTime.hour24,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<OffNotificationTime>(
+                            title: const Text('Until I turn back on'),
+                            value: OffNotificationTime.forever,
+                            groupValue: _time,
+                            onChanged: (OffNotificationTime value) {
+                              radioListState(() {
+                                _time = value;
+                              });
+                            },
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              LoginButton(
+                                margin: EdgeInsets.symmetric(vertical: 16),
+                                height: 40,
+                                minWidth: MediaQuery.of(context).size.width / 4,
+                                color: colorMainBG,
+                                borderColor: colorBlack,
+                                borderRadius: 4,
+                                text: "Cancel",
+                                textColor: colorBlack,
+                                onClick: () {
                                   Navigator.of(context).pop();
-                                }
-                              },
-                            )
-                          ],
-                        )
-                      ],
+                                },
+                              ),
+                              LoginButton(
+                                margin: EdgeInsets.symmetric(vertical: 16),
+                                height: 40,
+                                minWidth: MediaQuery.of(context).size.width / 4,
+                                color: colorBlue,
+                                borderColor: colorBlue,
+                                borderRadius: 4,
+                                text: "Save",
+                                onClick: () {
+                                  var validate =
+                                      _formKey.currentState.validate();
+                                  if (validate) {
+                                    handleTurnOffNotification();
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                              )
+                            ],
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -405,6 +417,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void handleUpdateGroupName() async {
     await databaseService.updateGroupField(
         {"groupName": group.groupName}, group.groupId).then((value) {
+      databaseService
+          .groups[databaseService.groups
+              .indexWhere((element) => element.groupId == group.groupId)]
+          .groupName = group.groupName;
       Fluttertoast.showToast(msg: "Update success");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }

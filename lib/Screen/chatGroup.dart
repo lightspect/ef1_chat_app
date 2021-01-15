@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,7 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class ChatGroupPage extends StatefulWidget {
   const ChatGroupPage({Key key, this.group}) : super(key: key);
@@ -162,8 +160,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       replyMessage = new MessagesModel();
       replyVisibility = false;
     });
-    sendNotificationMessageToPeerUser(
-        contentType, message, group.groupName, group.groupId);
   }
 
   void openGallery() async {
@@ -223,33 +219,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       });
       Fluttertoast.showToast(msg: err.toString());
     });
-  }
-
-  Future<void> sendNotificationMessageToPeerUser(
-      messageType, textFromTextField, groupName, groupId) async {
-    await http.post(
-      'https://fcm.googleapis.com/fcm/send',
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': 'key=' +
-            'AAAA82yclUs:APA91bGwko4n5s8Jctyx_4wQZjuJ4-L8thKuDJT8cQK-RxIjAo9AMROZFWJ6kHpYik6TeCxIsNV9t2IlSldnZjmYImSADJq7_1G3VGxZBEkRc6nYxHzBDT1rmTsd93zNNQj4M5Al_Xa_',
-      },
-      body: json.encode(
-        <String, dynamic>{
-          'notification': <String, dynamic>{
-            'body': messageType == 1 ? '$textFromTextField' : '(Photo)',
-            'title': '$groupName',
-            "sound": "default"
-          },
-          'priority': 'high',
-          'data': <String, dynamic>{
-            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            'groupId': groupId,
-          },
-          'registration_ids': membersToken,
-        },
-      ),
-    );
   }
 
   @override
@@ -616,16 +585,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   Widget buildItem(int index, MessagesModel message) {
     if (message.type == 4) {
-      return Text(
-        (message.sentBy == databaseService.user.userId
-                ? "You"
-                : members
-                    .firstWhere((element) => element.userId == message.sentBy,
-                        orElse: () => UserModel())
-                    .nickname) +
-            " " +
-            message.messageContent,
-        style: TextStyle(color: Colors.grey),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          (message.sentBy == databaseService.user.userId
+                  ? "You"
+                  : members
+                      .firstWhere((element) => element.userId == message.sentBy,
+                          orElse: () => UserModel())
+                      .nickname) +
+              " " +
+              message.messageContent,
+          style: TextStyle(color: Colors.grey),
+        ),
       );
     } else {
       if (message.sentBy == databaseService.user.userId) {

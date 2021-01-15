@@ -11,14 +11,20 @@ exports.sendNotification = functions.firestore
     const groupId = snap.ref.parent.parent.id
 
     const senderId = doc.sentBy
-    const contentMessage = doc.messageContent
+    var contentMessage = ""
     const promises = []   
 
     const groups = await admin.firestore().doc("groups/" + groupId).get()
-    const memberData = groups.data().members
+    const memberData = groups.data().membersList
     var groupName = groups.data().groupName
+
+    if(doc.type === 1 || doc.type === 2 || doc.type === 3) {
+      contentMessage = doc.messageContent
+    } else {
+      contentMessage = "(Photo)"
+    }
     memberData.forEach(async (memberId) => {
-      const member = admin.firestore().doc("users/" + memberId).get()
+      const member = admin.firestore().doc("users/" + memberId["userId"]).get()
       promises.push(member)
     })
 
@@ -47,7 +53,7 @@ exports.sendNotification = functions.firestore
       },
       tokens: memberToken,
     }
-    if(memberToken.length > 0) {
+    if(memberToken.length > 0 && doc.type != 4) {
       admin.messaging().sendMulticast(payload).then(response => {
         console.log('Successfully sent message:', response)
         if (response.failureCount > 0) {
