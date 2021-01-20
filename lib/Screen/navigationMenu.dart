@@ -5,6 +5,7 @@ import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/navigationModel.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/navigationService.dart';
+import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -50,17 +51,31 @@ class NavigationMenuState extends State<NavigationMenu> {
           : message['aps']['alert']) as Map;
       var data = message['data'] as Map;
       String groupId = data['groupId'].toString();
-      if (groupId != databaseService.currentGroupId &&
-          !databaseService.offGroupNotification.containsKey(groupId)) {
-        showNotification(notification, groupId);
-      } else if (databaseService.offGroupNotification.containsKey(groupId)) {
-        if (databaseService.offGroupNotification[groupId].isNotEmpty) {
-          if (DateTime.now().isAfter(
-              DateTime.parse(databaseService.offGroupNotification[groupId]))) {
-            databaseService.offGroupNotification.remove(groupId);
-            showNotification(notification, groupId);
+      String messageType = data['type'].toString();
+      if (messageType == "newMessage") {
+        if (groupId != databaseService.currentGroupId &&
+            !databaseService.offGroupNotification.containsKey(groupId)) {
+          showNotification(notification, groupId);
+        } else if (databaseService.offGroupNotification.containsKey(groupId)) {
+          if (databaseService.offGroupNotification[groupId].isNotEmpty) {
+            if (DateTime.now().isAfter(DateTime.parse(
+                databaseService.offGroupNotification[groupId]))) {
+              databaseService.offGroupNotification.remove(groupId);
+              showNotification(notification, groupId);
+            }
           }
         }
+      } else if (messageType == "addMember") {
+        List<UserModel> groupMemberList =
+            databaseService.groupMembersList[groupId];
+        List<dynamic> newMembersData = data['result'].toList();
+        List<UserModel> newMembers = newMembersData
+            .map<UserModel>((member) => UserModel.fromMap(member))
+            .toList();
+        for (UserModel member in newMembers) {
+          groupMemberList.add(member);
+        }
+        databaseService.groupMembersList[groupId] = groupMemberList;
       }
       return;
     }, onResume: (Map<String, dynamic> message) {

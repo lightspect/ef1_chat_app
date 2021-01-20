@@ -5,6 +5,7 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
+import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,6 +39,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   Members currentUser, peerUser;
   String alert = '';
   bool chatDetail;
+  String action = "";
 
   @override
   void initState() {
@@ -249,6 +251,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             validator: (value) {
                               if (value.isEmpty) {
                                 return "Please enter a keyword to search for message";
+                              } else if (value.length < 2) {
+                                return "Please enter more than 1 letter to search";
                               }
                               return null;
                             },
@@ -307,8 +311,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               onClick: () {
                                 var validate = _formKey.currentState.validate();
                                 if (validate) {
-                                  handleMessageSearch();
                                   Navigator.of(context).pop();
+                                  handleMessageSearch();
                                 }
                               },
                             )
@@ -473,7 +477,12 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     setState(() {});
   }
 
-  void handleMessageSearch() async {}
+  void handleMessageSearch() async {
+    Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+        settings: RouteSettings(name: "/message/detail/search"),
+        builder: (context) => ChatSearchScreen(_messageController.text,
+            privateChat, [contactUser, databaseService.user])));
+  }
 
   void handleUpdateNickName() async {
     await databaseService
@@ -484,6 +493,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       databaseService.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
       databaseService.refreshMessageList();
+      setState(() {
+        action = "change";
+      });
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
 
@@ -501,11 +513,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         if (groupChat != null) {
           goBackUntil("/chatGroup/detail/members", false);
         } else {
-          Map<String, dynamic> arguments = {};
-          arguments["action"] = "remove";
-          arguments["data"] = new ContactModel(
-              userId: contact.userId, nickname: contact.userId, photoUrl: "");
-          Navigator.of(context).pop(arguments);
+          setState(() {
+            action = "remove";
+          });
         }
       },
           "Removed successfully",
@@ -519,6 +529,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   void handleCreateGroupMessage() async {
     peerUser = new Members(userId: contact.userId, isActive: true, role: 1);
+    await databaseService.refreshMessageList();
     if (!privateChatExist()) {
       List<Members> membersList = [peerUser, currentUser];
       privateChat = new GroupModel(
@@ -578,13 +589,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     if (groupChat != null) {
       goBackUntil("/chatGroup/detail/members", false);
     } else {
-      Map<String, dynamic> arguments = {};
-      arguments["action"] = "add";
-      arguments["data"] = new ContactModel(
-          userId: newContact.userId,
-          nickname: newContact.nickname,
-          photoUrl: newContact.photoUrl);
-      Navigator.of(context).pop(arguments);
+      setState(() {
+        action = "add";
+      });
     }
   }
 
@@ -690,300 +697,322 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         backgroundColor: colorMainBG,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          width: MediaQuery.of(context).size.width,
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              Divider(
-                color: Colors.grey,
-              ),
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Material(
-                  child: contactUser != null
-                      ? CachedNetworkImage(
-                          placeholder: (context, url) => Container(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.0,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.grey),
+      body: WillPopScope(
+        onWillPop: () {
+          Map<String, dynamic> arguments = {};
+          arguments["action"] = action;
+          if (action == "remove") {
+            arguments["data"] = new ContactModel(
+                userId: contact.userId, nickname: contact.userId, photoUrl: "");
+          } else if (action == "add") {
+            arguments["data"] = new ContactModel(
+                userId: contact.userId,
+                nickname: contactUser.nickname,
+                photoUrl: contactUser.photoUrl);
+          } else {
+            arguments["data"] = new ContactModel(
+                userId: contact.userId,
+                nickname: contact.nickname,
+                photoUrl: contactUser.photoUrl);
+          }
+          Navigator.of(context).pop(arguments);
+          return Future.value(false);
+        },
+        child: SingleChildScrollView(
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                Divider(
+                  color: Colors.grey,
+                ),
+                Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Material(
+                    child: contactUser != null
+                        ? CachedNetworkImage(
+                            placeholder: (context, url) => Container(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                              width: 60.0,
+                              height: 60.0,
+                              padding: EdgeInsets.all(10.0),
                             ),
+                            imageUrl: contactUser.photoUrl,
                             width: 60.0,
                             height: 60.0,
-                            padding: EdgeInsets.all(10.0),
-                          ),
-                          imageUrl: contactUser.photoUrl,
-                          width: 60.0,
-                          height: 60.0,
-                          fit: BoxFit.cover,
-                        )
-                      : Icon(
-                          Icons.account_circle,
-                          size: 60.0,
-                          color: Colors.grey,
-                        ),
-                  borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                  clipBehavior: Clip.hardEdge,
-                ),
-              ),
-              Text(contactUser != null ? contactUser.nickname : ""),
-              Text(contactUser != null ? contactUser.aboutMe : "",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  )),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    privateChatExist()
-                        ? SizedBox(
-                            width: 100,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                InkWell(
-                                  onTap: _searchMessageDialog,
-                                  child: CircleAvatar(
-                                    child: Icon(
-                                      Icons.search,
-                                      color: colorBlack,
-                                    ),
-                                    backgroundColor: Color(0xffE5E5E5),
-                                    radius: 15,
-                                  ),
-                                ),
-                                Text(
-                                  "Search",
-                                  style: TextStyle(fontSize: 10),
-                                )
-                              ],
-                            ),
+                            fit: BoxFit.cover,
                           )
-                        : Container(),
-                    inContact()
-                        ? (!chatDetail
-                            ? SizedBox(
-                                width: 100,
-                                child: Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: handleCreateGroupMessage,
-                                      child: CircleAvatar(
-                                        child: Icon(
-                                          Icons.message,
-                                          color: colorBlack,
-                                        ),
-                                        backgroundColor: Color(0xffE5E5E5),
-                                        radius: 15,
-                                      ),
-                                    ),
-                                    Text(
-                                      "Message",
-                                      style: TextStyle(fontSize: 10),
-                                    )
-                                  ],
-                                ),
-                              )
-                            : Container())
-                        : SizedBox(
-                            width: 100,
-                            child: Column(
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    alert = "Add " +
-                                        contact.nickname +
-                                        " to contact?";
-                                    _alertDialog(
-                                        context,
-                                        () => handleAddNewContact(),
-                                        "Add to Contact",
-                                        "Do you want to add this person to contact?",
-                                        Icon(Icons.info,
-                                            size: 60, color: colorBlue),
-                                        true,
-                                        colorBlue);
-                                  },
-                                  child: CircleAvatar(
-                                    child: Icon(
-                                      Icons.add_circle_outline,
-                                      color: colorBlack,
-                                    ),
-                                    backgroundColor: Color(0xffE5E5E5),
-                                    radius: 15,
-                                  ),
-                                ),
-                                Text(
-                                  "Add to Contact",
-                                  style: TextStyle(fontSize: 10),
-                                )
-                              ],
-                            ),
+                        : Icon(
+                            Icons.account_circle,
+                            size: 60.0,
+                            color: Colors.grey,
                           ),
-                    privateChatExist()
-                        ? SizedBox(
-                            width: 100,
-                            child: Column(
-                              children: [
-                                InkWell(
-                                  onTap: _offNotificationDialog,
-                                  child: CircleAvatar(
-                                    child: Icon(
-                                      Icons.notifications,
-                                      color: colorBlack,
-                                    ),
-                                    backgroundColor: Color(0xffE5E5E5),
-                                    radius: 15,
-                                  ),
-                                ),
-                                Text(
-                                  "Notification",
-                                  style: TextStyle(fontSize: 10),
-                                )
-                              ],
-                            ),
-                          )
-                        : Container(),
-                  ],
+                    borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                    clipBehavior: Clip.hardEdge,
+                  ),
                 ),
-              ),
-              Visibility(
-                  visible: inContact(),
-                  child: Column(
+                Text(contactUser != null ? contactUser.nickname : ""),
+                Text(contactUser != null ? contactUser.aboutMe : "",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    )),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Divider(),
-                      InkWell(
-                          onTap: () {
-                            _changeNicknameDialog();
-                          },
-                          child: Container(
-                            height: 28,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.edit,
-                                  color: colorBlack,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 40),
-                                  child: Text("Change Name"),
-                                ),
-                              ],
-                            ),
-                          )),
-                      Divider(),
-                      groupChat != null
-                          ? (checkUserAdmin(databaseService.user.userId)
-                              ? InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      alert = checkUserAdmin(contact.userId)
-                                          ? "Do you want to change this User Role to Member?"
-                                          : "Do you want to promote this Member to Admin?";
-                                    });
-                                    _alertDialog(
-                                        context,
-                                        handleChangeMemberRole,
-                                        "Notice",
-                                        alert,
-                                        Icon(
-                                          Icons.info,
-                                          size: 60,
-                                          color: colorBlue,
-                                        ),
-                                        true,
-                                        colorBlue);
-                                  },
-                                  child: Container(
-                                    height: 28,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: [
-                                        Icon(
-                                          Icons.group_add,
-                                          color: colorBlack,
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 40),
-                                          child: Text(
-                                              checkUserAdmin(contact.userId)
-                                                  ? "Demote to Member"
-                                                  : "Promote to Group Admin"),
-                                        ),
-                                      ],
+                      privateChatExist()
+                          ? SizedBox(
+                              width: 100,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  InkWell(
+                                    onTap: _searchMessageDialog,
+                                    child: CircleAvatar(
+                                      child: Icon(
+                                        Icons.search,
+                                        color: colorBlack,
+                                      ),
+                                      backgroundColor: Color(0xffE5E5E5),
+                                      radius: 15,
                                     ),
-                                  ))
+                                  ),
+                                  Text(
+                                    "Search",
+                                    style: TextStyle(fontSize: 10),
+                                  )
+                                ],
+                              ),
+                            )
+                          : Container(),
+                      inContact()
+                          ? (!chatDetail
+                              ? SizedBox(
+                                  width: 100,
+                                  child: Column(
+                                    children: [
+                                      InkWell(
+                                        onTap: handleCreateGroupMessage,
+                                        child: CircleAvatar(
+                                          child: Icon(
+                                            Icons.message,
+                                            color: colorBlack,
+                                          ),
+                                          backgroundColor: Color(0xffE5E5E5),
+                                          radius: 15,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Message",
+                                        style: TextStyle(fontSize: 10),
+                                      )
+                                    ],
+                                  ),
+                                )
                               : Container())
-                          : InkWell(
-                              onTap: () {
-                                Navigator.of(context, rootNavigator: true)
-                                    .push(MaterialPageRoute(
-                                        builder: (context) => CreateGroupPage(
-                                              contact: contact,
-                                            )));
-                              },
-                              child: Container(
-                                height: 28,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.group_add,
-                                      color: colorBlack,
+                          : SizedBox(
+                              width: 100,
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      alert = "Add " +
+                                          contact.nickname +
+                                          " to contact?";
+                                      _alertDialog(
+                                          context,
+                                          () => handleAddNewContact(),
+                                          "Add to Contact",
+                                          "Do you want to add this person to contact?",
+                                          Icon(Icons.info,
+                                              size: 60, color: colorBlue),
+                                          true,
+                                          colorBlue);
+                                    },
+                                    child: CircleAvatar(
+                                      child: Icon(
+                                        Icons.add_circle_outline,
+                                        color: colorBlack,
+                                      ),
+                                      backgroundColor: Color(0xffE5E5E5),
+                                      radius: 15,
                                     ),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 40),
-                                      child: Text("Add to Group"),
-                                    ),
-                                  ],
-                                ),
-                              )),
-                      groupChat != null
-                          ? (checkUserAdmin(databaseService.user.userId)
-                              ? Divider()
-                              : Container())
-                          : Divider(),
-                      InkWell(
-                          onTap: () {
-                            setState(() {
-                              alert =
-                                  "You are about to delete this contact. Continue?";
-                            });
-                            _alertDialog(
-                                context,
-                                () => handleRemoveFromContact(),
-                                "Alert",
-                                alert,
-                                Icon(Icons.info, size: 60, color: colorRed),
-                                true,
-                                colorBlue);
-                          },
-                          child: Container(
-                            height: 28,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.delete,
-                                  color: colorBlack,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 40),
-                                  child: Text("Remove from Contact"),
-                                ),
-                              ],
+                                  ),
+                                  Text(
+                                    "Add to Contact",
+                                    style: TextStyle(fontSize: 10),
+                                  )
+                                ],
+                              ),
                             ),
-                          )),
-                      Divider(),
+                      privateChatExist()
+                          ? SizedBox(
+                              width: 100,
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: _offNotificationDialog,
+                                    child: CircleAvatar(
+                                      child: Icon(
+                                        Icons.notifications,
+                                        color: colorBlack,
+                                      ),
+                                      backgroundColor: Color(0xffE5E5E5),
+                                      radius: 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Notification",
+                                    style: TextStyle(fontSize: 10),
+                                  )
+                                ],
+                              ),
+                            )
+                          : Container(),
                     ],
-                  ))
-            ],
+                  ),
+                ),
+                Visibility(
+                    visible: inContact(),
+                    child: Column(
+                      children: [
+                        Divider(),
+                        InkWell(
+                            onTap: () {
+                              _changeNicknameDialog();
+                            },
+                            child: Container(
+                              height: 28,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    color: colorBlack,
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 40),
+                                    child: Text("Change Name"),
+                                  ),
+                                ],
+                              ),
+                            )),
+                        Divider(),
+                        groupChat != null
+                            ? (checkUserAdmin(databaseService.user.userId)
+                                ? InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        alert = checkUserAdmin(contact.userId)
+                                            ? "Do you want to change this User Role to Member?"
+                                            : "Do you want to promote this Member to Admin?";
+                                      });
+                                      _alertDialog(
+                                          context,
+                                          handleChangeMemberRole,
+                                          "Notice",
+                                          alert,
+                                          Icon(
+                                            Icons.info,
+                                            size: 60,
+                                            color: colorBlue,
+                                          ),
+                                          true,
+                                          colorBlue);
+                                    },
+                                    child: Container(
+                                      height: 28,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Icon(
+                                            Icons.group_add,
+                                            color: colorBlack,
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(left: 40),
+                                            child: Text(
+                                                checkUserAdmin(contact.userId)
+                                                    ? "Demote to Member"
+                                                    : "Promote to Group Admin"),
+                                          ),
+                                        ],
+                                      ),
+                                    ))
+                                : Container())
+                            : InkWell(
+                                onTap: () {
+                                  Navigator.of(context, rootNavigator: true)
+                                      .push(MaterialPageRoute(
+                                          builder: (context) => CreateGroupPage(
+                                                contact: contact,
+                                              )));
+                                },
+                                child: Container(
+                                  height: 28,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.group_add,
+                                        color: colorBlack,
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 40),
+                                        child: Text("Add to Group"),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                        groupChat != null
+                            ? (checkUserAdmin(databaseService.user.userId)
+                                ? Divider()
+                                : Container())
+                            : Divider(),
+                        InkWell(
+                            onTap: () {
+                              setState(() {
+                                alert =
+                                    "You are about to delete this contact. Continue?";
+                              });
+                              _alertDialog(
+                                  context,
+                                  () => handleRemoveFromContact(),
+                                  "Alert",
+                                  alert,
+                                  Icon(Icons.info, size: 60, color: colorRed),
+                                  true,
+                                  colorBlue);
+                            },
+                            child: Container(
+                              height: 28,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    color: colorBlack,
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 40),
+                                    child: Text("Remove from Contact"),
+                                  ),
+                                ],
+                              ),
+                            )),
+                        Divider(),
+                      ],
+                    ))
+              ],
+            ),
           ),
         ),
       ),

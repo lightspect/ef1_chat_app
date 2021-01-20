@@ -37,12 +37,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   DatabaseService databaseService;
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
-  PersistentBottomSheetController controller;
 
   GroupModel group;
   List<MessagesModel> messages;
   List<UserModel> members = [];
-  List<String> membersToken = [];
 
   MessagesModel replyMessage = new MessagesModel();
   bool hasContent = false;
@@ -88,13 +86,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     for (Members member in group.membersList) {
       groupMemberId.add(member.userId);
     }
-    members = await databaseService.fetchUsersByArray(groupMemberId);
-    for (Members member in group.membersList) {
-      if (member.isActive && member.userId != databaseService.user.userId)
-        membersToken.add(members
-            .where((element) => element.userId == member.userId)
-            .first
-            .token);
+    if (!databaseService.groupMembersList.containsKey(group.groupId)) {
+      members = await databaseService.fetchUsersByArray(groupMemberId);
+      databaseService.groupMembersList[group.groupId] = members;
+      print(members.length);
+    } else {
+      members = databaseService.groupMembersList[group.groupId];
+      print(members.length);
     }
     if (this.mounted) {
       setState(() {
@@ -132,6 +130,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     setState(() {
       hasContent = false;
     });
+    listScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
       MessagesModel messagesModel = new MessagesModel(

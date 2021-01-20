@@ -13,6 +13,11 @@ class Api {
     return _db.collection(path).snapshots();
   }
 
+  Future<QuerySnapshot> getDataCollectionBySubCollection(
+      String path, String field, String id) {
+    return _db.collectionGroup(path).where(field, isEqualTo: id).get();
+  }
+
   Stream<QuerySnapshot> streamCollectionByArray(
       String path, String field, dynamic condition) {
     return _db

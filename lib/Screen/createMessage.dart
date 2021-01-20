@@ -41,9 +41,10 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
     Members peerUser =
         new Members(userId: contact.userId, isActive: true, role: 1);
     await databaseService.refreshMessageList();
-    if (databaseService.groups.any((element) =>
+    if (!(databaseService.groups.any((element) =>
         element.type == 1 &&
-        element.membersList.any((member) => member.userId == contact.userId))) {
+        element.membersList
+            .any((member) => member.userId == contact.userId)))) {
       Members currentUser = new Members(
           userId: databaseService.user.userId, isActive: true, role: 1);
       List<Members> membersList = [peerUser, currentUser];
@@ -63,6 +64,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
         group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
+        Navigator.of(context).pop();
         Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
@@ -75,6 +77,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
           .first;
       group.groupName = contact.nickname;
       group.groupPhoto = contact.photoUrl;
+      Navigator.of(context).pop();
       Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
     }
@@ -169,7 +172,6 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
               ),
               itemBuilder: (context, element) => InkWell(
                 onTap: () {
-                  Navigator.of(context).pop();
                   handleCreateGroupMessage(element);
                 },
                 child: Row(

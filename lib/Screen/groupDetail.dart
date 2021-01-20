@@ -7,6 +7,7 @@ import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
 import 'package:chat_app_ef1/locator.dart';
@@ -188,6 +189,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             validator: (value) {
                               if (value.isEmpty) {
                                 return "Please enter a keyword to search for message";
+                              } else if (value.length < 2) {
+                                return "Please enter more than 1 letter to search";
                               }
                               return null;
                             },
@@ -246,8 +249,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               onClick: () {
                                 var validate = _formKey.currentState.validate();
                                 if (validate) {
-                                  handleMessageSearch();
                                   Navigator.of(context).pop();
+                                  handleMessageSearch();
                                 }
                               },
                             )
@@ -412,7 +415,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     setState(() {});
   }
 
-  void handleMessageSearch() async {}
+  void handleMessageSearch() async {
+    Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+        settings: RouteSettings(name: "/chatGroup/detail/search"),
+        builder: (context) =>
+            ChatSearchScreen(_messageController.text, group, members)));
+  }
 
   void handleUpdateGroupName() async {
     await databaseService.updateGroupField(

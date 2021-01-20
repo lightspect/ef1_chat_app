@@ -23,6 +23,7 @@ class DatabaseService extends ChangeNotifier {
   FirebaseMessaging firebaseMessaging;
   String currentGroupId;
   Map<String, String> offGroupNotification;
+  Map<String, List<UserModel>> groupMembersList;
 
   DatabaseService() {
     firebaseMessaging = FirebaseMessaging();
@@ -32,6 +33,7 @@ class DatabaseService extends ChangeNotifier {
     groups = [];
     currentGroupId = "";
     offGroupNotification = {};
+    groupMembersList = {};
     readLocal();
     readContactsList();
   }
@@ -120,6 +122,18 @@ class DatabaseService extends ChangeNotifier {
   Future setUser(UserModel data, String id) async {
     await _api.setDocument('users', data.toMap(), id);
     return;
+  }
+
+  Future<List<UserModel>> getUsersByContact(String contactId) async {
+    users = [];
+    var result = await _api.getDataCollectionBySubCollection(
+        "contacts", "id", contactId);
+    for (QueryDocumentSnapshot element in result.docs) {
+      await element.reference.parent.parent
+          .get()
+          .then((value) => users.add(UserModel.fromMap(value.data())));
+    }
+    return users;
   }
 
   Future<List<ContactModel>> fetchContacts(String id) async {
@@ -287,12 +301,20 @@ class DatabaseService extends ChangeNotifier {
           : contactModel.userId;
       group.groupPhoto = contactModel.photoUrl;
     }
-    if (groups.length == 0 ||
-        groups.where((element) => element.groupId == group.groupId).isEmpty) {
-      groups.add(group);
-    }
-    print(group.groupName);
+
     return group;
+  }
+
+  Future<List<GroupModel>> mapGroupMessageData(QuerySnapshot docs) async {
+    List<GroupModel> list =
+        docs.docs.map((doc) => GroupModel.fromMap(doc.data())).toList();
+    groups = [];
+    for (GroupModel group in list) {
+      GroupModel addGroup = await generateGroupMessage(group);
+      print(addGroup.groupName);
+      groups.add(addGroup);
+    }
+    return groups;
   }
 
   Future<void> refreshMessageList() async {
@@ -300,12 +322,7 @@ class DatabaseService extends ChangeNotifier {
     groupStream = fetchGroupsByMemberArrayAsStream('membersList', [
       {"isActive": true, "role": 1, "userId": user.userId},
       {"isActive": true, "role": 2, "userId": user.userId}
-    ]).asyncMap((docs) => Future.wait([
-          for (GroupModel group in docs.docs
-              .map((doc) => GroupModel.fromMap(doc.data()))
-              .toList())
-            generateGroupMessage(group)
-        ]));
+    ]).asyncMap((docs) => mapGroupMessageData(docs));
   }
 
   void turnOffGroupNotification(String groupId, String dateTime) {

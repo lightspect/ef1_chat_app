@@ -112,6 +112,11 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       hasContent = false;
     });
+    listScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+    );
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
       MessagesModel messagesModel = new MessagesModel(
