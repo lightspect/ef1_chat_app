@@ -1,5 +1,3 @@
-import 'package:chat_app_ef1/Model/userModel.dart';
-
 class GroupModel {
   String groupId;
   String groupName;
@@ -11,7 +9,6 @@ class GroupModel {
   String recentMessageTime;
   int type;
   List<Members> membersList;
-  List<ContactModel> usersList;
 
   GroupModel({
     this.groupId = "",
@@ -24,7 +21,6 @@ class GroupModel {
     this.recentMessageTime = "",
     this.type = 0,
     this.membersList,
-    this.usersList,
   });
 
   Map<String, dynamic> toMap() {

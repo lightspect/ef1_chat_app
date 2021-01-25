@@ -53,6 +53,8 @@ dependencies:
   http: ^0.12.2
   assorted_layout_widgets: ^3.0.0
   connectivity: ^2.0.2
+  firebase_database: ^4.3.0
+  rxdart: ^0.25.0
 
 dev_dependencies:
   flutter_test:

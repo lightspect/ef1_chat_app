@@ -35,7 +35,7 @@ class Api {
   }
 
   Stream<QuerySnapshot> streamCollectionFromArray(
-      String path, String field, dynamic condition) {
+      String path, dynamic field, dynamic condition) {
     return _db.collection(path).where(field, whereIn: condition).snapshots();
   }
 
@@ -68,6 +68,10 @@ class Api {
 
   Future<void> setDocument(String path, Map data, String id) {
     return _db.collection(path).doc(id).set(data);
+  }
+
+  Future<void> setDocumentMerge(String path, Map data, String id) {
+    return _db.collection(path).doc(id).set(data, SetOptions(merge: true));
   }
 
   Future<void> updateDocument(String path, Map data, String id) {

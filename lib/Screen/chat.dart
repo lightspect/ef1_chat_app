@@ -94,7 +94,10 @@ class _ChatPageState extends State<ChatPage> {
             settings: RouteSettings(name: "/contact/detail"),
             builder: (context) => ContactDetailPage(contact, null, true)));
     print(result);
-    if (result != null) {
+    if (result != null &&
+        databaseService.contacts
+            .where((element) => element.userId == contact.userId)
+            .isNotEmpty) {
       refreshPrivateChat(result["data"]);
     }
   }

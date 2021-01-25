@@ -62,6 +62,15 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   void getContactDetail() async {
     contactUser = await databaseService.getUserById(contact.userId);
+    if (contact.photoUrl != contactUser.photoUrl &&
+        contact.photoUrl.isNotEmpty) {
+      contact.photoUrl = contactUser.photoUrl;
+      await databaseService.setContact(
+          contact, databaseService.user.userId, contact.userId);
+      databaseService.contacts[databaseService.contacts
+          .indexWhere((element) => element.userId == contact.userId)] = contact;
+      await databaseService.setContactsList();
+    }
     if (contactUser == null) {
       alert = 'Error getting user information';
       _alertDialog(context, () => goBackUntil("", false), "Alert", alert,
@@ -469,10 +478,13 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         break;
     }
     if (timeOff == "forever") {
-      databaseService.offGroupNotification[privateChat.groupId] = "";
+      databaseService.user.offNotification[privateChat.groupId] = "";
     } else {
-      databaseService.offGroupNotification[privateChat.groupId] =
+      databaseService.user.offNotification[privateChat.groupId] =
           DateTime.now().add(duration).toString();
+      databaseService.updateUserField(
+          {"offNotification": databaseService.user.offNotification},
+          databaseService.user.userId);
     }
     setState(() {});
   }
@@ -487,10 +499,10 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   void handleUpdateNickName() async {
     await databaseService
         .updateContact(contact, databaseService.user.userId, contact.userId)
-        .then((value) {
+        .then((value) async {
       databaseService.contacts[databaseService.contacts
           .indexWhere((element) => element.userId == contact.userId)] = contact;
-      databaseService.setContactsList();
+      await databaseService.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
       databaseService.refreshMessageList();
       setState(() {
@@ -507,6 +519,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         databaseService.contacts
             .removeWhere((element) => element.userId == contact.userId);
         databaseService.setContactsList();
+        databaseService.fetchOnlineStatusAsStream();
         alert = "Success";
       });
       _alertDialog(context, () {
@@ -742,7 +755,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               height: 60.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: contactUser.photoUrl,
+                            imageUrl: contact.photoUrl,
                             width: 60.0,
                             height: 60.0,
                             fit: BoxFit.cover,
@@ -858,10 +871,27 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               child: Column(
                                 children: [
                                   InkWell(
-                                    onTap: _offNotificationDialog,
+                                    onTap: () {
+                                      if (databaseService.user.offNotification
+                                          .containsKey(privateChat.groupId)) {
+                                        databaseService.user.offNotification
+                                            .remove(privateChat.groupId);
+                                        databaseService.updateUserField({
+                                          "offNotification": databaseService
+                                              .user.offNotification
+                                        }, databaseService.user.userId);
+                                        setState(() {});
+                                      } else {
+                                        _offNotificationDialog();
+                                      }
+                                    },
                                     child: CircleAvatar(
                                       child: Icon(
-                                        Icons.notifications,
+                                        databaseService.user.offNotification
+                                                .containsKey(
+                                                    privateChat.groupId)
+                                            ? Icons.notifications_off
+                                            : Icons.notifications,
                                         color: colorBlack,
                                       ),
                                       backgroundColor: Color(0xffE5E5E5),

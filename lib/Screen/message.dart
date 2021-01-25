@@ -192,14 +192,14 @@ class _MessagePageState extends State<MessagePage> {
                 stream: databaseService.groupStream,
                 builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
                   if (!snapshot.hasData) {
-                    print("No data");
+                    //print("No data");
                     return Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
                       ),
                     );
                   } else {
-                    print("Has data");
+                    //print("Has data");
                     groups = List.from(snapshot.data);
                     groups.removeWhere(
                         (element) => element.recentMessageContent.isEmpty);
@@ -320,9 +320,25 @@ class _MessagePageState extends State<MessagePage> {
                       ),
                     ),
                     Spacer(),
-                    Text(
-                      formatDateTime(group.recentMessageTime),
-                      style: TextStyle(color: Colors.grey, fontSize: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          formatDateTime(group.recentMessageTime),
+                          style: TextStyle(color: Colors.grey, fontSize: 10),
+                        ),
+                        databaseService.user.offNotification
+                                .containsKey(group.groupId)
+                            ? Padding(
+                                padding: EdgeInsets.symmetric(vertical: 4),
+                                child: Icon(
+                                  Icons.notifications_off,
+                                  size: 10,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : Container()
+                      ],
                     ),
                   ],
                 ),

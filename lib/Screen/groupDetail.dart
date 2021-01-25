@@ -11,6 +11,7 @@ import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
 import 'package:chat_app_ef1/locator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -44,11 +45,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    if (databaseService.offGroupNotification.containsKey(group.groupId)) {
-      if (databaseService.offGroupNotification[group.groupId].isNotEmpty) {
+    if (databaseService.user.offNotification.containsKey(group.groupId)) {
+      if (databaseService.user.offNotification[group.groupId].isNotEmpty) {
         if (DateTime.now().isAfter(DateTime.parse(
-            databaseService.offGroupNotification[group.groupId]))) {
-          databaseService.offGroupNotification.remove(group.groupId);
+            databaseService.user.offNotification[group.groupId]))) {
+          databaseService.user.offNotification.remove(group.groupId);
           setState(() {});
         }
       }
@@ -386,7 +387,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     );
   }
 
-  void handleTurnOffNotification() {
+  void handleTurnOffNotification() async {
     String timeOff = _time.toString().split(".")[1];
     Duration duration = new Duration(days: 0);
     switch (timeOff) {
@@ -407,11 +408,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         break;
     }
     if (timeOff == "forever") {
-      databaseService.offGroupNotification[group.groupId] = "";
+      databaseService.user.offNotification[group.groupId] = "";
     } else {
-      databaseService.offGroupNotification[group.groupId] =
+      databaseService.user.offNotification[group.groupId] =
           DateTime.now().add(duration).toString();
     }
+    databaseService.updateUserField(
+        {"offNotification": databaseService.user.offNotification},
+        databaseService.user.userId);
     setState(() {});
   }
 
@@ -668,10 +672,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       children: [
                         InkWell(
                           onTap: () {
-                            if (databaseService.offGroupNotification
+                            if (databaseService.user.offNotification
                                 .containsKey(group.groupId)) {
-                              databaseService.offGroupNotification
+                              databaseService.user.offNotification
                                   .remove(group.groupId);
+                              databaseService.updateUserField({
+                                "offNotification":
+                                    databaseService.user.offNotification
+                              }, databaseService.user.userId);
                               setState(() {});
                             } else {
                               _offNotificationDialog();
@@ -679,7 +687,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           },
                           child: CircleAvatar(
                             child: Icon(
-                              databaseService.offGroupNotification
+                              databaseService.user.offNotification
                                       .containsKey(group.groupId)
                                   ? Icons.notifications_off
                                   : Icons.notifications,

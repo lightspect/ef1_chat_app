@@ -7,8 +7,10 @@ import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 
 class DatabaseService extends ChangeNotifier {
   Api _api = locator<Api>();
@@ -19,11 +21,13 @@ class DatabaseService extends ChangeNotifier {
   List<ContactModel> contacts;
   List<GroupModel> groups;
   List<MessagesModel> messages;
+  List<OnlineStatusModel> statusList;
+  Stream<List<OnlineStatusModel>> contactStatusList;
   Stream<List<GroupModel>> groupStream;
   FirebaseMessaging firebaseMessaging;
   String currentGroupId;
-  Map<String, String> offGroupNotification;
   Map<String, List<UserModel>> groupMembersList;
+  DatabaseReference databaseReference;
 
   DatabaseService() {
     firebaseMessaging = FirebaseMessaging();
@@ -31,11 +35,12 @@ class DatabaseService extends ChangeNotifier {
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
     contacts = [];
     groups = [];
+    statusList = [];
     currentGroupId = "";
-    offGroupNotification = {};
     groupMembersList = {};
     readLocal();
     readContactsList();
+    databaseReference = FirebaseDatabase.instance.reference();
   }
 
   Future readLocal() async {
@@ -280,6 +285,40 @@ class DatabaseService extends ChangeNotifier {
     return;
   }
 
+  Future<List<OnlineStatusModel>> mapContactStatusData(
+      QuerySnapshot docs) async {
+    List<OnlineStatusModel> list = docs.docs
+        .map((doc) => OnlineStatusModel.fromMap(doc.data(), doc.id))
+        .toList();
+    statusList = [];
+    for (OnlineStatusModel status in list) {
+      ContactModel contactModel = contacts.firstWhere(
+          (element) => element.userId == status.userId,
+          orElse: () => ContactModel());
+      status.nickname = contactModel.nickname;
+      status.photoUrl = contactModel.photoUrl;
+      statusList.add(status);
+    }
+    return statusList;
+  }
+
+  Future<void> fetchOnlineStatusAsStream() async {
+    List<String> contactId = [];
+    for (ContactModel contact in contacts) {
+      contactId.add(contact.userId);
+    }
+    List<List<String>> contactChunk =
+        splitListToChunk(contactId, 10).cast<List<String>>().toList();
+    List<Stream<List<OnlineStatusModel>>> streams =
+        List<Stream<List<OnlineStatusModel>>>();
+    contactChunk.forEach((element) {
+      streams.add(_api
+          .streamCollectionFromArray('status', FieldPath.documentId, element)
+          .asyncMap((event) => mapContactStatusData(event)));
+    });
+    contactStatusList = ZipStream(streams, (value) => value.last);
+  }
+
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
     members.removeWhere((element) => element.userId == user.userId);
     ContactModel contactModel = contacts.firstWhere(
@@ -311,7 +350,6 @@ class DatabaseService extends ChangeNotifier {
     groups = [];
     for (GroupModel group in list) {
       GroupModel addGroup = await generateGroupMessage(group);
-      print(addGroup.groupName);
       groups.add(addGroup);
     }
     return groups;
@@ -325,8 +363,75 @@ class DatabaseService extends ChangeNotifier {
     ]).asyncMap((docs) => mapGroupMessageData(docs));
   }
 
+  List<dynamic> splitListToChunk(List<dynamic> input, int size) {
+    var len = input.length;
+    var chunks = [];
+
+    for (var i = 0; i < len; i += size) {
+      var end = (i + size < len) ? i + size : len;
+      chunks.add(input.sublist(i, end));
+    }
+    return chunks;
+  }
+
   void turnOffGroupNotification(String groupId, String dateTime) {
-    offGroupNotification[groupId] = dateTime;
+    user.offNotification[groupId] = dateTime;
+  }
+
+  rtdbAndLocalFsPresence() async {
+    var uid = user.userId;
+    var userStatusDatabaseRef =
+        databaseReference.reference().child('/status/' + uid);
+
+    var isOfflineForDatabase = {
+      "state": 'offline',
+      "last_changed": ServerValue.timestamp,
+    };
+
+    var isOnlineForDatabase = {
+      "state": 'online',
+      "last_changed": ServerValue.timestamp,
+    };
+
+    // Firestore uses a different server timestamp value, so we'll
+    // create two more constants for Firestore state.
+    var isOfflineForFirestore = {
+      "state": 'offline',
+      "last_changed": FieldValue.serverTimestamp(),
+    };
+
+    var isOnlineForFirestore = {
+      "state": 'online',
+      "last_changed": FieldValue.serverTimestamp(),
+    };
+
+    databaseReference
+        .reference()
+        .child('.info/connected')
+        .onValue
+        .listen((Event event) async {
+      if (event.snapshot.value == false) {
+        // Instead of simply returning, we'll also set Firestore's state
+        // to 'offline'. This ensures that our Firestore cache is aware
+        // of the switch to 'offline.'
+        setFirestoreStatus(isOfflineForFirestore, uid);
+        return;
+      }
+
+      await userStatusDatabaseRef
+          .onDisconnect()
+          .update(isOfflineForDatabase)
+          .then((snap) {
+        userStatusDatabaseRef.set(isOnlineForDatabase);
+
+        // We'll also add Firestore set here for when we come online.
+        setFirestoreStatus(isOnlineForFirestore, uid);
+      });
+    });
+  }
+
+  setFirestoreStatus(Map<String, dynamic> data, String uid) {
+    _api.setDocumentMerge('status', data, uid);
   }
 }
 

@@ -54,13 +54,16 @@ class NavigationMenuState extends State<NavigationMenu> {
       String messageType = data['type'].toString();
       if (messageType == "newMessage") {
         if (groupId != databaseService.currentGroupId &&
-            !databaseService.offGroupNotification.containsKey(groupId)) {
+            !databaseService.user.offNotification.containsKey(groupId)) {
           showNotification(notification, groupId);
-        } else if (databaseService.offGroupNotification.containsKey(groupId)) {
-          if (databaseService.offGroupNotification[groupId].isNotEmpty) {
+        } else if (databaseService.user.offNotification.containsKey(groupId)) {
+          if (databaseService.user.offNotification[groupId].isNotEmpty) {
             if (DateTime.now().isAfter(DateTime.parse(
-                databaseService.offGroupNotification[groupId]))) {
-              databaseService.offGroupNotification.remove(groupId);
+                databaseService.user.offNotification[groupId]))) {
+              databaseService.user.offNotification.remove(groupId);
+              databaseService.updateUserField(
+                  {"offNotification": databaseService.user.offNotification},
+                  databaseService.user.userId);
               showNotification(notification, groupId);
             }
           }
@@ -192,7 +195,12 @@ class NavigationMenuState extends State<NavigationMenu> {
                   .toList();
 
               return WillPopScope(
-                onWillPop: () async => provider.onWillPop(context),
+                onWillPop: () async => provider
+                    .onWillPop(context)
+                    .then((value) => databaseService.setFirestoreStatus({
+                          "state": 'offline',
+                          "last_changed": FieldValue.serverTimestamp(),
+                        }, databaseService.user.userId)),
                 child: Scaffold(
                   body: IndexedStack(
                     children: screens,

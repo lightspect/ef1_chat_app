@@ -44,6 +44,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     databaseService = locator<DatabaseService>();
     readLocal();
+    databaseService.rtdbAndLocalFsPresence();
   }
 
   void handleSignOut() async {
@@ -59,10 +60,11 @@ class _HomePageState extends State<HomePage> {
       isLoading = false;
     });
 
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(databaseService.user.userId)
-        .update({'token': ""});
+    databaseService.updateUserField({'token': ""}, databaseService.user.userId);
+    databaseService.setFirestoreStatus({
+      "state": 'offline',
+      "last_changed": FieldValue.serverTimestamp(),
+    }, databaseService.user.userId);
 
     databaseService.user = new UserModel(
         userId: "",

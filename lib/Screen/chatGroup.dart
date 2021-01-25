@@ -82,17 +82,16 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     setState(() {
       isLoading = true;
     });
-    List<String> groupMemberId = [];
-    for (Members member in group.membersList) {
-      groupMemberId.add(member.userId);
-    }
     if (!databaseService.groupMembersList.containsKey(group.groupId)) {
-      members = await databaseService.fetchUsersByArray(groupMemberId);
+      for (Members member in group.membersList) {
+        UserModel memberUser = await databaseService.getUserById(member.userId);
+        members.add(memberUser);
+      }
       databaseService.groupMembersList[group.groupId] = members;
-      print(members.length);
+      print("Get Online");
     } else {
       members = databaseService.groupMembersList[group.groupId];
-      print(members.length);
+      print("Get Offline");
     }
     if (this.mounted) {
       setState(() {

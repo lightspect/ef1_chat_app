@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'color_utils.dart';
 
@@ -419,7 +421,7 @@ class ExitAlertDialog extends StatelessWidget {
         ),
         FlatButton(
           onPressed: () {
-            Navigator.of(context).pop(true);
+            SystemChannels.platform.invokeMethod('SystemNavigator.pop');
           },
           child: Text('Exit'),
         ),
