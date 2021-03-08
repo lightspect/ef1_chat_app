@@ -120,6 +120,10 @@ class _ChatPageState extends State<ChatPage> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeOut,
     );
+    setState(() {
+      replyMessage = new MessagesModel();
+      replyVisibility = false;
+    });
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
       MessagesModel messagesModel = new MessagesModel(
@@ -142,10 +146,6 @@ class _ChatPageState extends State<ChatPage> {
               }))
           .catchError((onError) {
         Fluttertoast.showToast(msg: onError.toString());
-      });
-      setState(() {
-        replyMessage = new MessagesModel();
-        replyVisibility = false;
       });
     }
   }
