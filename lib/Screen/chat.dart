@@ -14,7 +14,7 @@ import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
@@ -178,16 +178,26 @@ class _ChatPageState extends State<ChatPage> {
 
   Future uploadFile(File chatImageFile) async {
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(chatImageFile);
-    StorageTaskSnapshot storageTaskSnapshot;
-    uploadTask.onComplete.then((value) {
-      if (value.error == null) {
+    firebase_storage.FirebaseStorage storage =
+        firebase_storage.FirebaseStorage.instance;
+    firebase_storage.Reference reference = storage.ref().child(fileName);
+    firebase_storage.UploadTask uploadTask = reference.putFile(chatImageFile);
+    firebase_storage.TaskSnapshot storageTaskSnapshot;
+    uploadTask.then((value) {
+      if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          setState(() {
-            isLoading = false;
-            sendMessage(downloadUrl, 2);
+          group.groupPhoto = downloadUrl;
+          storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+            setState(() {
+              isLoading = false;
+              sendMessage(downloadUrl, 2);
+            });
+          }).catchError((err) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(msg: err.toString());
           });
         }, onError: (err) {
           setState(() {
@@ -575,7 +585,7 @@ class _ChatPageState extends State<ChatPage> {
                       : message.contentType == 2
                           // Image
                           ? Container(
-                              child: FlatButton(
+                              child: TextButton(
                                 child: Material(
                                   child: CachedNetworkImage(
                                     placeholder: (context, url) => Container(
@@ -627,7 +637,8 @@ class _ChatPageState extends State<ChatPage> {
                                           builder: (context) => FullPhoto(
                                               url: message.messageContent)));
                                 },
-                                padding: EdgeInsets.all(0),
+                                style: TextButton.styleFrom(
+                                    padding: EdgeInsets.all(0)),
                               ),
                               margin: EdgeInsets.only(
                                   bottom:
@@ -715,7 +726,7 @@ class _ChatPageState extends State<ChatPage> {
                           )
                         : message.contentType == 2
                             ? Container(
-                                child: FlatButton(
+                                child: TextButton(
                                   child: Material(
                                     child: CachedNetworkImage(
                                       placeholder: (context, url) => Container(
@@ -768,7 +779,8 @@ class _ChatPageState extends State<ChatPage> {
                                             builder: (context) => FullPhoto(
                                                 url: message.messageContent)));
                                   },
-                                  padding: EdgeInsets.all(0),
+                                  style: TextButton.styleFrom(
+                                      padding: EdgeInsets.all(0)),
                                 ),
                                 margin: EdgeInsets.only(left: 10.0),
                               )
@@ -932,7 +944,7 @@ class _ChatPageState extends State<ChatPage> {
                       : snap.data.contentType == 2
                           // Image
                           ? Container(
-                              child: FlatButton(
+                              child: TextButton(
                                 child: Material(
                                   child: CachedNetworkImage(
                                     placeholder: (context, url) => Container(
@@ -984,7 +996,8 @@ class _ChatPageState extends State<ChatPage> {
                                           builder: (context) => FullPhoto(
                                               url: snap.data.messageContent)));
                                 },
-                                padding: EdgeInsets.all(0),
+                                style: TextButton.styleFrom(
+                                    padding: EdgeInsets.all(0)),
                               ),
                               margin:
                                   message.sentBy == databaseService.user.userId

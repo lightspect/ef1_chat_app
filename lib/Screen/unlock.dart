@@ -4,6 +4,7 @@ import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
@@ -77,7 +78,7 @@ class _UnlockPageState extends State<UnlockPage> {
       final List<DocumentSnapshot> documents = result.docs;
       if (documents.length == 0) {
         currentUser = firebaseUser;
-        String token = await databaseService.firebaseMessaging.getToken();
+        String token = await FirebaseMessaging.instance.getToken();
         user = new UserModel(
             userId: currentUser.uid,
             nickname: currentUser.displayName,

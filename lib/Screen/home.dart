@@ -9,7 +9,7 @@ import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -110,11 +110,13 @@ class _HomePageState extends State<HomePage> {
 
   Future uploadFile() async {
     String fileName = databaseService.user.userId;
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(avatarImageFile);
-    StorageTaskSnapshot storageTaskSnapshot;
-    uploadTask.onComplete.then((value) {
-      if (value.error == null) {
+    firebase_storage.FirebaseStorage storage =
+        firebase_storage.FirebaseStorage.instance;
+    firebase_storage.Reference reference = storage.ref().child(fileName);
+    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile);
+    firebase_storage.TaskSnapshot storageTaskSnapshot;
+    uploadTask.then((value) {
+      if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
           databaseService.user.photoUrl = downloadUrl;

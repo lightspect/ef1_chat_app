@@ -276,9 +276,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   List<Widget> buildMemberType() {
     List<Widget> typeList = [];
     for (MapEntry<int, String> type in memberType.entries) {
-      Widget button = FlatButton(
-        height: 24,
-        minWidth: MediaQuery.of(context).size.width / 2.4,
+      Widget button = TextButton(
         onPressed: () {
           setState(() {
             selectedIndex = type.key;
@@ -286,11 +284,14 @@ class _GroupMemberState extends State<GroupMemberScreen> {
           });
         },
         child: Text(type.value),
-        color: selectedIndex == type.key ? Color(0xffAAAAAA) : colorMainBG,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(width: 1, color: Color(0xffAAAAAA)),
-        ),
+        style: TextButton.styleFrom(
+            backgroundColor:
+                selectedIndex == type.key ? Color(0xffAAAAAA) : colorMainBG,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(width: 1, color: Color(0xffAAAAAA)),
+            ),
+            minimumSize: Size(MediaQuery.of(context).size.width / 2.4, 24)),
       );
       typeList.add(button);
     }

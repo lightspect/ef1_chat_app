@@ -7,8 +7,8 @@ import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_qr_bar_scanner/qr_bar_scanner_camera.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class ScanScreen extends StatefulWidget {
   @override
@@ -17,6 +17,9 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanState extends State<ScanScreen> {
   String _qrInfo = 'Scan a QR/Bar code';
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  Barcode result;
+  QRViewController controller;
   bool _camState = false;
   bool isLoading = false;
   String _argument = "";
@@ -26,6 +29,16 @@ class _ScanState extends State<ScanScreen> {
   UserModel userModel;
   ContactModel contactModel;
 
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((scanData) {
+      setState(() {
+        result = scanData;
+      });
+    });
+    _qrCallback(result.code, context);
+  }
+
   _qrCallback(String code, BuildContext context) async {
     _argument = ModalRoute.of(context).settings.arguments;
     setState(() {
@@ -33,7 +46,7 @@ class _ScanState extends State<ScanScreen> {
       _qrInfo = code;
     });
     if (_argument == "getAddress") {
-      Navigator.pop(context, code);
+      //Navigator.pop(context, code);
     } else {
       //check if user existed
       userModel = await databaseService.getUserById(code);
@@ -104,14 +117,9 @@ class _ScanState extends State<ScanScreen> {
                 child: SizedBox(
                   height: 1000,
                   width: 500,
-                  child: QRBarScannerCamera(
-                    onError: (context, error) => Text(
-                      error.toString(),
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    qrCodeCallback: (code) {
-                      _qrCallback(code, context);
-                    },
+                  child: QRView(
+                    key: qrKey,
+                    onQRViewCreated: _onQRViewCreated,
                   ),
                 ),
               )

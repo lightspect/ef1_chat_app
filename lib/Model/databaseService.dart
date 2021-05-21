@@ -8,7 +8,6 @@ import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -24,13 +23,11 @@ class DatabaseService extends ChangeNotifier {
   List<OnlineStatusModel> statusList;
   Stream<List<OnlineStatusModel>> contactStatusList;
   Stream<List<GroupModel>> groupStream;
-  FirebaseMessaging firebaseMessaging;
   String currentGroupId;
   Map<String, List<UserModel>> groupMembersList;
   DatabaseReference databaseReference;
 
   DatabaseService() {
-    firebaseMessaging = FirebaseMessaging();
     sharedPref = SharedPref();
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
     contacts = [];
@@ -309,8 +306,7 @@ class DatabaseService extends ChangeNotifier {
     }
     List<List<String>> contactChunk =
         splitListToChunk(contactId, 10).cast<List<String>>().toList();
-    List<Stream<List<OnlineStatusModel>>> streams =
-        List<Stream<List<OnlineStatusModel>>>();
+    List<Stream<List<OnlineStatusModel>>> streams = [];
     contactChunk.forEach((element) {
       streams.add(_api
           .streamCollectionFromArray('status', FieldPath.documentId, element)

@@ -11,8 +11,7 @@ import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
 import 'package:chat_app_ef1/locator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
@@ -536,11 +535,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   Future uploadFile() async {
     String fileName = group.groupId;
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(avatarImageFile);
-    StorageTaskSnapshot storageTaskSnapshot;
-    uploadTask.onComplete.then((value) {
-      if (value.error == null) {
+    firebase_storage.FirebaseStorage storage =
+        firebase_storage.FirebaseStorage.instance;
+    firebase_storage.Reference reference = storage.ref().child(fileName);
+    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile);
+    firebase_storage.TaskSnapshot storageTaskSnapshot;
+    uploadTask.then((value) {
+      if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
           group.groupPhoto = downloadUrl;

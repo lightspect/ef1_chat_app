@@ -8,6 +8,7 @@ import 'package:chat_app_ef1/Model/navigationService.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -41,15 +42,21 @@ class NavigationMenuState extends State<NavigationMenu> {
   }
 
   void registerNotification() {
-    databaseService.firebaseMessaging.requestNotificationPermissions();
-
-    databaseService.firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) {
-      print('onMessage: $message');
+    FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+    FirebaseMessaging.onMessage.listen((event) {
+      print('onMessage: ' + event.data.toString());
       var notification = (Platform.isAndroid
-          ? message['notification']
-          : message['aps']['alert']) as Map;
-      var data = message['data'] as Map;
+          ? event.data['notification']
+          : event.data['aps']['alert']) as Map;
+      var data = event.data['data'] as Map;
       String groupId = data['groupId'].toString();
       String messageType = data['type'].toString();
       if (messageType == "newMessage") {
@@ -81,20 +88,23 @@ class NavigationMenuState extends State<NavigationMenu> {
         databaseService.groupMembersList[groupId] = groupMemberList;
       }
       return;
-    }, onResume: (Map<String, dynamic> message) {
-      var data = message['data'] as Map;
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      var data = event.data['data'] as Map;
       String groupId = data['groupId'].toString();
       selectNotification(groupId);
-      print('onResume: $message');
-      return;
-    }, onLaunch: (Map<String, dynamic> message) {
-      var data = message['data'] as Map;
-      String groupId = data['groupId'].toString();
-      selectNotification(groupId);
-      print('onLaunch: $message');
+      print('onResume: $event.$data');
       return;
     });
-    databaseService.firebaseMessaging.getToken().then((token) {
+    FirebaseMessaging.onBackgroundMessage((message) async {
+      var data = message.data['data'] as Map;
+      String groupId = data['groupId'].toString();
+      selectNotification(groupId);
+      print('onLaunch: $message.$data');
+      return;
+    });
+
+    FirebaseMessaging.instance.getToken().then((token) {
       print('token: $token');
       FirebaseFirestore.instance
           .collection('users')
@@ -110,7 +120,7 @@ class NavigationMenuState extends State<NavigationMenu> {
         new AndroidInitializationSettings('ic_launcher');
     var initializationSettingsIOS = new IOSInitializationSettings();
     var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
+        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: selectNotification);
   }
@@ -138,12 +148,13 @@ class NavigationMenuState extends State<NavigationMenu> {
       'your channel description',
       playSound: true,
       enableVibration: true,
-      importance: Importance.Max,
-      priority: Priority.High,
+      importance: Importance.max,
+      priority: Priority.high,
     );
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
     var platformChannelSpecifics = new NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
     print(message);
 //    print(message['body'].toString());
 //    print(json.encode(message));
