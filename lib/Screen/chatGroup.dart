@@ -84,7 +84,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     });
     if (!databaseService!.groupMembersList.containsKey(group!.groupId)) {
       for (Members? member in group!.membersList!) {
-        UserModel memberUser = await databaseService!.getUserById(member!.userId);
+        UserModel memberUser =
+            await databaseService!.getUserById(member!.userId);
         members!.add(memberUser);
       }
       databaseService!.groupMembersList[group!.groupId] = members;
@@ -166,10 +167,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile? pickedFile;
+    XFile? pickedFile;
     File? image;
 
-    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
+    pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       image = File(pickedFile.path);
@@ -198,33 +199,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     firebase_storage.UploadTask uploadTask = reference.putFile(chatImageFile);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
-      if (value != null) {
-        storageTaskSnapshot = value;
-        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          group!.groupPhoto = downloadUrl;
-          storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-            setState(() {
-              isLoading = false;
-              sendMessage(downloadUrl, 2);
-            });
-          }).catchError((err) {
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: err.toString());
-          });
-        }, onError: (err) {
-          setState(() {
-            isLoading = false;
-          });
-          Fluttertoast.showToast(msg: 'This file is not an image');
+      storageTaskSnapshot = value;
+      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+        group!.groupPhoto = downloadUrl;
+        setState(() {
+          isLoading = false;
+          sendMessage(downloadUrl, 2);
         });
-      } else {
+      }, onError: (err) {
         setState(() {
           isLoading = false;
         });
         Fluttertoast.showToast(msg: 'This file is not an image');
-      }
+      });
     }, onError: (err) {
       setState(() {
         isLoading = false;
@@ -351,8 +338,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder(
-                stream: databaseService!.fetchMessagesAsStreamPagination(
-                    group!.groupId, limit),
+                stream: databaseService!
+                    .fetchMessagesAsStreamPagination(group!.groupId, limit),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -362,7 +349,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     );
                   } else {
                     messages = snapshot.data!.docs
-                        .map((doc) => MessagesModel.fromMap(doc.data() as Map<dynamic, dynamic>?, doc.id))
+                        .map((doc) => MessagesModel.fromMap(
+                            doc.data() as Map<dynamic, dynamic>?, doc.id))
                         .toList();
                     return ListView.builder(
                       itemBuilder: (context, index) => GestureDetector(
@@ -945,23 +933,24 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                          margin: message.sentBy == databaseService!.user!.userId
-                              ? EdgeInsets.only(right: 10)
-                              : EdgeInsets.only(left: 45),
+                          margin:
+                              message.sentBy == databaseService!.user!.userId
+                                  ? EdgeInsets.only(right: 10)
+                                  : EdgeInsets.only(left: 45),
                           width: MediaQuery.of(context).size.width / 2,
                           height: 48,
                           decoration: BoxDecoration(
                               color: Color(0xFF868B90),
-                              borderRadius:
-                                  message.sentBy == databaseService!.user!.userId
-                                      ? BorderRadius.only(
-                                          bottomLeft: Radius.circular(18),
-                                          topLeft: Radius.circular(18),
-                                          topRight: Radius.circular(18))
-                                      : BorderRadius.only(
-                                          bottomRight: Radius.circular(18),
-                                          topLeft: Radius.circular(18),
-                                          topRight: Radius.circular(18))),
+                              borderRadius: message.sentBy ==
+                                      databaseService!.user!.userId
+                                  ? BorderRadius.only(
+                                      bottomLeft: Radius.circular(18),
+                                      topLeft: Radius.circular(18),
+                                      topRight: Radius.circular(18))
+                                  : BorderRadius.only(
+                                      bottomRight: Radius.circular(18),
+                                      topLeft: Radius.circular(18),
+                                      topRight: Radius.circular(18))),
                         )
                       : snap.data!.contentType == 2
                           // Image
@@ -1021,10 +1010,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                 style: TextButton.styleFrom(
                                     padding: EdgeInsets.all(0)),
                               ),
-                              margin:
-                                  message.sentBy == databaseService!.user!.userId
-                                      ? EdgeInsets.only(right: 10)
-                                      : EdgeInsets.only(left: 45),
+                              margin: message.sentBy ==
+                                      databaseService!.user!.userId
+                                  ? EdgeInsets.only(right: 10)
+                                  : EdgeInsets.only(left: 45),
                             )
                           // Sticker
                           : Container(
@@ -1039,9 +1028,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           right: 10.0),*/
                               ),
                 ],
-                mainAxisAlignment: message.sentBy == databaseService!.user!.userId
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
+                mainAxisAlignment:
+                    message.sentBy == databaseService!.user!.userId
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
               ),
             );
           } else {

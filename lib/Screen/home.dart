@@ -60,7 +60,8 @@ class _HomePageState extends State<HomePage> {
       isLoading = false;
     });
 
-    databaseService!.updateUserField({'token': ""}, databaseService!.user!.userId);
+    databaseService!
+        .updateUserField({'token': ""}, databaseService!.user!.userId);
     databaseService!.setFirestoreStatus({
       "state": 'offline',
       "last_changed": FieldValue.serverTimestamp(),
@@ -113,39 +114,33 @@ class _HomePageState extends State<HomePage> {
     firebase_storage.FirebaseStorage storage =
         firebase_storage.FirebaseStorage.instance;
     firebase_storage.Reference reference = storage.ref().child(fileName);
-    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile!);
+    firebase_storage.UploadTask uploadTask =
+        reference.putFile(avatarImageFile!);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
-      if (value != null) {
-        storageTaskSnapshot = value;
-        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          databaseService!.user!.photoUrl = downloadUrl;
-          databaseService!
-              .updateUser(databaseService!.user!, databaseService!.user!.userId)
-              .then((data) async {
-            await databaseService!.setLocal();
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: "Upload success");
-          }).catchError((err) {
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: err.toString());
-          });
-        }, onError: (err) {
+      storageTaskSnapshot = value;
+      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+        databaseService!.user!.photoUrl = downloadUrl;
+        databaseService!
+            .updateUser(databaseService!.user!, databaseService!.user!.userId)
+            .then((data) async {
+          await databaseService!.setLocal();
           setState(() {
             isLoading = false;
           });
-          Fluttertoast.showToast(msg: 'This file is not an image');
+          Fluttertoast.showToast(msg: "Upload success");
+        }).catchError((err) {
+          setState(() {
+            isLoading = false;
+          });
+          Fluttertoast.showToast(msg: err.toString());
         });
-      } else {
+      }, onError: (err) {
         setState(() {
           isLoading = false;
         });
         Fluttertoast.showToast(msg: 'This file is not an image');
-      }
+      });
     }, onError: (err) {
       setState(() {
         isLoading = false;
@@ -325,8 +320,8 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text(
-                              "Display Name: " + databaseService!.user!.nickname!),
+                          Text("Display Name: " +
+                              databaseService!.user!.nickname!),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
