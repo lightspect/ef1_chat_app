@@ -194,7 +194,8 @@ class LoginLogo extends StatelessWidget {
         margin: margin ?? EdgeInsets.only(bottom: 16),
         width: width ?? MediaQuery.of(context).size.width,
         child: Image(
-          image: image as ImageProvider<Object>? ?? AssetImage('assets/images/logo_wallet.png'),
+          image: image as ImageProvider<Object>? ??
+              AssetImage('assets/images/logo_wallet.png'),
         ),
       ),
     );
@@ -399,7 +400,7 @@ class ExitAlertDialog extends StatelessWidget {
     return AlertDialog(
       title: Text('Exit?'),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.of(context).pop(false);
           },
@@ -410,7 +411,7 @@ class ExitAlertDialog extends StatelessWidget {
                 ),
           ),
         ),
-        FlatButton(
+        TextButton(
           onPressed: () {
             Navigator.of(context).pop(true);
           },

@@ -127,9 +127,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
 
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile? pickedFile;
+    XFile? pickedFile;
 
-    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
+    pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     File image = File(pickedFile!.path);
     if (image != null) {
@@ -280,8 +280,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder(
-                stream: databaseService!.fetchMessagesAsStreamPagination(
-                    group!.groupId, limit),
+                stream: databaseService!
+                    .fetchMessagesAsStreamPagination(group!.groupId, limit),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -291,7 +291,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                     );
                   } else {
                     messages = snapshot.data!.docs
-                        .map((doc) => MessagesModel.fromMap(doc.data() as Map<dynamic, dynamic>?, doc.id))
+                        .map((doc) => MessagesModel.fromMap(
+                            doc.data() as Map<dynamic, dynamic>?, doc.id))
                         .toList();
                     messages!.sort((element1, element2) {
                       if (DateTime.parse(element1.sentAt!)
@@ -471,7 +472,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
               : message.contentType == 2
                   // Image
                   ? Container(
-                      child: FlatButton(
+                      child: TextButton(
                         child: Material(
                           child: CachedNetworkImage(
                             placeholder: (context, url) => Container(
@@ -516,7 +517,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                   builder: (context) =>
                                       FullPhoto(url: message.messageContent)));
                         },
-                        padding: EdgeInsets.all(0),
                       ),
                       margin: EdgeInsets.only(
                           bottom: isLastMessageRight(index) ? 20.0 : 10.0,
@@ -577,7 +577,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                       )
                     : message.contentType == 2
                         ? Container(
-                            child: FlatButton(
+                            child: TextButton(
                               child: Material(
                                 child: CachedNetworkImage(
                                   placeholder: (context, url) => Container(
@@ -626,7 +626,6 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                         builder: (context) => FullPhoto(
                                             url: message.messageContent)));
                               },
-                              padding: EdgeInsets.all(0),
                             ),
                             margin: EdgeInsets.only(left: 10.0),
                           )
@@ -933,35 +932,35 @@ class PlusMinusEntryState extends State<PlusMinusEntry> {
     return Row(
       children: <Widget>[
         Expanded(
-            child: FlatButton(
+            child: TextButton(
                 onPressed: _love,
                 child: Text(
                   '❤',
                   style: TextStyle(fontSize: 15),
                 ))),
         Expanded(
-            child: FlatButton(
+            child: TextButton(
                 onPressed: _happy,
                 child: Text(
                   '😂',
                   style: TextStyle(fontSize: 15),
                 ))),
         Expanded(
-            child: FlatButton(
+            child: TextButton(
                 onPressed: _surprise,
                 child: Text(
                   '😮',
                   style: TextStyle(fontSize: 15),
                 ))),
         Expanded(
-            child: FlatButton(
+            child: TextButton(
                 onPressed: _sad,
                 child: Text(
                   '😢',
                   style: TextStyle(fontSize: 15),
                 ))),
         Expanded(
-            child: FlatButton(
+            child: TextButton(
                 onPressed: _angry,
                 child: Text(
                   '😠',

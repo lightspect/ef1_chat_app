@@ -128,10 +128,12 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
-                                    contact!.nickname = _nicknameController.text;
+                                    contact!.nickname =
+                                        _nicknameController.text;
                                   });
                                   handleUpdateNickName();
                                   Navigator.of(context).pop();
@@ -157,7 +159,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         .updateContact(contact!, databaseService!.user!.userId, contact!.userId)
         .then((value) {
       Fluttertoast.showToast(msg: "Update success");
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }, onError: (err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
   }
 
   void handleRemoveFromContact() async {
@@ -169,7 +173,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       });
       _alertDialog(context);
       databaseService!.refreshMessageList();
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }, onError: (err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
   }
 
   void handleCreateGroupMessage() async {
@@ -199,7 +205,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
+      GroupModel group =
+          GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
       if (group.type == 1) {
         group.groupName = contact!.nickname;
         group.groupPhoto = contact!.photoUrl;

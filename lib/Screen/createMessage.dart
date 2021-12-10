@@ -8,7 +8,6 @@ import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -65,7 +64,8 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
+      GroupModel group =
+          GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
       if (group.type == 1) {
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
@@ -147,7 +147,8 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                     );
                   } else {
                     contacts = snapshot.data!.docs
-                        .map((doc) => ContactModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
+                        .map((doc) => ContactModel.fromMap(
+                            doc.data() as Map<dynamic, dynamic>?))
                         .toList();
                     return GroupedListView<ContactModel, String>(
                       elements: contacts,

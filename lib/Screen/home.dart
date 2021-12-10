@@ -88,9 +88,9 @@ class _HomePageState extends State<HomePage> {
 
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile? pickedFile;
+    XFile? pickedFile;
 
-    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
+    pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     File image = File(pickedFile!.path);
 
@@ -311,8 +311,8 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Text(
-                              "Display Name: " + databaseService!.user!.nickname!),
+                          Text("Display Name: " +
+                              databaseService!.user!.nickname!),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
