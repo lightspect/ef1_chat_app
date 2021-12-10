@@ -9,13 +9,13 @@ class NavigationService {
   Future<dynamic> navigateToChat(GroupModel group) {
     switch (group.type) {
       case 2:
-        return navigatorKey.currentState.push(MaterialPageRoute(
+        return navigatorKey.currentState!.push(MaterialPageRoute(
             builder: (context) => ChatGroupPage(group: group)));
       case 1:
-        return navigatorKey.currentState.push(
+        return navigatorKey.currentState!.push(
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       default:
-        return navigatorKey.currentState.push(
+        return navigatorKey.currentState!.push(
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
     }
   }

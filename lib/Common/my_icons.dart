@@ -23,7 +23,7 @@ class MyIcon {
   MyIcon._();
 
   static const _kFontFam = 'MyIcon';
-  static const _kFontPkg = null;
+  static const dynamic _kFontPkg = null;
 
   static const IconData ellipsis_v = IconData(0xf142, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

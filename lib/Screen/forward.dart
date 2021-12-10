@@ -10,9 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ForwardMessagePage extends StatefulWidget {
-  const ForwardMessagePage({Key key, this.message}) : super(key: key);
+  const ForwardMessagePage({Key? key, this.message}) : super(key: key);
 
-  final MessagesModel message;
+  final MessagesModel? message;
 
   static const route = '/message';
 
@@ -22,26 +22,26 @@ class ForwardMessagePage extends StatefulWidget {
 
 class _ForwardMessagePageState extends State<ForwardMessagePage> {
   final _searchController = TextEditingController();
-  final MessagesModel message;
+  final MessagesModel? message;
   //final _debouncer = Debouncer(milliseconds: 500);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
 
-  List<GroupModel> groups;
+  List<GroupModel>? groups;
 
   _ForwardMessagePageState(this.message);
 
-  List<String> id = [];
+  List<String?> id = [];
 
   @override
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    databaseService.refreshMessageList();
+    databaseService!.refreshMessageList();
   }
 
   void search(String search) {}
 
-  void sendMessage(String groupId, String message, int contentType) async {
+  void sendMessage(String? groupId, String message, int? contentType) async {
     //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
@@ -53,7 +53,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
           .set({
         'messageContent': message,
         'sentAt': dateTime,
-        'sentBy': databaseService.user.userId,
+        'sentBy': databaseService!.user!.userId,
         'type': 1,
         'contentType': contentType
       }).then((value) {
@@ -62,7 +62,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
             .doc(groupId)
             .update({
               'recentMessage': contentType == 2 ? "Photo" : message,
-              'recentMessageSender': databaseService.user.userId,
+              'recentMessageSender': databaseService!.user!.userId,
               'recentMessageTime': dateTime,
             })
             .then((value) => setState(() {}))
@@ -132,7 +132,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
             ),
             Flexible(
               child: StreamBuilder(
-                stream: databaseService.groupStream,
+                stream: databaseService!.groupStream,
                 builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -142,9 +142,9 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                     );
                   } else {
                     groups = snapshot.data;
-                    groups.sort((group1, group2) {
-                      if (DateTime.parse(group1.recentMessageTime)
-                          .isAfter(DateTime.parse(group2.recentMessageTime))) {
+                    groups!.sort((group1, group2) {
+                      if (DateTime.parse(group1.recentMessageTime!)
+                          .isAfter(DateTime.parse(group2.recentMessageTime!))) {
                         return -1;
                       } else {
                         return 1;
@@ -153,8 +153,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                     return ListView.builder(
                       padding: EdgeInsets.all(10.0),
                       itemBuilder: (context, index) =>
-                          buildItem(context, groups[index]),
-                      itemCount: groups.length,
+                          buildItem(context, groups![index]),
+                      itemCount: groups!.length,
                     );
                   }
                 },
@@ -176,7 +176,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
             child: Row(
               children: <Widget>[
                 Material(
-                  child: group.groupPhoto.isNotEmpty
+                  child: group.groupPhoto!.isNotEmpty
                       ? CachedNetworkImage(
                           placeholder: (context, url) => Container(
                             child: CircularProgressIndicator(
@@ -188,7 +188,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                             height: 60.0,
                             padding: EdgeInsets.all(10.0),
                           ),
-                          imageUrl: group.groupPhoto,
+                          imageUrl: group.groupPhoto!,
                           width: 60.0,
                           height: 60.0,
                           fit: BoxFit.cover,
@@ -208,14 +208,14 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          group.groupName,
+                          group.groupName!,
                           style: TextStyle(
                               color: colorBlack,
                               fontSize: 12,
                               fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          group.recentMessageContent,
+                          group.recentMessageContent!,
                           style: TextStyle(
                               color: Colors.grey, fontSize: 10, height: 1.6),
                           overflow: TextOverflow.ellipsis,
@@ -230,8 +230,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                   text: "Send",
                   onClick: () {
                     if (!id.contains(group.groupId)) {
-                      sendMessage(group.groupId, message.messageContent,
-                          message.contentType);
+                      sendMessage(group.groupId, message!.messageContent!,
+                          message!.contentType);
                       id.add(group.groupId);
                     }
                   },

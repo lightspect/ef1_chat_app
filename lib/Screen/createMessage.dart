@@ -18,11 +18,11 @@ class CreateMessagePage extends StatefulWidget {
 }
 
 class _CreateMessagePageState extends State<CreateMessagePage> {
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
   final _searchController = TextEditingController();
 
   String alert = '';
-  List<ContactModel> contacts;
+  late List<ContactModel> contacts;
 
   @override
   void initState() {
@@ -47,8 +47,8 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
     if (contactDoc.length == 0) {
       GroupModel group = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdBy: databaseService.user.userId,
-          members: [databaseService.user.userId, contact.userId],
+          createdBy: databaseService!.user!.userId,
+          members: [databaseService!.user!.userId, contact.userId],
           groupId: "",
           groupName: "",
           groupPhoto: "",
@@ -56,7 +56,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
           recentMessageSender: "",
           recentMessageTime: "",
           type: 1);
-      DocumentReference groupDocRef = await databaseService.addGroup(group);
+      DocumentReference groupDocRef = await databaseService!.addGroup(group);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
         group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
@@ -65,7 +65,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data());
+      GroupModel group = GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
       if (group.type == 1) {
         group.groupName = contact.nickname;
         group.groupPhoto = contact.photoUrl;
@@ -136,8 +136,8 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             ),
             Flexible(
               child: StreamBuilder(
-                stream: databaseService
-                    .fetchContactsAsStream(databaseService.user.userId),
+                stream: databaseService!
+                    .fetchContactsAsStream(databaseService!.user!.userId),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -146,12 +146,12 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                       ),
                     );
                   } else {
-                    contacts = snapshot.data.docs
-                        .map((doc) => ContactModel.fromMap(doc.data()))
+                    contacts = snapshot.data!.docs
+                        .map((doc) => ContactModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
                         .toList();
                     return GroupedListView<ContactModel, String>(
                       elements: contacts,
-                      groupBy: (element) => element.nickname.substring(0, 1),
+                      groupBy: (element) => element.nickname!.substring(0, 1),
                       groupSeparatorBuilder: (String groupByValue) => Container(
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: Text(groupByValue),
@@ -178,7 +178,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                                         height: 40.0,
                                         padding: EdgeInsets.all(10.0),
                                       ),
-                                      imageUrl: element.photoUrl,
+                                      imageUrl: element.photoUrl!,
                                       width: 40.0,
                                       height: 40.0,
                                       fit: BoxFit.cover,
@@ -195,7 +195,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                             Container(
                               padding: EdgeInsets.only(left: 12),
                               child: Text(
-                                element.nickname,
+                                element.nickname!,
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),

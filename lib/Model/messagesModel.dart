@@ -1,12 +1,12 @@
 class MessagesModel {
-  String messageId;
-  String messageContent;
-  String sentBy;
-  String sentAt;
-  int type;
-  int contentType;
-  List<String> reaction;
-  bool isRead;
+  String? messageId;
+  String? messageContent;
+  String? sentBy;
+  String? sentAt;
+  int? type;
+  int? contentType;
+  List<String>? reaction;
+  bool? isRead;
 
   MessagesModel(
       {this.messageId,
@@ -18,7 +18,7 @@ class MessagesModel {
       this.reaction,
       this.isRead});
 
-  factory MessagesModel.fromMap(Map data, String id) {
+  factory MessagesModel.fromMap(Map? data, String id) {
     data = data ?? {};
     return MessagesModel(
       messageId: id,
@@ -47,12 +47,12 @@ class MessagesModel {
 }
 
 class ReactionModel {
-  String userId;
-  int reaction;
+  String? userId;
+  int? reaction;
 
   ReactionModel({this.userId, this.reaction});
 
-  factory ReactionModel.fromMap(Map data) {
+  factory ReactionModel.fromMap(Map? data) {
     data = data ?? {};
     return ReactionModel(
       userId: data['userId'] ?? '',

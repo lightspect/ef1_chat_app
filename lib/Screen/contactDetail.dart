@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ContactDetailPage extends StatefulWidget {
-  final ContactModel contact;
+  final ContactModel? contact;
   ContactDetailPage(this.contact);
   @override
   State<StatefulWidget> createState() => _ContactDetailPageState(contact);
@@ -20,12 +20,12 @@ class ContactDetailPage extends StatefulWidget {
 
 class _ContactDetailPageState extends State<ContactDetailPage> {
   _ContactDetailPageState(this.contact);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
   final _nicknameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  ContactModel contact;
-  UserModel contactUser;
+  ContactModel? contact;
+  UserModel? contactUser;
   String alert = '';
 
   @override
@@ -37,7 +37,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   void getContactDetail() async {
-    contactUser = await databaseService.getUserById(contact.userId);
+    contactUser = await databaseService!.getUserById(contact!.userId);
     if (contactUser == null) {
       alert = 'Error getting user information';
       _alertDialog(context);
@@ -70,7 +70,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a new nickname";
                               }
                               return null;
@@ -128,10 +128,10 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
-                                    contact.nickname = _nicknameController.text;
+                                    contact!.nickname = _nicknameController.text;
                                   });
                                   handleUpdateNickName();
                                   Navigator.of(context).pop();
@@ -153,22 +153,22 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   void handleUpdateNickName() async {
-    databaseService
-        .updateContact(contact, databaseService.user.userId, contact.userId)
+    databaseService!
+        .updateContact(contact!, databaseService!.user!.userId, contact!.userId)
         .then((value) {
       Fluttertoast.showToast(msg: "Update success");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
 
   void handleRemoveFromContact() async {
-    databaseService
-        .removeContact(databaseService.user.userId, contact.userId)
+    databaseService!
+        .removeContact(databaseService!.user!.userId, contact!.userId)
         .then((value) {
       setState(() {
         alert = "success";
       });
       _alertDialog(context);
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
 
@@ -176,14 +176,14 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     final QuerySnapshot checkGroupResult = await FirebaseFirestore.instance
         .collection('groups')
         .where('type', isEqualTo: 1)
-        .where('members', arrayContains: contact.userId)
+        .where('members', arrayContains: contact!.userId)
         .get();
     final List<DocumentSnapshot> contactDoc = checkGroupResult.docs;
     if (contactDoc.length == 0) {
       GroupModel group = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdBy: databaseService.user.userId,
-          members: [databaseService.user.userId, contact.userId],
+          createdBy: databaseService!.user!.userId,
+          members: [databaseService!.user!.userId, contact!.userId],
           groupId: "",
           groupName: "",
           groupPhoto: "",
@@ -191,18 +191,18 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           recentMessageSender: "",
           recentMessageTime: "",
           type: 1);
-      DocumentReference groupDocRef = await databaseService.addGroup(group);
+      DocumentReference groupDocRef = await databaseService!.addGroup(group);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
+        group.groupName = contact!.nickname;
+        group.groupPhoto = contact!.photoUrl;
         Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = GroupModel.fromMap(contactDoc.first.data());
+      GroupModel group = GroupModel.fromMap(contactDoc.first.data() as Map<dynamic, dynamic>?);
       if (group.type == 1) {
-        group.groupName = contact.nickname;
-        group.groupPhoto = contact.photoUrl;
+        group.groupName = contact!.nickname;
+        group.groupPhoto = contact!.photoUrl;
       }
       Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(builder: (context) => ChatPage(group: group)));
@@ -264,7 +264,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          contact.nickname,
+          contact!.nickname!,
           style: TextStyle(color: colorBlack),
         ),
         leading: BackButton(
@@ -294,7 +294,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                     height: 60.0,
                     padding: EdgeInsets.all(10.0),
                   ),
-                  imageUrl: contact.photoUrl,
+                  imageUrl: contact!.photoUrl!,
                   width: 60.0,
                   height: 60.0,
                   fit: BoxFit.cover,
@@ -303,8 +303,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                 clipBehavior: Clip.hardEdge,
               ),
             ),
-            Text(contactUser != null ? contactUser.nickname : ""),
-            Text(contactUser != null ? contactUser.aboutMe : "",
+            Text(contactUser != null ? contactUser!.nickname! : ""),
+            Text(contactUser != null ? contactUser!.aboutMe! : "",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey,

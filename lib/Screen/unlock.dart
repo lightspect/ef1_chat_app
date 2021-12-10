@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chat_app_ef1/Common/loading.dart';
 import 'package:chat_app_ef1/Common/share_prefs.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
@@ -13,9 +15,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class UnlockPage extends StatefulWidget {
-  UnlockPage({Key key, this.title}) : super(key: key);
+  UnlockPage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   @override
   _UnlockPageState createState() => _UnlockPageState();
@@ -25,13 +27,13 @@ class _UnlockPageState extends State<UnlockPage> {
   Color _buttonTextColor = Colors.white;
   final GoogleSignIn googleSignIn = GoogleSignIn();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  SharedPref sharedPref;
-  DatabaseService databaseService;
+  late SharedPref sharedPref;
+  DatabaseService? databaseService;
 
   bool isLoading = false;
   bool isLoggedIn = false;
-  User currentUser;
-  UserModel user;
+  late User currentUser;
+  late UserModel user;
 
   @override
   void initState() {
@@ -67,7 +69,8 @@ class _UnlockPageState extends State<UnlockPage> {
       isLoading = true;
     });
 
-    GoogleSignInAccount googleUser = await googleSignIn.signIn();
+    GoogleSignInAccount googleUser =
+        await (googleSignIn.signIn() as FutureOr<GoogleSignInAccount>);
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
@@ -75,7 +78,7 @@ class _UnlockPageState extends State<UnlockPage> {
       idToken: googleAuth.idToken,
     );
 
-    User firebaseUser =
+    User? firebaseUser =
         (await firebaseAuth.signInWithCredential(credential)).user;
 
     if (firebaseUser != null) {
@@ -87,7 +90,7 @@ class _UnlockPageState extends State<UnlockPage> {
       final List<DocumentSnapshot> documents = result.docs;
       if (documents.length == 0) {
         currentUser = firebaseUser;
-        String token = await databaseService.firebaseMessaging.getToken();
+        String? token = await databaseService!.firebaseMessaging.getToken();
         user = new UserModel(
             userId: currentUser.uid,
             nickname: currentUser.displayName,
@@ -97,13 +100,13 @@ class _UnlockPageState extends State<UnlockPage> {
             chattingWith: "",
             token: token);
         // Update data to server if new user
-        databaseService.setUser(user, currentUser.uid);
+        databaseService!.setUser(user, currentUser.uid);
 
         // Write data to local
         sharedPref.save("user", user.toMap());
       } else {
         // Write data to local
-        user = UserModel.fromMap(documents[0].data());
+        user = UserModel.fromMap(documents[0].data() as Map<dynamic, dynamic>?);
         sharedPref.save("user", user.toMap());
       }
       Fluttertoast.showToast(msg: "Sign in success");

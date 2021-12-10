@@ -20,9 +20,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatGroupPage extends StatefulWidget {
-  const ChatGroupPage({Key key, this.group}) : super(key: key);
+  const ChatGroupPage({Key? key, this.group}) : super(key: key);
 
-  final GroupModel group;
+  final GroupModel? group;
 
   static const route = '/message/chat';
 
@@ -32,14 +32,14 @@ class ChatGroupPage extends StatefulWidget {
 
 class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   _ChatGroupPageState(this.group);
-  SharedPreferences prefs;
-  DatabaseService databaseService;
+  SharedPreferences? prefs;
+  DatabaseService? databaseService;
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
-  PersistentBottomSheetController controller;
+  PersistentBottomSheetController? controller;
 
-  final GroupModel group;
-  List<MessagesModel> messages;
+  final GroupModel? group;
+  List<MessagesModel>? messages;
   List<UserModel> members = [];
 
   bool hasContent = false;
@@ -53,7 +53,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     databaseService = locator<DatabaseService>();
     listScrollController.addListener(_scrollListener);
     getMemberList();
-    databaseService.currentGroupId = group.groupId;
+    databaseService!.currentGroupId = group!.groupId;
   }
 
   _scrollListener() {
@@ -80,8 +80,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
     setState(() {
       isLoading = true;
     });
-    for (String id in group.members) {
-      UserModel userModel = await databaseService.getUserById(id);
+    for (String? id in group!.members as Iterable<String?>) {
+      UserModel userModel = await databaseService!.getUserById(id);
       members.add(userModel);
     }
     setState(() {
@@ -99,22 +99,22 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
       String dateTime = DateTime.now().toString();
       await FirebaseFirestore.instance
           .collection('messages')
-          .doc(group.groupId)
+          .doc(group!.groupId)
           .collection("messages")
           .doc()
           .set({
             'messageContent': message,
             'sentAt': dateTime,
-            'sentBy': databaseService.user.userId,
+            'sentBy': databaseService!.user!.userId,
             'type': 1,
             'contentType': contentType
           })
           .then((value) => FirebaseFirestore.instance
                   .collection('groups')
-                  .doc(group.groupId)
+                  .doc(group!.groupId)
                   .update({
                 'recentMessage': contentType == 2 ? "Photo" : message,
-                'recentMessageSender': databaseService.user.userId,
+                'recentMessageSender': databaseService!.user!.userId,
                 'recentMessageTime': dateTime,
               }).catchError((onError) {
                 Fluttertoast.showToast(msg: onError.toString());
@@ -127,11 +127,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
 
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
+    PickedFile? pickedFile;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
-    File image = File(pickedFile.path);
+    File image = File(pickedFile!.path);
     if (image != null) {
       setState(() {
         isLoading = true;
@@ -157,7 +157,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
         return;
       }
       if (controller != null) {
-        controller.close();
+        controller!.close();
         controller = null;
       }
     });
@@ -165,29 +165,22 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
 
   Future uploadFile(File chatImageFile) async {
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(chatImageFile);
-    StorageTaskSnapshot storageTaskSnapshot;
-    uploadTask.onComplete.then((value) {
-      if (value.error == null) {
-        storageTaskSnapshot = value;
-        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          setState(() {
-            isLoading = false;
-            sendMessage(downloadUrl, 2);
-          });
-        }, onError: (err) {
-          setState(() {
-            isLoading = false;
-          });
-          Fluttertoast.showToast(msg: 'This file is not an image');
+    Reference reference = FirebaseStorage.instance.ref().child(fileName);
+    UploadTask uploadTask = reference.putFile(chatImageFile);
+    TaskSnapshot storageTaskSnapshot;
+    uploadTask.then((value) {
+      storageTaskSnapshot = value;
+      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+        setState(() {
+          isLoading = false;
+          sendMessage(downloadUrl, 2);
         });
-      } else {
+      }, onError: (err) {
         setState(() {
           isLoading = false;
         });
         Fluttertoast.showToast(msg: 'This file is not an image');
-      }
+      });
     }, onError: (err) {
       setState(() {
         isLoading = false;
@@ -206,7 +199,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Material(
-                  child: group.groupPhoto != ""
+                  child: group!.groupPhoto != ""
                       ? CachedNetworkImage(
                           placeholder: (context, url) => Container(
                             child: CircularProgressIndicator(
@@ -218,7 +211,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                             height: 50.0,
                             padding: EdgeInsets.all(15.0),
                           ),
-                          imageUrl: group.groupPhoto,
+                          imageUrl: group!.groupPhoto!,
                           width: 50.0,
                           height: 50.0,
                           fit: BoxFit.cover,
@@ -239,7 +232,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
                     child: Text(
-                      group.groupName,
+                      group!.groupName!,
                       style: TextStyle(color: colorBlack),
                       overflow: TextOverflow.ellipsis,
                       softWrap: true,
@@ -272,7 +265,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
               ],
             ),
             onWillPop: () {
-              databaseService.currentGroupId = "";
+              databaseService!.currentGroupId = "";
               return Future.value(true);
             }));
   }
@@ -287,8 +280,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder(
-                stream: databaseService.fetchMessagesAsStreamPagination(
-                    group.groupId, limit),
+                stream: databaseService!.fetchMessagesAsStreamPagination(
+                    group!.groupId, limit),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -297,12 +290,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                       ),
                     );
                   } else {
-                    messages = snapshot.data.docs
-                        .map((doc) => MessagesModel.fromMap(doc.data(), doc.id))
+                    messages = snapshot.data!.docs
+                        .map((doc) => MessagesModel.fromMap(doc.data() as Map<dynamic, dynamic>?, doc.id))
                         .toList();
-                    messages.sort((element1, element2) {
-                      if (DateTime.parse(element1.sentAt)
-                          .isAfter(DateTime.parse(element2.sentAt))) {
+                    messages!.sort((element1, element2) {
+                      if (DateTime.parse(element1.sentAt!)
+                          .isAfter(DateTime.parse(element2.sentAt!))) {
                         return -1;
                       } else {
                         return 1;
@@ -313,11 +306,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                           onTapDown: storePosition,
                           onLongPress: () {
                             showEmojiMenu();
-                            _settingModalBottomSheet(messages[index], context);
+                            _settingModalBottomSheet(messages![index], context);
                           },
                           child: Column(
                             children: [
-                              buildItem(index, messages[index]),
+                              buildItem(index, messages![index]),
                               isLastMessageYesterday(index)
                                   ? Container(
                                       height: 40,
@@ -333,8 +326,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                              messages[index - 1]
-                                                  .sentAt
+                                              messages![index - 1]
+                                                  .sentAt!
                                                   .substring(0, 10),
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
@@ -349,7 +342,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                           )),
                       reverse: true,
                       controller: listScrollController,
-                      itemCount: messages.length,
+                      itemCount: messages!.length,
                     );
                   }
                 },
@@ -451,7 +444,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   }
 
   Widget buildItem(int index, MessagesModel message) {
-    if (message.sentBy == databaseService.user.userId) {
+    if (message.sentBy == databaseService!.user!.userId) {
       // Right (my message)
       return Row(
         children: <Widget>[
@@ -461,7 +454,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                   children: [
                     Container(
                       child: Text(
-                        message.messageContent,
+                        message.messageContent!,
                         style: TextStyle(color: Colors.white),
                       ),
                       padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
@@ -508,7 +501,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                               ),
                               clipBehavior: Clip.hardEdge,
                             ),
-                            imageUrl: message.messageContent,
+                            imageUrl: message.messageContent!,
                             width: MediaQuery.of(context).size.width / 1.8,
                             height: 200.0,
                             fit: BoxFit.cover,
@@ -533,7 +526,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                   : message.contentType == 4
                       ? Container(
                           child: Text(
-                            message.messageContent,
+                            message.messageContent!,
                             style: TextStyle(
                                 color: Colors.white,
                                 fontStyle: FontStyle.italic),
@@ -572,7 +565,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                 message.contentType == 1
                     ? Container(
                         child: Text(
-                          message.messageContent,
+                          message.messageContent!,
                           style: TextStyle(color: colorBlack),
                         ),
                         padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
@@ -617,7 +610,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                                     ),
                                     clipBehavior: Clip.hardEdge,
                                   ),
-                                  imageUrl: message.messageContent,
+                                  imageUrl: message.messageContent!,
                                   width: 200.0,
                                   height: 200.0,
                                   fit: BoxFit.cover,
@@ -640,7 +633,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                         : message.contentType == 4
                             ? Container(
                                 child: Text(
-                                  message.messageContent,
+                                  message.messageContent!,
                                   style: TextStyle(
                                       color: colorBlack,
                                       fontStyle: FontStyle.italic),
@@ -672,7 +665,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             isLastMessageLeft(index)
                 ? Container(
                     child: Text(
-                      message.sentAt,
+                      message.sentAt!,
                       style: TextStyle(
                           color: Colors.grey,
                           fontSize: 12.0,
@@ -692,8 +685,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             messages != null &&
-            (messages[index - 1].sentBy == databaseService.user.userId ||
-                messages[index].sentBy != messages[index - 1].sentBy)) ||
+            (messages![index - 1].sentBy == databaseService!.user!.userId ||
+                messages![index].sentBy != messages![index - 1].sentBy)) ||
         index == 0) {
       return true;
     } else {
@@ -704,7 +697,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
             messages != null &&
-            messages[index - 1].sentBy != databaseService.user.userId) ||
+            messages![index - 1].sentBy != databaseService!.user!.userId) ||
         index == 0) {
       return true;
     } else {
@@ -713,19 +706,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
   }
 
   bool isLastMessageYesterday(int index) {
-    if (messages.isNotEmpty && index > 0) {
+    if (messages!.isNotEmpty && index > 0) {
       String lastDate =
-          DateTime.parse(messages[index - 1].sentAt).day.toString() +
+          DateTime.parse(messages![index - 1].sentAt!).day.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).month.toString() +
+              DateTime.parse(messages![index - 1].sentAt!).month.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).year.toString();
+              DateTime.parse(messages![index - 1].sentAt!).year.toString();
       String currentDate =
-          DateTime.parse(messages[index].sentAt).day.toString() +
+          DateTime.parse(messages![index].sentAt!).day.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).month.toString() +
+              DateTime.parse(messages![index].sentAt!).month.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).year.toString();
+              DateTime.parse(messages![index].sentAt!).year.toString();
       if (currentDate != lastDate) {
         return true;
       } else {
@@ -757,7 +750,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
             imageUrl: members
                 .where((element) => element.userId == message.sentBy)
                 .first
-                .photoUrl,
+                .photoUrl!,
             width: 35.0,
             height: 35.0,
             fit: BoxFit.cover,
@@ -853,8 +846,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> with CustomPopupMenu {
                     onTap: () {
                       message.contentType = 4;
                       message.messageContent = "This message has been deleted";
-                      databaseService.updateMessage(
-                          message, group.groupId, message.messageId);
+                      databaseService!.updateMessage(
+                          message, group!.groupId, message.messageId);
                       Navigator.of(context).pop();
                     },
                     child: Row(
@@ -907,7 +900,7 @@ class PlusMinusEntry extends PopupMenuEntry<int> {
   // initialValue to showMenu().
 
   @override
-  bool represents(int n) => n == 1 || n == 2 || n == 3 || n == 4 || n == 5;
+  bool represents(int? n) => n == 1 || n == 2 || n == 3 || n == 4 || n == 5;
 
   @override
   PlusMinusEntryState createState() => PlusMinusEntryState();

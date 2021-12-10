@@ -3,9 +3,9 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 
 class SeedSuccessPage extends StatefulWidget {
-  SeedSuccessPage({Key key, this.title}) : super(key: key);
+  SeedSuccessPage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   @override
   _SeedSuccessPageState createState() => _SeedSuccessPageState();

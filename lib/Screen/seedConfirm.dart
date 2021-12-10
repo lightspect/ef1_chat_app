@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 class SeedConfirmPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final String seed = ModalRoute.of(context).settings.arguments;
+    final String seed = ModalRoute.of(context)!.settings.arguments as String;
     List<String> seedArray = seed.split(" ")..shuffle();
     Future<void> _showMyDialog() async {
       return showDialog<void>(

@@ -1,11 +1,11 @@
 class UserModel {
-  String userId;
-  String nickname;
-  String photoUrl;
-  String createdAt;
-  String aboutMe;
-  String chattingWith;
-  String token;
+  String? userId;
+  String? nickname;
+  String? photoUrl;
+  String? createdAt;
+  String? aboutMe;
+  String? chattingWith;
+  String? token;
 
   UserModel(
       {this.userId,
@@ -16,7 +16,7 @@ class UserModel {
       this.chattingWith,
       this.token});
 
-  factory UserModel.fromMap(Map data) {
+  factory UserModel.fromMap(Map? data) {
     data = data ?? {};
     return UserModel(
         userId: data['id'] ?? '',
@@ -42,13 +42,13 @@ class UserModel {
 }
 
 class ContactModel {
-  String userId;
-  String nickname;
-  String photoUrl;
+  String? userId;
+  String? nickname;
+  String? photoUrl;
 
   ContactModel({this.userId, this.nickname, this.photoUrl});
 
-  factory ContactModel.fromMap(Map data) {
+  factory ContactModel.fromMap(Map? data) {
     data = data ?? {};
     return ContactModel(
       userId: data['id'] ?? '',

@@ -1,14 +1,14 @@
 class GroupModel {
-  String groupId;
-  String groupName;
-  String groupPhoto;
-  String createdAt;
-  String createdBy;
-  String recentMessageContent;
-  String recentMessageSender;
-  String recentMessageTime;
-  int type;
-  List<dynamic> members;
+  String? groupId;
+  String? groupName;
+  String? groupPhoto;
+  String? createdAt;
+  String? createdBy;
+  String? recentMessageContent;
+  String? recentMessageSender;
+  String? recentMessageTime;
+  int? type;
+  List<dynamic>? members;
 
   GroupModel(
       {this.groupId,
@@ -37,7 +37,7 @@ class GroupModel {
     };
   }
 
-  factory GroupModel.fromMap(Map data) {
+  factory GroupModel.fromMap(Map? data) {
     data = data ?? {};
     return GroupModel(
         groupId: data['groupId'] ?? '',

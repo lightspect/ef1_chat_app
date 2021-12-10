@@ -5,24 +5,21 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Common/share_prefs.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/navigationService.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key key, this.title}) : super(key: key);
+  const HomePage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   static const route = '/home';
 
@@ -31,11 +28,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  SharedPref sharedPref;
-  DatabaseService databaseService;
+  SharedPref? sharedPref;
+  DatabaseService? databaseService;
 
   bool isLoading = false;
-  File avatarImageFile;
+  File? avatarImageFile;
 
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
@@ -64,10 +61,10 @@ class _HomePageState extends State<HomePage> {
 
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(databaseService.user.userId)
+        .doc(databaseService!.user!.userId)
         .update({'token': ""});
 
-    databaseService.user = new UserModel(
+    databaseService!.user = new UserModel(
         userId: "",
         aboutMe: "",
         chattingWith: "",
@@ -75,27 +72,27 @@ class _HomePageState extends State<HomePage> {
         nickname: "",
         photoUrl: "",
         token: "");
-    databaseService.setLocal();
+    databaseService!.setLocal();
 
     Navigator.of(context, rootNavigator: true)
         .pushNamedAndRemoveUntil('/unlock', (Route<dynamic> route) => false);
   }
 
   void readLocal() async {
-    await databaseService.readLocal();
-    await databaseService.fetchContacts(databaseService.user.userId);
-    await databaseService.setContactsList();
+    await databaseService!.readLocal();
+    await databaseService!.fetchContacts(databaseService!.user!.userId);
+    await databaseService!.setContactsList();
     // Force refresh input
     setState(() {});
   }
 
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
+    PickedFile? pickedFile;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
-    File image = File(pickedFile.path);
+    File image = File(pickedFile!.path);
 
     if (image != null) {
       setState(() {
@@ -107,41 +104,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future uploadFile() async {
-    String fileName = databaseService.user.userId;
-    StorageReference reference = FirebaseStorage.instance.ref().child(fileName);
-    StorageUploadTask uploadTask = reference.putFile(avatarImageFile);
-    StorageTaskSnapshot storageTaskSnapshot;
-    uploadTask.onComplete.then((value) {
-      if (value.error == null) {
-        storageTaskSnapshot = value;
-        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          databaseService.user.photoUrl = downloadUrl;
-          databaseService
-              .updateUser(databaseService.user, databaseService.user.userId)
-              .then((data) async {
-            await databaseService.setLocal();
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: "Upload success");
-          }).catchError((err) {
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: err.toString());
-          });
-        }, onError: (err) {
+    String fileName = databaseService!.user!.userId!;
+    Reference reference = FirebaseStorage.instance.ref().child(fileName);
+    UploadTask uploadTask = reference.putFile(avatarImageFile!);
+    TaskSnapshot storageTaskSnapshot;
+    uploadTask.then((value) {
+      storageTaskSnapshot = value;
+      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+        databaseService!.user!.photoUrl = downloadUrl;
+        databaseService!
+            .updateUser(databaseService!.user!, databaseService!.user!.userId)
+            .then((data) async {
+          await databaseService!.setLocal();
           setState(() {
             isLoading = false;
           });
-          Fluttertoast.showToast(msg: 'This file is not an image');
+          Fluttertoast.showToast(msg: "Upload success");
+        }).catchError((err) {
+          setState(() {
+            isLoading = false;
+          });
+          Fluttertoast.showToast(msg: err.toString());
         });
-      } else {
+      }, onError: (err) {
         setState(() {
           isLoading = false;
         });
         Fluttertoast.showToast(msg: 'This file is not an image');
-      }
+      });
     }, onError: (err) {
       setState(() {
         isLoading = false;
@@ -155,10 +145,10 @@ class _HomePageState extends State<HomePage> {
       isLoading = true;
     });
 
-    databaseService
-        .updateUser(databaseService.user, databaseService.user.userId)
+    databaseService!
+        .updateUser(databaseService!.user!, databaseService!.user!.userId)
         .then((data) async {
-      await databaseService.setLocal();
+      await databaseService!.setLocal();
       setState(() {
         isLoading = false;
       });
@@ -253,11 +243,11 @@ class _HomePageState extends State<HomePage> {
                             onClick: () {
                               setState(() {
                                 if (_nicknameController.text.isNotEmpty) {
-                                  databaseService.user.nickname =
+                                  databaseService!.user!.nickname =
                                       _nicknameController.text;
                                 } else if (_statusMessageController
                                     .text.isNotEmpty) {
-                                  databaseService.user.aboutMe =
+                                  databaseService!.user!.aboutMe =
                                       _statusMessageController.text;
                                 }
                               });
@@ -322,7 +312,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                              "Display Name: " + databaseService.user.nickname),
+                              "Display Name: " + databaseService!.user!.nickname!),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
@@ -342,7 +332,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Status Message: " +
-                              databaseService.user.aboutMe),
+                              databaseService!.user!.aboutMe!),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
@@ -401,7 +391,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: BoxDecoration(
                       border: Border.all(color: colorBlack, width: 1.0)),
                   child: QrImage(
-                    data: databaseService.user.userId,
+                    data: databaseService!.user!.userId!,
                   ),
                 ),
                 LoginButton(
@@ -417,15 +407,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget profilePicture(BuildContext context) {
-    if (databaseService.user == null) {
+    if (databaseService!.user == null) {
       return Icon(
         Icons.account_circle,
         size: 120.0,
         color: Colors.grey,
       );
     } else if (avatarImageFile == null) {
-      if (databaseService.user.photoUrl != null ||
-          databaseService.user.photoUrl.isNotEmpty) {
+      if (databaseService!.user!.photoUrl != null ||
+          databaseService!.user!.photoUrl!.isNotEmpty) {
         return Material(
           child: CachedNetworkImage(
             placeholder: (context, url) => Container(
@@ -437,7 +427,7 @@ class _HomePageState extends State<HomePage> {
               height: 120.0,
               padding: EdgeInsets.all(20.0),
             ),
-            imageUrl: databaseService.user.photoUrl,
+            imageUrl: databaseService!.user!.photoUrl!,
             width: 120.0,
             height: 120.0,
             fit: BoxFit.cover,
@@ -455,7 +445,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       return Material(
         child: Image.file(
-          avatarImageFile,
+          avatarImageFile!,
           width: 120.0,
           height: 120.0,
           fit: BoxFit.cover,

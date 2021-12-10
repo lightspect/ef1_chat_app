@@ -11,9 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ForwardMessagePage extends StatefulWidget {
-  const ForwardMessagePage({Key key, this.message}) : super(key: key);
+  const ForwardMessagePage({Key? key, this.message}) : super(key: key);
 
-  final MessagesModel message;
+  final MessagesModel? message;
 
   static const route = '/message';
 
@@ -23,11 +23,11 @@ class ForwardMessagePage extends StatefulWidget {
 
 class _ForwardMessagePageState extends State<ForwardMessagePage> {
   final _searchController = TextEditingController();
-  final MessagesModel message;
+  final MessagesModel? message;
   //final _debouncer = Debouncer(milliseconds: 500);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
 
-  List<GroupModel> groups = [];
+  List<GroupModel>? groups = [];
 
   _ForwardMessagePageState(this.message);
 
@@ -39,33 +39,33 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    databaseService.refreshMessageList();
+    databaseService!.refreshMessageList();
     getGroups();
   }
 
   void search(String search) {}
 
   void getGroups() {
-    databaseService
-        .fetchGroupsByUserId(databaseService.user.userId)
+    databaseService!
+        .fetchGroupsByUserId(databaseService!.user!.userId)
         .then((value) async => setState(() {
               groups = value;
-              for (int i = 0; i < groups.length; i++) {
-                generateGroupMessage(groups[i]).then((value) => setState(() {
-                      groups[i] = value;
+              for (int i = 0; i < groups!.length; i++) {
+                generateGroupMessage(groups![i]).then((value) => setState(() {
+                      groups![i] = value;
                     }));
               }
-              groups.forEach((element) {
+              groups!.forEach((element) {
                 groupsMap[element] = false;
               });
             }));
   }
 
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
-    members.remove(databaseService.user.userId);
-    ContactModel contactModel = await databaseService.getContactById(
-        databaseService.user.userId, members.first.trim());
-    if (contactModel != null && contactModel.userId.isNotEmpty) {
+    members.remove(databaseService!.user!.userId);
+    ContactModel contactModel = await databaseService!.getContactById(
+        databaseService!.user!.userId, members.first.trim());
+    if (contactModel != null && contactModel.userId!.isNotEmpty) {
       return contactModel;
     } else {
       return new ContactModel(
@@ -75,8 +75,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
 
   Future<GroupModel> generateGroupMessage(GroupModel group) async {
     if (group.type == 1) {
-      ContactModel contactModel = await getContactDetail(group.members);
-      group.groupName = contactModel.nickname.isNotEmpty
+      ContactModel contactModel = await getContactDetail(group.members!);
+      group.groupName = contactModel.nickname!.isNotEmpty
           ? contactModel.nickname
           : contactModel.userId;
       group.groupPhoto = contactModel.photoUrl;
@@ -84,7 +84,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
     return group;
   }
 
-  void sendMessage(String groupId, String message, int contentType) async {
+  void sendMessage(String? groupId, String message, int? contentType) async {
     //type: 1 = Text, 2 = image, 3 = sticker, 4 = deleted
     if (message.trim() != "") {
       String dateTime = DateTime.now().toString();
@@ -96,7 +96,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
           .set({
         'messageContent': message,
         'sentAt': dateTime,
-        'sentBy': databaseService.user.userId,
+        'sentBy': databaseService!.user!.userId,
         'type': 1,
         'contentType': contentType
       }).then((value) {
@@ -105,7 +105,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
             .doc(groupId)
             .update({
               'recentMessage': contentType == 2 ? "Photo" : message,
-              'recentMessageSender': databaseService.user.userId,
+              'recentMessageSender': databaseService!.user!.userId,
               'recentMessageTime': dateTime,
             })
             .then((value) => setState(() {}))
@@ -177,9 +177,9 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                 child: ListView.builder(
               padding: EdgeInsets.all(10.0),
               itemBuilder: (context, index) {
-                return buildItem(context, groups[index], groupsMap);
+                return buildItem(context, groups![index], groupsMap);
               },
-              itemCount: groups.length,
+              itemCount: groups!.length,
             )),
           ],
         ),
@@ -197,7 +197,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
             child: Row(
               children: <Widget>[
                 Material(
-                  child: group.groupPhoto.isNotEmpty
+                  child: group.groupPhoto!.isNotEmpty
                       ? CachedNetworkImage(
                           placeholder: (context, url) => Container(
                             child: CircularProgressIndicator(
@@ -209,7 +209,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                             height: 60.0,
                             padding: EdgeInsets.all(10.0),
                           ),
-                          imageUrl: group.groupPhoto,
+                          imageUrl: group.groupPhoto!,
                           width: 60.0,
                           height: 60.0,
                           fit: BoxFit.cover,
@@ -229,14 +229,14 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          group.groupName,
+                          group.groupName!,
                           style: TextStyle(
                               color: colorBlack,
                               fontSize: 12,
                               fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          group.recentMessageContent,
+                          group.recentMessageContent!,
                           style: TextStyle(
                               color: Colors.grey, fontSize: 10, height: 1.6),
                           overflow: TextOverflow.ellipsis,
@@ -251,8 +251,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                   text: "Send",
                   onClick: () {
                     if (!groupsMap[group]) {
-                      sendMessage(group.groupId, message.messageContent,
-                          message.contentType);
+                      sendMessage(group.groupId, message!.messageContent!,
+                          message!.contentType);
                       groupsMap[group] = true;
                     }
                   },

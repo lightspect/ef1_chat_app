@@ -9,7 +9,7 @@ class Screen {
   final Widget child;
 
   /// Screen icon
-  final Widget icon;
+  final Widget? icon;
 
   /// Route generator for this screen's inner [Navigator]
   final RouteFactory onGenerateRoute;
@@ -22,14 +22,14 @@ class Screen {
 
   /// (Optional) Scroll controller for manipulating scroll views from
   /// [NavigationProvider].
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   Screen({
-    @required this.title,
-    @required this.child,
-    @required this.onGenerateRoute,
-    @required this.initialRoute,
-    @required this.navigatorState,
+    required this.title,
+    required this.child,
+    required this.onGenerateRoute,
+    required this.initialRoute,
+    required this.navigatorState,
     this.scrollController,
     this.icon,
   });

@@ -19,20 +19,20 @@ class AppButton extends StatelessWidget {
       this.leadingIcon,
       this.trailingIcon});
 
-  final VoidCallback onClick;
-  final String text;
-  final Color textColor;
-  final Color color;
-  final Color splashColor;
-  final Color highlightColor;
-  final double borderRadius;
-  final double minWidth;
-  final double height;
-  final double fontSize;
-  final Color borderColor;
-  final TextStyle style;
-  final IconData leadingIcon;
-  final IconData trailingIcon;
+  final VoidCallback? onClick;
+  final String? text;
+  final Color? textColor;
+  final Color? color;
+  final Color? splashColor;
+  final Color? highlightColor;
+  final double? borderRadius;
+  final double? minWidth;
+  final double? height;
+  final double? fontSize;
+  final Color? borderColor;
+  final TextStyle? style;
+  final IconData? leadingIcon;
+  final IconData? trailingIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -76,16 +76,16 @@ class AppTextField extends StatelessWidget {
       this.borderColor,
       this.textColor});
 
-  final TextEditingController controller;
-  final String hintText;
-  final String helpText;
-  final IconData prefixIcon;
-  final IconData suffixIcon;
-  final bool isPassword;
-  final bool enabled;
-  final bool readOnly;
-  final Color borderColor;
-  final Color textColor;
+  final TextEditingController? controller;
+  final String? hintText;
+  final String? helpText;
+  final IconData? prefixIcon;
+  final IconData? suffixIcon;
+  final bool? isPassword;
+  final bool? enabled;
+  final bool? readOnly;
+  final Color? borderColor;
+  final Color? textColor;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -136,21 +136,21 @@ class LoginButton extends StatelessWidget {
       this.trailingIcon,
       this.margin});
 
-  final VoidCallback onClick;
-  final String text;
-  final Color textColor;
-  final Color color;
-  final Color splashColor;
-  final Color highlightColor;
-  final double borderRadius;
-  final double minWidth;
-  final double height;
-  final double fontSize;
-  final Color borderColor;
-  final TextStyle style;
-  final IconData leadingIcon;
-  final IconData trailingIcon;
-  final EdgeInsets margin;
+  final VoidCallback? onClick;
+  final String? text;
+  final Color? textColor;
+  final Color? color;
+  final Color? splashColor;
+  final Color? highlightColor;
+  final double? borderRadius;
+  final double? minWidth;
+  final double? height;
+  final double? fontSize;
+  final Color? borderColor;
+  final TextStyle? style;
+  final IconData? leadingIcon;
+  final IconData? trailingIcon;
+  final EdgeInsets? margin;
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +183,9 @@ class LoginButton extends StatelessWidget {
 class LoginLogo extends StatelessWidget {
   LoginLogo({this.margin, this.width, this.image});
 
-  final EdgeInsets margin;
-  final double width;
-  final Image image;
+  final EdgeInsets? margin;
+  final double? width;
+  final Image? image;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +194,7 @@ class LoginLogo extends StatelessWidget {
         margin: margin ?? EdgeInsets.only(bottom: 16),
         width: width ?? MediaQuery.of(context).size.width,
         child: Image(
-          image: image ?? AssetImage('assets/images/logo_wallet.png'),
+          image: image as ImageProvider<Object>? ?? AssetImage('assets/images/logo_wallet.png'),
         ),
       ),
     );
@@ -202,25 +202,25 @@ class LoginLogo extends StatelessWidget {
 }
 
 class TextFormFieldWidget extends StatefulWidget {
-  final TextInputType textInputType;
+  final TextInputType? textInputType;
   final String hintText;
-  final Widget prefixIcon;
-  final Widget suffixIcon;
-  final String defaultText;
-  final FocusNode focusNode;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
+  final String? defaultText;
+  final FocusNode? focusNode;
   final bool obscureText;
   final bool enable;
-  final double width;
-  final TextEditingController controller;
-  final Function functionValidate;
+  final double? width;
+  final TextEditingController? controller;
+  final Function? functionValidate;
   final TextInputAction actionKeyboard;
-  final Function onSubmitField;
-  final Function onFieldTap;
-  final Function onChange;
-  final EdgeInsets padding;
+  final Function? onSubmitField;
+  final Function? onFieldTap;
+  final Function? onChange;
+  final EdgeInsets? padding;
 
   const TextFormFieldWidget(
-      {@required this.hintText,
+      {required this.hintText,
       this.width,
       this.focusNode,
       this.textInputType,
@@ -300,7 +300,7 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
         controller: widget.controller,
         validator: (value) {
           if (widget.functionValidate != null) {
-            String resultValidate = widget.functionValidate(value);
+            String? resultValidate = widget.functionValidate!(value);
             if (resultValidate != null) {
               return resultValidate;
             }
@@ -308,13 +308,13 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
           return null;
         },
         onFieldSubmitted: (value) {
-          if (widget.onSubmitField != null) widget.onSubmitField();
+          if (widget.onSubmitField != null) widget.onSubmitField!();
         },
         onTap: () {
-          if (widget.onFieldTap != null) widget.onFieldTap();
+          if (widget.onFieldTap != null) widget.onFieldTap!();
         },
         onChanged: (value) {
-          if (widget.onChange != null) widget.onChange();
+          if (widget.onChange != null) widget.onChange!();
         },
       ),
     );
@@ -336,12 +336,12 @@ class CustomAlertDialog extends StatelessWidget {
     this.bodyAction,
     this.action,
   });
-  final String title;
-  final Icon icon;
-  final String bodyTitle;
-  final String bodySubtitle;
-  final List<Widget> bodyAction;
-  final List<Widget> action;
+  final String? title;
+  final Icon? icon;
+  final String? bodyTitle;
+  final String? bodySubtitle;
+  final List<Widget>? bodyAction;
+  final List<Widget>? action;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +367,7 @@ class CustomAlertDialog extends StatelessWidget {
                     ),
               ),
               Visibility(
-                visible: bodyTitle.isNotEmpty,
+                visible: bodyTitle!.isNotEmpty,
                 child: Text(
                   bodyTitle ?? "Success",
                   textAlign: TextAlign.center,
@@ -375,7 +375,7 @@ class CustomAlertDialog extends StatelessWidget {
                 ),
               ),
               Visibility(
-                visible: bodySubtitle.isNotEmpty,
+                visible: bodySubtitle!.isNotEmpty,
                 child: Text(
                   bodySubtitle ?? "",
                   textAlign: TextAlign.center,
@@ -405,7 +405,7 @@ class ExitAlertDialog extends StatelessWidget {
           },
           child: Text(
             'Cancel',
-            style: Theme.of(context).textTheme.button.copyWith(
+            style: Theme.of(context).textTheme.button!.copyWith(
                   fontWeight: FontWeight.normal,
                 ),
           ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:chat_app_ef1/Common/color_utils.dart';
@@ -14,21 +15,21 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 class NavigationMenu extends StatefulWidget {
-  final String currentUserId;
+  final String? currentUserId;
 
   static const route = '/';
 
-  NavigationMenu({Key key, this.currentUserId}) : super(key: key);
+  NavigationMenu({Key? key, this.currentUserId}) : super(key: key);
 
   @override
   State createState() => NavigationMenuState(currentUserId: currentUserId);
 }
 
 class NavigationMenuState extends State<NavigationMenu> {
-  NavigationMenuState({Key key, this.currentUserId});
+  NavigationMenuState({Key? key, this.currentUserId});
 
-  final String currentUserId;
-  DatabaseService databaseService;
+  final String? currentUserId;
+  DatabaseService? databaseService;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -41,33 +42,29 @@ class NavigationMenuState extends State<NavigationMenu> {
   }
 
   void registerNotification() {
-    databaseService.firebaseMessaging.requestNotificationPermissions();
+    databaseService!.firebaseMessaging.requestPermission();
 
-    databaseService.firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) {
-      print('onMessage: $message');
-      var notification = (Platform.isAndroid
-          ? message['notification']
-          : message['aps']['alert']) as Map;
-      var data = message['data'] as Map;
+    FirebaseMessaging.onMessage.listen((event) {
+      print('onMessage: $event');
+      var notification = event.notification;
+      var data = event.data;
       String groupId = data['groupId'].toString();
-      if (groupId != databaseService.currentGroupId) {
-        print("Current Group Id: " + databaseService.currentGroupId);
+      if (groupId != databaseService!.currentGroupId) {
+        print("Current Group Id: " + databaseService!.currentGroupId!);
         showNotification(notification, groupId);
       }
       return;
-    }, onResume: (Map<String, dynamic> message) {
-      print('onResume: $message');
-      return;
-    }, onLaunch: (Map<String, dynamic> message) {
-      print('onLaunch: $message');
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      print('onResume: $event');
       return;
     });
-    databaseService.firebaseMessaging.getToken().then((token) {
+
+    databaseService!.firebaseMessaging.getToken().then((token) {
       print('token: $token');
       FirebaseFirestore.instance
           .collection('users')
-          .doc(databaseService.user.userId)
+          .doc(databaseService!.user!.userId)
           .update({'token': token});
     }).catchError((err) {
       Fluttertoast.showToast(msg: err.message.toString());
@@ -77,22 +74,22 @@ class NavigationMenuState extends State<NavigationMenu> {
   void configLocalNotification() async {
     var initializationSettingsAndroid =
         new AndroidInitializationSettings('ic_launcher');
-    var initializationSettingsIOS = new IOSInitializationSettings();
-    var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
+    var initializationSettingsIOS = IOSInitializationSettings();
+    var initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: selectNotification);
   }
 
-  Future selectNotification(String payload) async {
+  Future selectNotification(String? payload) async {
     if (payload != null) {
       debugPrint('notification payload: $payload');
-      GroupModel group = await databaseService.getGroupById(payload);
+      GroupModel group = await databaseService!.getGroupById(payload);
       if (group.type == 1) {
-        group = await databaseService.generateGroupMessage(group);
+        group = await databaseService!.generateGroupMessage(group);
       }
-      print("Current Group Id on Click: " + databaseService.currentGroupId);
-      if (databaseService.currentGroupId.isNotEmpty) {
+      print("Current Group Id on Click: " + databaseService!.currentGroupId!);
+      if (databaseService!.currentGroupId!.isNotEmpty) {
         Navigator.of(context, rootNavigator: true).pop();
       }
       locator<NavigationService>().navigateToChat(group);
@@ -105,15 +102,16 @@ class NavigationMenuState extends State<NavigationMenu> {
           ? 'com.example.chat_app_ef1'
           : 'com.example.chatAppEf1',
       'Flutter chat demo',
-      'your channel description',
+      channelDescription: 'your channel description',
       playSound: true,
       enableVibration: true,
-      importance: Importance.Max,
-      priority: Priority.High,
+      importance: Importance.max,
+      priority: Priority.high,
     );
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
     var platformChannelSpecifics = new NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
     print(message);
 //    print(message['body'].toString());
 //    print(json.encode(message));
@@ -165,7 +163,8 @@ class NavigationMenuState extends State<NavigationMenu> {
                   .toList();
 
               return WillPopScope(
-                onWillPop: () async => provider.onWillPop(context),
+                onWillPop: (() async =>
+                    provider.onWillPop(context) as FutureOr<bool>),
                 child: Scaffold(
                   body: IndexedStack(
                     children: screens,

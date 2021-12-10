@@ -16,18 +16,18 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanState extends State<ScanScreen> {
-  String _qrInfo = 'Scan a QR/Bar code';
+  String? _qrInfo = 'Scan a QR/Bar code';
   bool _camState = false;
   bool isLoading = false;
-  String _argument = "";
+  String? _argument = "";
   String alert = "";
   bool isInContact = true;
-  DatabaseService databaseService;
-  UserModel userModel;
-  ContactModel contactModel;
+  DatabaseService? databaseService;
+  UserModel? userModel;
+  ContactModel? contactModel;
 
-  _qrCallback(String code, BuildContext context) async {
-    _argument = ModalRoute.of(context).settings.arguments;
+  _qrCallback(String? code, BuildContext context) async {
+    _argument = ModalRoute.of(context)!.settings.arguments as String?;
     setState(() {
       _camState = false;
       _qrInfo = code;
@@ -36,18 +36,18 @@ class _ScanState extends State<ScanScreen> {
       Navigator.pop(context, code);
     } else {
       //check if user existed
-      userModel = await databaseService.getUserById(code);
+      userModel = await databaseService!.getUserById(code);
       if (userModel != null) {
         //check if user is not self
-        if (userModel.userId != databaseService.user.userId) {
-          contactModel = await databaseService.getContactById(
-              databaseService.user.userId, code);
+        if (userModel!.userId != databaseService!.user!.userId) {
+          contactModel = await databaseService!.getContactById(
+              databaseService!.user!.userId, code);
           //check if user not in contact list
           if (contactModel == null) {
             contactModel = new ContactModel(
-                nickname: userModel.nickname,
-                photoUrl: userModel.photoUrl,
-                userId: userModel.userId);
+                nickname: userModel!.nickname,
+                photoUrl: userModel!.photoUrl,
+                userId: userModel!.userId);
             setState(() {
               isInContact = false;
             });
@@ -124,21 +124,21 @@ class _ScanState extends State<ScanScreen> {
     setState(() {
       isLoading = true;
     });
-    databaseService
+    databaseService!
         .setContact(
-            contactModel, databaseService.user.userId, contactModel.userId)
+            contactModel!, databaseService!.user!.userId, contactModel!.userId)
         .then(
             (value) => Fluttertoast.showToast(msg: "Add Contact Successfully"))
         .catchError((err) => Fluttertoast.showToast(msg: err.toString()));
     setState(() {
       isLoading = false;
     });
-    databaseService.refreshMessageList();
+    databaseService!.refreshMessageList();
   }
 
   void _settingModalBottomSheet(parentContext) {
     final _aliasController = TextEditingController();
-    _aliasController.text = contactModel.nickname;
+    _aliasController.text = contactModel!.nickname!;
     bool _visible = false;
     showModalBottomSheet(
         shape: RoundedRectangleBorder(
@@ -194,7 +194,7 @@ class _ScanState extends State<ScanScreen> {
                                           height: 60.0,
                                           padding: EdgeInsets.all(10.0),
                                         ),
-                                        imageUrl: contactModel.photoUrl,
+                                        imageUrl: contactModel!.photoUrl!,
                                         width: 60.0,
                                         height: 60.0,
                                         fit: BoxFit.cover,
@@ -210,7 +210,7 @@ class _ScanState extends State<ScanScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            _qrInfo,
+                                            _qrInfo!,
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
