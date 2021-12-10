@@ -12,9 +12,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../locator.dart';
 
 class GroupMemberScreen extends StatefulWidget {
-  final GroupModel group;
-  final List<UserModel> members;
-  final List<Members> groupMembers;
+  final GroupModel? group;
+  final List<UserModel>? members;
+  final List<Members?>? groupMembers;
   GroupMemberScreen(this.group, this.members, this.groupMembers);
   @override
   _GroupMemberState createState() =>
@@ -23,11 +23,11 @@ class GroupMemberScreen extends StatefulWidget {
 
 class _GroupMemberState extends State<GroupMemberScreen> {
   _GroupMemberState(this.group, this.members, this.groupMembers);
-  GroupModel group;
-  List<Members> groupMembers;
-  List<UserModel> members;
+  GroupModel? group;
+  List<Members?>? groupMembers;
+  List<UserModel>? members;
   List<UserModel> filteredMembers = [];
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
   Map<int, String> memberType = {1: "Member", 2: "Admin"};
   int selectedIndex = 1;
   String alert = "";
@@ -42,18 +42,18 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   void handleSelectMemberType() {
     filteredMembers = [];
     if (selectedIndex == 1) {
-      for (int i = 0; i < groupMembers.length; i++) {
-        if (groupMembers[i].role == 1 && groupMembers[i].isActive) {
-          filteredMembers.add(members
-              .where((element) => element.userId == groupMembers[i].userId)
+      for (int i = 0; i < groupMembers!.length; i++) {
+        if (groupMembers![i]!.role == 1 && groupMembers![i]!.isActive) {
+          filteredMembers.add(members!
+              .where((element) => element.userId == groupMembers![i]!.userId)
               .first);
         }
       }
     } else {
-      for (int i = 0; i < groupMembers.length; i++) {
-        if (groupMembers[i].role == 2 && groupMembers[i].isActive) {
-          filteredMembers.add(members
-              .where((element) => element.userId == groupMembers[i].userId)
+      for (int i = 0; i < groupMembers!.length; i++) {
+        if (groupMembers![i]!.role == 2 && groupMembers![i]!.isActive) {
+          filteredMembers.add(members!
+              .where((element) => element.userId == groupMembers![i]!.userId)
               .first);
         }
       }
@@ -62,23 +62,23 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   }
 
   void removeMember(UserModel member) async {
-    Members memberToBeRemove = groupMembers[
-        groupMembers.indexWhere((element) => element.userId == member.userId)];
+    Members memberToBeRemove = groupMembers![
+        groupMembers!.indexWhere((element) => element!.userId == member.userId)]!;
     memberToBeRemove.isActive = false;
-    groupMembers[groupMembers.indexWhere(
-        (element) => element.userId == member.userId)] = memberToBeRemove;
-    await databaseService.updateGroupField({
-      "membersList": groupMembers
-          .map<Map<String, dynamic>>((member) => member.toMap())
+    groupMembers![groupMembers!.indexWhere(
+        (element) => element!.userId == member.userId)] = memberToBeRemove;
+    await databaseService!.updateGroupField({
+      "membersList": groupMembers!
+          .map<Map<String, dynamic>>((member) => member!.toMap())
           .toList()
-    }, group.groupId).then((value) async {
+    }, group!.groupId).then((value) async {
       MessagesModel message = new MessagesModel(
-          messageContent: "remove " + member.nickname + " from the group",
+          messageContent: "remove " + member.nickname! + " from the group",
           contentType: 1,
           type: 4,
           sentAt: DateTime.now().toString(),
-          sentBy: databaseService.user.userId);
-      await databaseService.addMessage(message, group.groupId);
+          sentBy: databaseService!.user!.userId);
+      await databaseService!.addMessage(message, group!.groupId);
       alert = "success";
       handleSelectMemberType();
       _alertDialog(context, member);
@@ -176,12 +176,12 @@ class _GroupMemberState extends State<GroupMemberScreen> {
 
   Widget buildItem(BuildContext context, UserModel member) {
     ContactModel contact;
-    int contactIndex = databaseService.contacts
-        .indexWhere((element) => element.userId == member.userId);
+    int contactIndex = databaseService!.contacts!
+        .indexWhere((element) => element!.userId == member.userId);
     print(contactIndex);
     if (contactIndex >= 0) {
       contact = new ContactModel(
-          nickname: databaseService.contacts[contactIndex].nickname,
+          nickname: databaseService!.contacts![contactIndex]!.nickname,
           photoUrl: member.photoUrl,
           userId: member.userId);
     } else {
@@ -203,7 +203,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
         child: Row(
           children: [
             InkWell(
-              onTap: () => member.userId == databaseService.user.userId
+              onTap: () => member.userId == databaseService!.user!.userId
                   ? null
                   : Navigator.push(
                           context,
@@ -216,7 +216,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Material(
-                    child: member.photoUrl != null || member.photoUrl.isNotEmpty
+                    child: member.photoUrl != null || member.photoUrl!.isNotEmpty
                         ? CachedNetworkImage(
                             placeholder: (context, url) => Container(
                               child: CircularProgressIndicator(
@@ -228,7 +228,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                               height: 40.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: member.photoUrl,
+                            imageUrl: member.photoUrl!,
                             width: 40.0,
                             height: 40.0,
                             fit: BoxFit.cover,
@@ -244,7 +244,7 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                   Container(
                     padding: EdgeInsets.only(left: 12),
                     child: Text(
-                      contact.nickname,
+                      contact.nickname!,
                       style: TextStyle(fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -253,19 +253,19 @@ class _GroupMemberState extends State<GroupMemberScreen> {
               ),
             ),
             Spacer(),
-            (groupMembers
+            (groupMembers!
                             .firstWhere(
                               (element) =>
-                                  element.userId == databaseService.user.userId,
+                                  element!.userId == databaseService!.user!.userId,
                               orElse: () => Members(),
-                            )
+                            )!
                             .role ==
                         2 &&
-                    member.userId != databaseService.user.userId)
+                    member.userId != databaseService!.user!.userId)
                 ? IconButton(
                     icon: Icon(Icons.logout),
                     onPressed: () {
-                      alert = "Do you want to remove " + member.nickname + "?";
+                      alert = "Do you want to remove " + member.nickname! + "?";
                       _alertDialog(context, member);
                     })
                 : Container(),

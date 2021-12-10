@@ -11,9 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class MessagePage extends StatefulWidget {
-  const MessagePage({Key key, this.title}) : super(key: key);
+  const MessagePage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   static const route = '/message';
 
@@ -26,11 +26,11 @@ class _MessagePageState extends State<MessagePage> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   //final _debouncer = Debouncer(milliseconds: 500);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
 
-  List<GroupModel> groups;
+  late List<GroupModel> groups;
 
-  GroupModel group;
+  GroupModel? group;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _MessagePageState extends State<MessagePage> {
 
   void _onRefresh() async {
     print("onRefresh");
-    databaseService.refreshMessageList();
+    databaseService!.refreshMessageList();
     setState(() {});
     _refreshController.refreshCompleted();
   }
@@ -117,7 +117,7 @@ class _MessagePageState extends State<MessagePage> {
                         height: 60.0,
                         padding: EdgeInsets.all(10.0),
                       ),
-                      imageUrl: databaseService.user.photoUrl,
+                      imageUrl: databaseService!.user!.photoUrl!,
                       width: 60.0,
                       height: 60.0,
                       fit: BoxFit.cover,
@@ -189,8 +189,8 @@ class _MessagePageState extends State<MessagePage> {
             ),
             Flexible(
               child: StreamBuilder(
-                stream: databaseService.groupStream,
-                builder: (context, AsyncSnapshot<List<GroupModel>> snapshot) {
+                stream: databaseService!.groupStream,
+                builder: (context, AsyncSnapshot<List<GroupModel>?> snapshot) {
                   if (!snapshot.hasData) {
                     //print("No data");
                     return Center(
@@ -200,7 +200,7 @@ class _MessagePageState extends State<MessagePage> {
                     );
                   } else {
                     //print("Has data");
-                    groups = List.from(snapshot.data);
+                    groups = List.from(snapshot.data!);
                     groups.removeWhere(
                         (element) => element.recentMessageContent.isEmpty);
                     groups.sort((group1, group2) {
@@ -216,7 +216,7 @@ class _MessagePageState extends State<MessagePage> {
                       enablePullUp: true,
                       header: WaterDropHeader(),
                       footer: CustomFooter(
-                        builder: (BuildContext context, LoadStatus mode) {
+                        builder: (BuildContext context, LoadStatus? mode) {
                           Widget body;
                           if (mode == LoadStatus.idle) {
                             body = Text("pull up load");
@@ -265,7 +265,7 @@ class _MessagePageState extends State<MessagePage> {
                 child: Row(
                   children: <Widget>[
                     Material(
-                      child: group.groupPhoto.isNotEmpty
+                      child: group.groupPhoto!.isNotEmpty
                           ? CachedNetworkImage(
                               placeholder: (context, url) => Container(
                                 child: CircularProgressIndicator(
@@ -277,7 +277,7 @@ class _MessagePageState extends State<MessagePage> {
                                 height: 60.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: group.groupPhoto,
+                              imageUrl: group.groupPhoto!,
                               width: 60.0,
                               height: 60.0,
                               fit: BoxFit.cover,
@@ -299,7 +299,7 @@ class _MessagePageState extends State<MessagePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              group.groupName,
+                              group.groupName!,
                               style: TextStyle(
                                   color: colorBlack,
                                   fontSize: 12,
@@ -327,7 +327,7 @@ class _MessagePageState extends State<MessagePage> {
                           formatDateTime(group.recentMessageTime),
                           style: TextStyle(color: Colors.grey, fontSize: 10),
                         ),
-                        databaseService.user.offNotification
+                        databaseService!.user!.offNotification!
                                 .containsKey(group.groupId)
                             ? Padding(
                                 padding: EdgeInsets.symmetric(vertical: 4),

@@ -1,11 +1,11 @@
 class UserModel {
   String userId;
-  String nickname;
-  String photoUrl;
+  String? nickname;
+  String? photoUrl;
   String createdAt;
   String aboutMe;
-  String token;
-  Map<dynamic, dynamic> offNotification;
+  String? token;
+  Map<dynamic, dynamic>? offNotification;
 
   UserModel({
     this.userId = "",
@@ -17,7 +17,7 @@ class UserModel {
     this.offNotification,
   });
 
-  factory UserModel.fromMap(Map data) {
+  factory UserModel.fromMap(Map? data) {
     data = data ?? {};
     return UserModel(
       userId: data['id'] ?? '',
@@ -48,13 +48,13 @@ class UserModel {
 }
 
 class ContactModel {
-  String userId;
-  String nickname;
-  String photoUrl;
+  String? userId;
+  String? nickname;
+  String? photoUrl;
 
   ContactModel({this.userId = "", this.nickname = "", this.photoUrl = ""});
 
-  factory ContactModel.fromMap(Map data) {
+  factory ContactModel.fromMap(Map? data) {
     data = data ?? {};
     return ContactModel(
       userId: data['id'] ?? '',
@@ -78,7 +78,7 @@ class GroupSettingModel {
 
   GroupSettingModel({this.groupId = "", this.offNotificationUntil = ""});
 
-  factory GroupSettingModel.fromMap(Map data) {
+  factory GroupSettingModel.fromMap(Map? data) {
     data = data ?? {};
     return GroupSettingModel(
       groupId: data['groupId'] ?? '',
@@ -96,8 +96,8 @@ class GroupSettingModel {
 
 class OnlineStatusModel {
   String userId;
-  String nickname;
-  String photoUrl;
+  String? nickname;
+  String? photoUrl;
   String status;
   String time;
 
@@ -108,12 +108,12 @@ class OnlineStatusModel {
       this.status = "",
       this.time = ""});
 
-  factory OnlineStatusModel.fromMap(Map data, String id) {
+  factory OnlineStatusModel.fromMap(Map? data, String? id) {
     data = data ?? {};
     return OnlineStatusModel(
-      userId: id,
+      userId: id!,
       status: data['state'] ?? "",
-      time: data['last_changed'].toString() ?? "",
+      time: data['last_changed'].toString(),
     );
   }
 

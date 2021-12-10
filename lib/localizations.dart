@@ -7,11 +7,11 @@ class AppLocalizations {
   AppLocalizations(this.locale);
   final Locale fallbackLocale = Locale('en');
 
-  static AppLocalizations of(BuildContext context) {
+  static AppLocalizations? of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static AppLocalizations instance;
+  static AppLocalizations? instance;
 
   AppLocalizations._init(Locale locale) {
     instance = this;
@@ -21,12 +21,12 @@ class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  Locale locale;
-  Map<String, String> _localizedStrings;
-  Map<String, String> _fallbackLocalizedStrings;
+  Locale? locale;
+  late Map<String, String> _localizedStrings;
+  late Map<String, String> _fallbackLocalizedStrings;
 
   Future<void> load() async {
-    _localizedStrings = await _loadLocalizedStrings(locale);
+    _localizedStrings = await _loadLocalizedStrings(locale!);
     _fallbackLocalizedStrings = {};
 
     if (locale != fallbackLocale) {
@@ -54,8 +54,8 @@ class AppLocalizations {
     return localizedStrings;
   }
 
-  String translate(String key, [Map<String, String> arguments]) {
-    String translation = _localizedStrings[key];
+  String? translate(String key, [Map<String, String>? arguments]) {
+    String? translation = _localizedStrings[key];
     translation = translation ?? _fallbackLocalizedStrings[key];
     translation = translation ?? "";
     if (arguments == null || arguments.length == 0) {
@@ -68,7 +68,7 @@ class AppLocalizations {
             'Value for "$argumentKey" is null in call of translate(\'$key\')');
         value = '';
       }
-      translation = translation.replaceAll("\$$argumentKey", value);
+      translation = translation!.replaceAll("\$$argumentKey", value);
     });
 
     return translation;

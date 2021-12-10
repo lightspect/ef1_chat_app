@@ -13,8 +13,8 @@ import '../locator.dart';
 
 class ChatSearchScreen extends StatefulWidget {
   final String keyword;
-  final GroupModel group;
-  final List<UserModel> members;
+  final GroupModel? group;
+  final List<UserModel?>? members;
   ChatSearchScreen(this.keyword, this.group, this.members);
   @override
   _ChatSearchScreenState createState() =>
@@ -26,10 +26,10 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
   List<AlgoliaObjectSnapshot> _results = [];
   bool _searching = false;
   String keyword;
-  GroupModel group;
+  GroupModel? group;
   List<MessagesModel> searchMessage = [];
-  List<UserModel> searchMembers = [];
-  DatabaseService databaseService;
+  List<UserModel?>? searchMembers = [];
+  DatabaseService? databaseService;
   String alert = "";
 
   @override
@@ -48,7 +48,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
       apiKey: '8ee8e6b349014daf8586c63b409d18d8',
     );
 
-    AlgoliaQuery query = algolia.instance.index(group.groupId);
+    AlgoliaQuery query = algolia.instance.index(group!.groupId);
     query = query.search(keyword);
 
     _results = (await query.getObjects()).hits;
@@ -107,7 +107,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
               if (_searching) {
                 return Future.value(false);
               } else {
-                databaseService.currentGroupId = "";
+                databaseService!.currentGroupId = "";
                 return Future.value(true);
               }
             }));
@@ -182,9 +182,9 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
   }
 
   Widget buildItem(BuildContext context, MessagesModel message) {
-    UserModel member = searchMembers.firstWhere(
-        (element) => element.userId == message.sentBy,
-        orElse: () => UserModel());
+    UserModel member = searchMembers!.firstWhere(
+        (element) => element!.userId == message.sentBy,
+        orElse: () => UserModel())!;
     return Column(
       children: [
         Container(
@@ -192,7 +192,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
               child: Row(
                 children: <Widget>[
                   Material(
-                    child: member.photoUrl.isNotEmpty
+                    child: member.photoUrl!.isNotEmpty
                         ? CachedNetworkImage(
                             placeholder: (context, url) => Container(
                               child: CircularProgressIndicator(
@@ -204,13 +204,13 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                               height: 40.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: member.photoUrl,
+                            imageUrl: member.photoUrl!,
                             width: 40.0,
                             height: 40.0,
                             fit: BoxFit.cover,
                           )
                         : Icon(
-                            group.type == 1
+                            group!.type == 1
                                 ? Icons.account_circle
                                 : Icons.group,
                             size: 40.0,
@@ -226,7 +226,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            member.nickname,
+                            member.nickname!,
                             style: TextStyle(
                                 color: colorBlack,
                                 fontSize: 12,

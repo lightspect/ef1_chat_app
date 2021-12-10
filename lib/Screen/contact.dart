@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
@@ -12,9 +14,9 @@ import 'package:grouped_list/grouped_list.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class ContactPage extends StatefulWidget {
-  const ContactPage({Key key, this.title}) : super(key: key);
+  const ContactPage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   static const route = '/contact';
 
@@ -30,11 +32,11 @@ class _ContactPageState extends State<ContactPage> {
   final _debouncer = Debouncer(milliseconds: 500);
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
 
-  List<OnlineStatusModel> contacts;
-  List<OnlineStatusModel> searchList;
-  ContactModel contact;
+  late List<OnlineStatusModel> contacts;
+  late List<OnlineStatusModel> searchList;
+  ContactModel? contact;
 
   String alert = '';
 
@@ -49,7 +51,7 @@ class _ContactPageState extends State<ContactPage> {
 
   void _onRefresh() async {
     print("refresh Contact");
-    databaseService.fetchOnlineStatusAsStream();
+    databaseService!.fetchOnlineStatusAsStream();
     setState(() {});
     _refreshController.refreshCompleted();
   }
@@ -58,7 +60,10 @@ class _ContactPageState extends State<ContactPage> {
     searchList = [];
     if (search.isNotEmpty) {
       for (int i = 0; i < contacts.length; i++) {
-        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
+        if (contacts[i]
+                .nickname!
+                .toLowerCase()
+                .contains(search.toLowerCase()) ||
             contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
           searchList.add(contacts[i]);
         }
@@ -168,7 +173,7 @@ class _ContactPageState extends State<ContactPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter an ID";
                               }
                               return null;
@@ -219,7 +224,7 @@ class _ContactPageState extends State<ContactPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a nickname";
                               }
                               return null;
@@ -293,9 +298,10 @@ class _ContactPageState extends State<ContactPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
-                                  _formKey.currentState.save();
+                                  _formKey.currentState!.save();
                                   handleAddNewContact();
                                   Navigator.of(context).pop();
                                 }
@@ -315,8 +321,8 @@ class _ContactPageState extends State<ContactPage> {
 
   void handleAddNewContact() async {
     bool existContact = false;
-    List<UserModel> userList =
-        await databaseService.fetchUsersById(_idController.text);
+    List<UserModel> userList = await (databaseService!
+        .fetchUsersById(_idController.text) as FutureOr<List<UserModel>>);
     //check if user existed
     if (userList.length > 0) {
       //check if user is self
@@ -324,8 +330,8 @@ class _ContactPageState extends State<ContactPage> {
           userId: userList[0].userId,
           nickname: _aliasController.text,
           photoUrl: userList[0].photoUrl);
-      print("Contact ID: " + contact.userId);
-      if (contact.userId != databaseService.user.userId) {
+      print("Contact ID: " + contact!.userId!);
+      if (contact!.userId != databaseService!.user!.userId) {
         //check if user already in contact
         if (contacts.length == 0) {
           existContact = false;
@@ -340,11 +346,12 @@ class _ContactPageState extends State<ContactPage> {
         print("Exist Contact: " + existContact.toString());
         //check if user already in contact list
         if (!existContact) {
-          await databaseService
-              .setContact(contact, databaseService.user.userId, contact.userId)
+          await databaseService!
+              .setContact(
+                  contact!, databaseService!.user!.userId, contact!.userId)
               .then((value) async {
-            databaseService.contacts.add(contact);
-            await databaseService.setContactsList();
+            databaseService!.contacts!.add(contact);
+            await databaseService!.setContactsList();
             setState(() {
               alert = "success";
               isEnterID = false;
@@ -371,7 +378,7 @@ class _ContactPageState extends State<ContactPage> {
         alert = 'User does not exist';
       });
     }
-    databaseService.refreshMessageList();
+    databaseService!.refreshMessageList();
     _alertDialog();
   }
 
@@ -389,9 +396,9 @@ class _ContactPageState extends State<ContactPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  (databaseService.user != null ||
-                          databaseService.user.photoUrl != null ||
-                          databaseService.user.photoUrl.isNotEmpty
+                  (databaseService!.user != null ||
+                          databaseService!.user!.photoUrl != null ||
+                          databaseService!.user!.photoUrl!.isNotEmpty
                       ? Material(
                           child: CachedNetworkImage(
                             placeholder: (context, url) => Container(
@@ -404,7 +411,7 @@ class _ContactPageState extends State<ContactPage> {
                               height: 60.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: databaseService.user.photoUrl,
+                            imageUrl: databaseService!.user!.photoUrl!,
                             width: 60.0,
                             height: 60.0,
                             fit: BoxFit.cover,
@@ -483,9 +490,9 @@ class _ContactPageState extends State<ContactPage> {
             ),
             Flexible(
               child: StreamBuilder(
-                stream: databaseService.contactStatusList,
-                builder:
-                    (context, AsyncSnapshot<List<OnlineStatusModel>> snapshot) {
+                stream: databaseService!.contactStatusList,
+                builder: (context,
+                    AsyncSnapshot<List<OnlineStatusModel>?> snapshot) {
                   if (!snapshot.hasData) {
                     print("No data");
                     return Center(
@@ -495,13 +502,13 @@ class _ContactPageState extends State<ContactPage> {
                     ));
                   } else {
                     print("Has data");
-                    contacts = List.from(snapshot.data);
+                    contacts = List.from(snapshot.data!);
                     return SmartRefresher(
                         enablePullDown: true,
                         enablePullUp: true,
                         header: WaterDropHeader(),
                         footer: CustomFooter(
-                          builder: (BuildContext context, LoadStatus mode) {
+                          builder: (BuildContext context, LoadStatus? mode) {
                             Widget body;
                             if (mode == LoadStatus.idle) {
                               body = Text("pull up load");
@@ -530,7 +537,7 @@ class _ContactPageState extends State<ContactPage> {
                               ? contacts
                               : searchList,
                           groupBy: (element) =>
-                              element.nickname.substring(0, 1).toUpperCase(),
+                              element.nickname!.substring(0, 1).toUpperCase(),
                           groupSeparatorBuilder: (String groupByValue) =>
                               Container(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -570,7 +577,7 @@ class _ContactPageState extends State<ContactPage> {
                                                 height: 40.0,
                                                 padding: EdgeInsets.all(10.0),
                                               ),
-                                              imageUrl: element.photoUrl,
+                                              imageUrl: element.photoUrl!,
                                               width: 40.0,
                                               height: 40.0,
                                               fit: BoxFit.cover,
@@ -599,7 +606,7 @@ class _ContactPageState extends State<ContactPage> {
                                 Container(
                                   padding: EdgeInsets.only(left: 12),
                                   child: Text(
-                                    element.nickname,
+                                    element.nickname!,
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold),
                                   ),

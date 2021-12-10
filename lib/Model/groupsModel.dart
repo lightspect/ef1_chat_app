@@ -1,14 +1,14 @@
 class GroupModel {
   String groupId;
-  String groupName;
-  String groupPhoto;
+  String? groupName;
+  String? groupPhoto;
   String createdAt;
   String createdBy;
   String recentMessageContent;
   String recentMessageSender;
   String recentMessageTime;
   int type;
-  List<Members> membersList;
+  List<Members?>? membersList;
 
   GroupModel({
     this.groupId = "",
@@ -34,13 +34,13 @@ class GroupModel {
       'recentMessageSender': recentMessageSender,
       'recentMessageTime': recentMessageTime,
       'type': type,
-      'membersList': membersList
-          .map<Map<String, dynamic>>((member) => member.toMap())
+      'membersList': membersList!
+          .map<Map<String, dynamic>>((member) => member!.toMap())
           .toList(),
     };
   }
 
-  factory GroupModel.fromMap(Map data) {
+  factory GroupModel.fromMap(Map? data) {
     data = data ?? {};
     return GroupModel(
       groupId: data['groupId'] ?? '',
@@ -62,7 +62,7 @@ class GroupModel {
 }
 
 class Members {
-  String userId;
+  String? userId;
   bool isActive;
   int role;
 
@@ -72,7 +72,7 @@ class Members {
     return {'userId': userId, 'isActive': isActive, 'role': role};
   }
 
-  factory Members.fromMap(Map data) {
+  factory Members.fromMap(Map? data) {
     data = data ?? {};
     return Members(
       userId: data['userId'] ?? '',

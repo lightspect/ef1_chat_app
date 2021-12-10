@@ -17,8 +17,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 class GroupDetailPage extends StatefulWidget {
-  final GroupModel group;
-  final List<UserModel> members;
+  final GroupModel? group;
+  final List<UserModel>? members;
   GroupDetailPage(this.group, this.members);
   @override
   State<StatefulWidget> createState() => _GroupDetailPageState(group, members);
@@ -28,27 +28,27 @@ enum OffNotificationTime { minutes10, hour1, hour8, hour24, forever }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
   _GroupDetailPageState(this.group, this.members);
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
   final _nicknameController = TextEditingController();
   final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  OffNotificationTime _time = OffNotificationTime.minutes10;
+  OffNotificationTime? _time = OffNotificationTime.minutes10;
 
   bool isLoading = false;
-  File avatarImageFile;
-  List<UserModel> members;
-  GroupModel group;
+  File? avatarImageFile;
+  List<UserModel>? members;
+  GroupModel? group;
   String alert = '';
 
   @override
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
-    if (databaseService.user.offNotification.containsKey(group.groupId)) {
-      if (databaseService.user.offNotification[group.groupId].isNotEmpty) {
+    if (databaseService!.user!.offNotification!.containsKey(group!.groupId)) {
+      if (databaseService!.user!.offNotification![group!.groupId].isNotEmpty) {
         if (DateTime.now().isAfter(DateTime.parse(
-            databaseService.user.offNotification[group.groupId]))) {
-          databaseService.user.offNotification.remove(group.groupId);
+            databaseService!.user!.offNotification![group!.groupId]))) {
+          databaseService!.user!.offNotification!.remove(group!.groupId);
           setState(() {});
         }
       }
@@ -80,7 +80,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a new group name";
                               }
                               return null;
@@ -138,10 +138,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
-                                    group.groupName = _nicknameController.text;
+                                    group!.groupName = _nicknameController.text;
                                   });
                                   handleUpdateGroupName();
                                   Navigator.of(context).pop();
@@ -187,7 +187,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a keyword to search for message";
                               } else if (value.length < 2) {
                                 return "Please enter more than 1 letter to search";
@@ -247,7 +247,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               borderRadius: 4,
                               text: "Search",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
                                   Navigator.of(context).pop();
                                   handleMessageSearch();
@@ -292,7 +292,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             title: const Text('10 minutes'),
                             value: OffNotificationTime.minutes10,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -302,7 +302,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             title: const Text('1 hour'),
                             value: OffNotificationTime.hour1,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -312,7 +312,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             title: const Text('8 hours'),
                             value: OffNotificationTime.hour8,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -322,7 +322,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             title: const Text('24 hours'),
                             value: OffNotificationTime.hour24,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -332,7 +332,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             title: const Text('Until I turn back on'),
                             value: OffNotificationTime.forever,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -364,7 +364,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                 text: "Save",
                                 onClick: () {
                                   var validate =
-                                      _formKey.currentState.validate();
+                                      _formKey.currentState!.validate();
                                   if (validate) {
                                     handleTurnOffNotification();
                                     Navigator.of(context).pop();
@@ -407,14 +407,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         break;
     }
     if (timeOff == "forever") {
-      databaseService.user.offNotification[group.groupId] = "";
+      databaseService!.user!.offNotification![group!.groupId] = "";
     } else {
-      databaseService.user.offNotification[group.groupId] =
+      databaseService!.user!.offNotification![group!.groupId] =
           DateTime.now().add(duration).toString();
     }
-    databaseService.updateUserField(
-        {"offNotification": databaseService.user.offNotification},
-        databaseService.user.userId);
+    databaseService!.updateUserField(
+        {"offNotification": databaseService!.user!.offNotification},
+        databaseService!.user!.userId);
     setState(() {});
   }
 
@@ -426,41 +426,41 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleUpdateGroupName() async {
-    await databaseService.updateGroupField(
-        {"groupName": group.groupName}, group.groupId).then((value) {
-      databaseService
-          .groups[databaseService.groups
-              .indexWhere((element) => element.groupId == group.groupId)]
-          .groupName = group.groupName;
+    await databaseService!.updateGroupField(
+        {"groupName": group!.groupName}, group!.groupId).then((value) {
+      databaseService!
+          .groups![databaseService!.groups!
+              .indexWhere((element) => element.groupId == group!.groupId)]
+          .groupName = group!.groupName;
       Fluttertoast.showToast(msg: "Update success");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
 
   void handleLeaveGroup() async {
-    Members memberToBeRemove = group.membersList[group.membersList.indexWhere(
-        (element) => element.userId == databaseService.user.userId)];
+    Members memberToBeRemove = group!.membersList![group!.membersList!.indexWhere(
+        (element) => element!.userId == databaseService!.user!.userId)]!;
     memberToBeRemove.isActive = false;
-    group.membersList[group.membersList.indexWhere(
-            (element) => element.userId == databaseService.user.userId)] =
+    group!.membersList![group!.membersList!.indexWhere(
+            (element) => element!.userId == databaseService!.user!.userId)] =
         memberToBeRemove;
-    await databaseService.updateGroupField({
-      'membersList': group.membersList
-          .map<Map<String, dynamic>>((member) => member.toMap())
+    await databaseService!.updateGroupField({
+      'membersList': group!.membersList!
+          .map<Map<String, dynamic>>((member) => member!.toMap())
           .toList()
-    }, group.groupId).then((value) {
+    }, group!.groupId).then((value) {
       setState(() {
         alert = "success";
       });
       _alertDialog(context);
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
     MessagesModel message = new MessagesModel(
         messageContent: "has left the group",
         contentType: 1,
         type: 4,
         sentAt: DateTime.now().toString(),
-        sentBy: databaseService.user.userId);
-    await databaseService.addMessage(message, group.groupId);
+        sentBy: databaseService!.user!.userId);
+    await databaseService!.addMessage(message, group!.groupId);
   }
 
   Future<void> _alertDialog(BuildContext parentContext) async {
@@ -515,8 +515,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
-    File image;
+    PickedFile? pickedFile;
+    File? image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
@@ -534,18 +534,18 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   Future uploadFile() async {
-    String fileName = group.groupId;
+    String fileName = group!.groupId;
     firebase_storage.FirebaseStorage storage =
         firebase_storage.FirebaseStorage.instance;
     firebase_storage.Reference reference = storage.ref().child(fileName);
-    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile);
+    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile!);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
       if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          group.groupPhoto = downloadUrl;
-          databaseService.updateGroup(group, group.groupId).then((data) {
+          group!.groupPhoto = downloadUrl;
+          databaseService!.updateGroup(group!, group!.groupId).then((data) {
             setState(() {
               isLoading = false;
             });
@@ -605,7 +605,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               ),
             ),
             Text(
-              group != null ? group.groupName : "",
+              group != null ? group!.groupName! : "",
               style: TextStyle(fontSize: 16),
             ),
             Padding(
@@ -646,8 +646,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => AddMemberPage(
-                                      groupId: group.groupId,
-                                      members: group.membersList,
+                                      groupId: group!.groupId,
+                                      members: group!.membersList,
                                     )));
                           },
                           child: CircleAvatar(
@@ -673,14 +673,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       children: [
                         InkWell(
                           onTap: () {
-                            if (databaseService.user.offNotification
-                                .containsKey(group.groupId)) {
-                              databaseService.user.offNotification
-                                  .remove(group.groupId);
-                              databaseService.updateUserField({
+                            if (databaseService!.user!.offNotification!
+                                .containsKey(group!.groupId)) {
+                              databaseService!.user!.offNotification!
+                                  .remove(group!.groupId);
+                              databaseService!.updateUserField({
                                 "offNotification":
-                                    databaseService.user.offNotification
-                              }, databaseService.user.userId);
+                                    databaseService!.user!.offNotification
+                              }, databaseService!.user!.userId);
                               setState(() {});
                             } else {
                               _offNotificationDialog();
@@ -688,8 +688,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           },
                           child: CircleAvatar(
                             child: Icon(
-                              databaseService.user.offNotification
-                                      .containsKey(group.groupId)
+                              databaseService!.user!.offNotification!
+                                      .containsKey(group!.groupId)
                                   ? Icons.notifications_off
                                   : Icons.notifications,
                               color: colorBlack,
@@ -737,7 +737,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           settings:
                               RouteSettings(name: "/chatGroup/detail/members"),
                           builder: (context) => GroupMemberScreen(
-                              group, members, group.membersList)));
+                              group, members, group!.membersList)));
                 },
                 child: Container(
                   height: 28,
@@ -787,7 +787,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   Widget groupPhoto() {
-    if (group.groupPhoto.isEmpty) {
+    if (group!.groupPhoto!.isEmpty) {
       return CircleAvatar(
         backgroundColor: Colors.grey,
         radius: 30,
@@ -809,7 +809,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             height: 60.0,
             padding: EdgeInsets.all(10.0),
           ),
-          imageUrl: group.groupPhoto,
+          imageUrl: group!.groupPhoto!,
           width: 60.0,
           height: 60.0,
           fit: BoxFit.cover,
@@ -820,7 +820,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     } else {
       return Material(
         child: Image.file(
-          avatarImageFile,
+          avatarImageFile!,
           width: 60.0,
           height: 60.0,
           fit: BoxFit.cover,

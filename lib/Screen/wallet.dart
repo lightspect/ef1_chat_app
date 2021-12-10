@@ -2,9 +2,9 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:flutter/material.dart';
 
 class WalletPage extends StatefulWidget {
-  const WalletPage({Key key, this.title}) : super(key: key);
+  const WalletPage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   static const route = '/wallet';
 

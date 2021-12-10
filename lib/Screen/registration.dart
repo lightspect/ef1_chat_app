@@ -3,9 +3,9 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 
 class RegistrationPage extends StatefulWidget {
-  RegistrationPage({Key key, this.title}) : super(key: key);
+  RegistrationPage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
@@ -42,7 +42,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
     }
 
-    bool checkedValue = false;
+    bool? checkedValue = false;
     return Scaffold(
         appBar: AppBar(
           backgroundColor: splashBG,
@@ -110,7 +110,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               borderRadius: 5,
               highlightColor: colorRed,
               onClick: () {
-                if (checkedValue) {
+                if (checkedValue!) {
                   Navigator.pushNamed(context, '/seedCreate');
                 } else {
                   _showMyDialog();

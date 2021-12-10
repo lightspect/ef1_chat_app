@@ -17,9 +17,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key key, this.title}) : super(key: key);
+  const HomePage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   static const route = '/home';
 
@@ -28,11 +28,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  SharedPref sharedPref;
-  DatabaseService databaseService;
+  SharedPref? sharedPref;
+  DatabaseService? databaseService;
 
   bool isLoading = false;
-  File avatarImageFile;
+  File? avatarImageFile;
 
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     databaseService = locator<DatabaseService>();
     readLocal();
-    databaseService.rtdbAndLocalFsPresence();
+    databaseService!.rtdbAndLocalFsPresence();
   }
 
   void handleSignOut() async {
@@ -60,38 +60,38 @@ class _HomePageState extends State<HomePage> {
       isLoading = false;
     });
 
-    databaseService.updateUserField({'token': ""}, databaseService.user.userId);
-    databaseService.setFirestoreStatus({
+    databaseService!.updateUserField({'token': ""}, databaseService!.user!.userId);
+    databaseService!.setFirestoreStatus({
       "state": 'offline',
       "last_changed": FieldValue.serverTimestamp(),
-    }, databaseService.user.userId);
+    }, databaseService!.user!.userId);
 
-    databaseService.user = new UserModel(
+    databaseService!.user = new UserModel(
         userId: "",
         aboutMe: "",
         createdAt: "",
         nickname: "",
         photoUrl: "",
         token: "");
-    databaseService.setLocal();
+    databaseService!.setLocal();
 
     Navigator.of(context, rootNavigator: true)
         .pushNamedAndRemoveUntil('/unlock', (Route<dynamic> route) => false);
   }
 
   void readLocal() async {
-    await databaseService.readLocal();
-    await databaseService.fetchContacts(databaseService.user.userId);
-    await databaseService.setContactsList();
-    databaseService.refreshMessageList();
+    await databaseService!.readLocal();
+    await databaseService!.fetchContacts(databaseService!.user!.userId);
+    await databaseService!.setContactsList();
+    databaseService!.refreshMessageList();
     // Force refresh input
     setState(() {});
   }
 
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
-    File image;
+    PickedFile? pickedFile;
+    File? image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
@@ -109,21 +109,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future uploadFile() async {
-    String fileName = databaseService.user.userId;
+    String fileName = databaseService!.user!.userId;
     firebase_storage.FirebaseStorage storage =
         firebase_storage.FirebaseStorage.instance;
     firebase_storage.Reference reference = storage.ref().child(fileName);
-    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile);
+    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile!);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
       if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          databaseService.user.photoUrl = downloadUrl;
-          databaseService
-              .updateUser(databaseService.user, databaseService.user.userId)
+          databaseService!.user!.photoUrl = downloadUrl;
+          databaseService!
+              .updateUser(databaseService!.user!, databaseService!.user!.userId)
               .then((data) async {
-            await databaseService.setLocal();
+            await databaseService!.setLocal();
             setState(() {
               isLoading = false;
             });
@@ -159,10 +159,10 @@ class _HomePageState extends State<HomePage> {
       isLoading = true;
     });
 
-    databaseService
-        .updateUser(databaseService.user, databaseService.user.userId)
+    databaseService!
+        .updateUser(databaseService!.user!, databaseService!.user!.userId)
         .then((data) async {
-      await databaseService.setLocal();
+      await databaseService!.setLocal();
       setState(() {
         isLoading = false;
       });
@@ -257,11 +257,11 @@ class _HomePageState extends State<HomePage> {
                             onClick: () {
                               setState(() {
                                 if (_nicknameController.text.isNotEmpty) {
-                                  databaseService.user.nickname =
+                                  databaseService!.user!.nickname =
                                       _nicknameController.text;
                                 } else if (_statusMessageController
                                     .text.isNotEmpty) {
-                                  databaseService.user.aboutMe =
+                                  databaseService!.user!.aboutMe =
                                       _statusMessageController.text;
                                 }
                               });
@@ -326,7 +326,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
-                              "Display Name: " + databaseService.user.nickname),
+                              "Display Name: " + databaseService!.user!.nickname!),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
@@ -346,7 +346,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text("Status Message: " +
-                              databaseService.user.aboutMe),
+                              databaseService!.user!.aboutMe),
                           Spacer(),
                           Icon(
                             Icons.arrow_forward_ios,
@@ -405,7 +405,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: BoxDecoration(
                       border: Border.all(color: colorBlack, width: 1.0)),
                   child: QrImage(
-                    data: databaseService.user.userId,
+                    data: databaseService!.user!.userId,
                   ),
                 ),
                 LoginButton(
@@ -421,15 +421,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget profilePicture() {
-    if (databaseService.user == null) {
+    if (databaseService!.user == null) {
       return Icon(
         Icons.account_circle,
         size: 120.0,
         color: Colors.grey,
       );
     } else if (avatarImageFile == null) {
-      if (databaseService.user.photoUrl != null ||
-          databaseService.user.photoUrl.isNotEmpty) {
+      if (databaseService!.user!.photoUrl != null ||
+          databaseService!.user!.photoUrl!.isNotEmpty) {
         return Material(
           child: CachedNetworkImage(
             placeholder: (context, url) => Container(
@@ -441,7 +441,7 @@ class _HomePageState extends State<HomePage> {
               height: 120.0,
               padding: EdgeInsets.all(20.0),
             ),
-            imageUrl: databaseService.user.photoUrl,
+            imageUrl: databaseService!.user!.photoUrl!,
             width: 120.0,
             height: 120.0,
             fit: BoxFit.cover,
@@ -459,7 +459,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       return Material(
         child: Image.file(
-          avatarImageFile,
+          avatarImageFile!,
           width: 120.0,
           height: 120.0,
           fit: BoxFit.cover,

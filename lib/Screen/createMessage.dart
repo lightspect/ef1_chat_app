@@ -17,12 +17,12 @@ class CreateMessagePage extends StatefulWidget {
 }
 
 class _CreateMessagePageState extends State<CreateMessagePage> {
-  DatabaseService databaseService;
+  DatabaseService? databaseService;
   final _searchController = TextEditingController();
 
   String alert = '';
-  List<ContactModel> contacts;
-  List<ContactModel> searchList = [];
+  List<ContactModel?>? contacts;
+  List<ContactModel?> searchList = [];
 
   @override
   void initState() {
@@ -33,24 +33,24 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
   void readLocal() async {
     databaseService = locator<DatabaseService>();
     // Force refresh input
-    contacts = databaseService.contacts;
+    contacts = databaseService!.contacts;
     setState(() {});
   }
 
   void handleCreateGroupMessage(ContactModel contact) async {
     Members peerUser =
         new Members(userId: contact.userId, isActive: true, role: 1);
-    await databaseService.refreshMessageList();
-    if (!(databaseService.groups.any((element) =>
+    await databaseService!.refreshMessageList();
+    if (!(databaseService!.groups!.any((element) =>
         element.type == 1 &&
-        element.membersList
-            .any((member) => member.userId == contact.userId)))) {
+        element.membersList!
+            .any((member) => member!.userId == contact.userId)))) {
       Members currentUser = new Members(
-          userId: databaseService.user.userId, isActive: true, role: 1);
+          userId: databaseService!.user!.userId, isActive: true, role: 1);
       List<Members> membersList = [peerUser, currentUser];
       GroupModel group = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdBy: databaseService.user.userId,
+          createdBy: databaseService!.user!.userId,
           membersList: membersList,
           groupId: "",
           groupName: "",
@@ -59,7 +59,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
           recentMessageSender: "",
           recentMessageTime: "",
           type: 1);
-      DocumentReference groupDocRef = await databaseService.addGroup(group);
+      DocumentReference groupDocRef = await databaseService!.addGroup(group);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
         group.groupId = groupDocRef.id;
         group.groupName = contact.nickname;
@@ -69,11 +69,11 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
             MaterialPageRoute(builder: (context) => ChatPage(group: group)));
       });
     } else {
-      GroupModel group = databaseService.groups
+      GroupModel group = databaseService!.groups!
           .where((element) =>
               element.type == 1 &&
-              element.membersList
-                  .any((member) => member.userId == contact.userId))
+              element.membersList!
+                  .any((member) => member!.userId == contact.userId))
           .first;
       group.groupName = contact.nickname;
       group.groupPhoto = contact.photoUrl;
@@ -86,10 +86,10 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
   void search(String search) {
     searchList = [];
     if (search.isNotEmpty) {
-      for (int i = 0; i < contacts.length; i++) {
-        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
-            contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
-          searchList.add(contacts[i]);
+      for (int i = 0; i < contacts!.length; i++) {
+        if (contacts![i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
+            contacts![i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
+          searchList.add(contacts![i]);
         }
       }
       setState(() {});
@@ -163,22 +163,22 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
               ),
             ),
             Flexible(
-                child: GroupedListView<ContactModel, String>(
-              elements: searchList.isEmpty ? contacts : searchList,
-              groupBy: (element) => element.nickname.substring(0, 1),
+                child: GroupedListView<ContactModel?, String>(
+              elements: searchList.isEmpty ? contacts! : searchList,
+              groupBy: (element) => element!.nickname!.substring(0, 1),
               groupSeparatorBuilder: (String groupByValue) => Container(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(groupByValue),
               ),
               itemBuilder: (context, element) => InkWell(
                 onTap: () {
-                  handleCreateGroupMessage(element);
+                  handleCreateGroupMessage(element!);
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Material(
-                      child: element.photoUrl != null
+                      child: element!.photoUrl != null
                           ? CachedNetworkImage(
                               placeholder: (context, url) => Container(
                                 child: CircularProgressIndicator(
@@ -190,7 +190,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                                 height: 40.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: element.photoUrl,
+                              imageUrl: element.photoUrl!,
                               width: 40.0,
                               height: 40.0,
                               fit: BoxFit.cover,
@@ -206,7 +206,7 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
                     Container(
                       padding: EdgeInsets.only(left: 12),
                       child: Text(
-                        element.nickname,
+                        element.nickname!,
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

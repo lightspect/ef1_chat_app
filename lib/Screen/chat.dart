@@ -21,9 +21,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({Key key, this.group}) : super(key: key);
+  const ChatPage({Key? key, this.group}) : super(key: key);
 
-  final GroupModel group;
+  final GroupModel? group;
 
   static const route = '/message/chat';
 
@@ -33,13 +33,13 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   _ChatPageState(this.group);
-  SharedPreferences prefs;
-  DatabaseService databaseService;
+  SharedPreferences? prefs;
+  DatabaseService? databaseService;
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
 
-  GroupModel group;
-  List<MessagesModel> messages;
+  GroupModel? group;
+  List<MessagesModel>? messages;
 
   MessagesModel replyMessage = new MessagesModel();
   bool hasContent = false;
@@ -53,7 +53,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     databaseService = locator<DatabaseService>();
     listScrollController.addListener(_scrollListener);
-    databaseService.currentGroupId = group.groupId;
+    databaseService!.currentGroupId = group!.groupId;
   }
 
   _scrollListener() {
@@ -76,18 +76,18 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void refreshPrivateChat(ContactModel contact) {
+  void refreshPrivateChat(ContactModel? contact) {
     setState(() {
-      group.groupName = contact.nickname;
-      group.groupPhoto = contact.photoUrl;
+      group!.groupName = contact!.nickname;
+      group!.groupPhoto = contact.photoUrl;
     });
   }
 
   void passAndReturnDataFromDetail(BuildContext context) async {
     ContactModel contact = new ContactModel(
-        userId: group.membersList[0].userId,
-        nickname: group.groupName,
-        photoUrl: group.groupPhoto);
+        userId: group!.membersList![0]!.userId,
+        nickname: group!.groupName,
+        photoUrl: group!.groupPhoto);
     var result = await Navigator.push(
         context,
         MaterialPageRoute(
@@ -95,16 +95,16 @@ class _ChatPageState extends State<ChatPage> {
             builder: (context) => ContactDetailPage(contact, null, true)));
     print(result);
     if (result != null &&
-        databaseService.contacts
-            .where((element) => element.userId == contact.userId)
+        databaseService!.contacts!
+            .where((element) => element!.userId == contact.userId)
             .isNotEmpty) {
       refreshPrivateChat(result["data"]);
     }
   }
 
-  Future<MessagesModel> getMessageData(String id) async {
+  Future<MessagesModel> getMessageData(String? id) async {
     MessagesModel message = new MessagesModel();
-    message = await databaseService.getMessageById(group.groupId, id);
+    message = await databaseService!.getMessageById(group!.groupId, id);
     return message;
   }
 
@@ -129,19 +129,19 @@ class _ChatPageState extends State<ChatPage> {
       MessagesModel messagesModel = new MessagesModel(
         messageContent: message,
         sentAt: dateTime,
-        sentBy: databaseService.user.userId,
-        type: replyMessage.messageId.isNotEmpty ? 3 : 1,
+        sentBy: databaseService!.user!.userId,
+        type: replyMessage.messageId!.isNotEmpty ? 3 : 1,
         contentType: contentType,
         replyTo:
-            replyMessage.messageId.isNotEmpty ? replyMessage.messageId : '',
+            replyMessage.messageId!.isNotEmpty ? replyMessage.messageId : '',
       );
-      await databaseService
-          .addMessage(messagesModel, group.groupId)
-          .then((value) => databaseService.updateGroupField({
+      await databaseService!
+          .addMessage(messagesModel, group!.groupId)
+          .then((value) => databaseService!.updateGroupField({
                 'recentMessage': contentType == 2 ? "Photo" : message,
-                'recentMessageSender': databaseService.user.userId,
+                'recentMessageSender': databaseService!.user!.userId,
                 'recentMessageTime': dateTime,
-              }, group.groupId).catchError((onError) {
+              }, group!.groupId).catchError((onError) {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {
@@ -152,8 +152,8 @@ class _ChatPageState extends State<ChatPage> {
 
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
-    File image;
+    PickedFile? pickedFile;
+    File? image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
@@ -187,7 +187,7 @@ class _ChatPageState extends State<ChatPage> {
       if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          group.groupPhoto = downloadUrl;
+          group!.groupPhoto = downloadUrl;
           storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
             setState(() {
               isLoading = false;
@@ -229,7 +229,7 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Material(
-                  child: group.groupPhoto != ""
+                  child: group!.groupPhoto != ""
                       ? CachedNetworkImage(
                           placeholder: (context, url) => Container(
                             child: CircularProgressIndicator(
@@ -241,7 +241,7 @@ class _ChatPageState extends State<ChatPage> {
                             height: 50.0,
                             padding: EdgeInsets.all(15.0),
                           ),
-                          imageUrl: group.groupPhoto,
+                          imageUrl: group!.groupPhoto!,
                           width: 50.0,
                           height: 50.0,
                           fit: BoxFit.cover,
@@ -258,7 +258,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
                     child: Text(
-                      group.groupName,
+                      group!.groupName!,
                       style: TextStyle(color: colorBlack),
                       overflow: TextOverflow.ellipsis,
                       softWrap: true,
@@ -293,7 +293,7 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ),
             onWillPop: () {
-              databaseService.currentGroupId = "";
+              databaseService!.currentGroupId = "";
               return Future.value(true);
             }));
   }
@@ -313,8 +313,8 @@ class _ChatPageState extends State<ChatPage> {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder(
-                stream: databaseService.fetchMessagesAsStreamPagination(
-                    group.groupId, limit),
+                stream: databaseService!.fetchMessagesAsStreamPagination(
+                    group!.groupId, limit),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -323,17 +323,17 @@ class _ChatPageState extends State<ChatPage> {
                       ),
                     );
                   } else {
-                    messages = snapshot.data.docs
-                        .map((doc) => MessagesModel.fromMap(doc.data(), doc.id))
+                    messages = snapshot.data!.docs
+                        .map((doc) => MessagesModel.fromMap(doc.data() as Map<dynamic, dynamic>?, doc.id))
                         .toList();
                     return ListView.builder(
                       itemBuilder: (context, index) => GestureDetector(
                           onLongPress: () {
-                            _settingModalBottomSheet(messages[index], context);
+                            _settingModalBottomSheet(messages![index], context);
                           },
                           child: Column(
                             children: [
-                              buildItem(index, messages[index]),
+                              buildItem(index, messages![index]),
                               isLastMessageYesterday(index)
                                   ? Container(
                                       height: 40,
@@ -349,7 +349,7 @@ class _ChatPageState extends State<ChatPage> {
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                              messages[index - 1]
+                                              messages![index - 1]
                                                   .sentAt
                                                   .substring(0, 10),
                                               textAlign: TextAlign.center,
@@ -365,7 +365,7 @@ class _ChatPageState extends State<ChatPage> {
                           )),
                       reverse: true,
                       controller: listScrollController,
-                      itemCount: messages.length,
+                      itemCount: messages!.length,
                     );
                   }
                 },
@@ -386,9 +386,9 @@ class _ChatPageState extends State<ChatPage> {
                         Text(
                           "Reply to ".replaceAll(" ", "\u00A0") +
                               (replyMessage.sentBy ==
-                                      databaseService.user.userId
+                                      databaseService!.user!.userId
                                   ? "yourself"
-                                  : group.groupName),
+                                  : group!.groupName!),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
@@ -552,7 +552,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget buildItem(int index, MessagesModel message) {
-    if (message.sentBy == databaseService.user.userId) {
+    if (message.sentBy == databaseService!.user!.userId) {
       // Right (my message)
       return Column(
         children: [
@@ -677,7 +677,7 @@ class _ChatPageState extends State<ChatPage> {
                 Row(
                   children: <Widget>[
                     isLastMessageLeft(index) || isLastMessageYesterday(index)
-                        ? group.groupPhoto != ""
+                        ? group!.groupPhoto != ""
                             ? Material(
                                 child: CachedNetworkImage(
                                   placeholder: (context, url) => Container(
@@ -690,7 +690,7 @@ class _ChatPageState extends State<ChatPage> {
                                     height: 35.0,
                                     padding: EdgeInsets.all(10.0),
                                   ),
-                                  imageUrl: group.groupPhoto,
+                                  imageUrl: group!.groupPhoto!,
                                   width: 35.0,
                                   height: 35.0,
                                   fit: BoxFit.cover,
@@ -825,7 +825,7 @@ class _ChatPageState extends State<ChatPage> {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             messages != null &&
-            messages[index - 1].sentBy == databaseService.user.userId) ||
+            messages![index - 1].sentBy == databaseService!.user!.userId) ||
         index == 0) {
       return true;
     } else {
@@ -836,7 +836,7 @@ class _ChatPageState extends State<ChatPage> {
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
             messages != null &&
-            messages[index - 1].sentBy != databaseService.user.userId) ||
+            messages![index - 1].sentBy != databaseService!.user!.userId) ||
         index == 0) {
       return true;
     } else {
@@ -845,19 +845,19 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   bool isLastMessageYesterday(int index) {
-    if (messages.isNotEmpty && index > 0) {
+    if (messages!.isNotEmpty && index > 0) {
       String lastDate =
-          DateTime.parse(messages[index - 1].sentAt).day.toString() +
+          DateTime.parse(messages![index - 1].sentAt).day.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).month.toString() +
+              DateTime.parse(messages![index - 1].sentAt).month.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).year.toString();
+              DateTime.parse(messages![index - 1].sentAt).year.toString();
       String currentDate =
-          DateTime.parse(messages[index].sentAt).day.toString() +
+          DateTime.parse(messages![index].sentAt).day.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).month.toString() +
+              DateTime.parse(messages![index].sentAt).month.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).year.toString();
+              DateTime.parse(messages![index].sentAt).year.toString();
       if (currentDate != lastDate) {
         return true;
       } else {
@@ -873,7 +873,7 @@ class _ChatPageState extends State<ChatPage> {
       return Container(
         margin: EdgeInsets.only(left: 50, right: 15, bottom: 5),
         child: Row(
-            mainAxisAlignment: message.sentBy == databaseService.user.userId
+            mainAxisAlignment: message.sentBy == databaseService!.user!.userId
                 ? MainAxisAlignment.end
                 : MainAxisAlignment.start,
             children: [
@@ -884,9 +884,9 @@ class _ChatPageState extends State<ChatPage> {
               ),
               Flexible(
                 child: Text(
-                  message.sentBy == databaseService.user.userId
+                  message.sentBy == databaseService!.user!.userId
                       ? "You"
-                      : group.groupName,
+                      : group!.groupName!,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -910,20 +910,20 @@ class _ChatPageState extends State<ChatPage> {
             return Container(
               child: Row(
                 children: <Widget>[
-                  snap.data.contentType == 1 || snap.data.contentType == 4
+                  snap.data!.contentType == 1 || snap.data!.contentType == 4
                       // Text
                       ? Container(
                           child: Text(
-                            snap.data.messageContent,
+                            snap.data!.messageContent,
                             style: TextStyle(
                                 color: Colors.white,
-                                fontStyle: snap.data.contentType == 1
+                                fontStyle: snap.data!.contentType == 1
                                     ? FontStyle.normal
                                     : FontStyle.italic),
                             overflow: TextOverflow.ellipsis,
                           ),
                           padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                          margin: message.sentBy == databaseService.user.userId
+                          margin: message.sentBy == databaseService!.user!.userId
                               ? EdgeInsets.only(right: 10)
                               : EdgeInsets.only(left: 45),
                           width: MediaQuery.of(context).size.width / 2,
@@ -931,7 +931,7 @@ class _ChatPageState extends State<ChatPage> {
                           decoration: BoxDecoration(
                               color: Color(0xFF868B90),
                               borderRadius:
-                                  message.sentBy == databaseService.user.userId
+                                  message.sentBy == databaseService!.user!.userId
                                       ? BorderRadius.only(
                                           bottomLeft: Radius.circular(18),
                                           topLeft: Radius.circular(18),
@@ -941,7 +941,7 @@ class _ChatPageState extends State<ChatPage> {
                                           topLeft: Radius.circular(18),
                                           topRight: Radius.circular(18))),
                         )
-                      : snap.data.contentType == 2
+                      : snap.data!.contentType == 2
                           // Image
                           ? Container(
                               child: TextButton(
@@ -979,7 +979,7 @@ class _ChatPageState extends State<ChatPage> {
                                       ),
                                       clipBehavior: Clip.hardEdge,
                                     ),
-                                    imageUrl: snap.data.messageContent,
+                                    imageUrl: snap.data!.messageContent,
                                     width:
                                         MediaQuery.of(context).size.width / 2,
                                     height: 100.0,
@@ -994,13 +994,13 @@ class _ChatPageState extends State<ChatPage> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) => FullPhoto(
-                                              url: snap.data.messageContent)));
+                                              url: snap.data!.messageContent)));
                                 },
                                 style: TextButton.styleFrom(
                                     padding: EdgeInsets.all(0)),
                               ),
                               margin:
-                                  message.sentBy == databaseService.user.userId
+                                  message.sentBy == databaseService!.user!.userId
                                       ? EdgeInsets.only(right: 10)
                                       : EdgeInsets.only(left: 45),
                             )
@@ -1017,7 +1017,7 @@ class _ChatPageState extends State<ChatPage> {
                           right: 10.0),*/
                               ),
                 ],
-                mainAxisAlignment: message.sentBy == databaseService.user.userId
+                mainAxisAlignment: message.sentBy == databaseService!.user!.userId
                     ? MainAxisAlignment.end
                     : MainAxisAlignment.start,
               ),
@@ -1066,7 +1066,7 @@ class _ChatPageState extends State<ChatPage> {
                 },
               ),
               Visibility(
-                visible: message.sentBy == databaseService.user.userId,
+                visible: message.sentBy == databaseService!.user!.userId,
                 child: IconButton(
                   icon: Icon(
                     Icons.delete_forever,
@@ -1121,8 +1121,8 @@ class _ChatPageState extends State<ChatPage> {
                     onTap: () {
                       message.contentType = 4;
                       message.messageContent = "This message has been deleted";
-                      databaseService.updateMessage(
-                          message, group.groupId, message.messageId);
+                      databaseService!.updateMessage(
+                          message, group!.groupId, message.messageId);
                       Navigator.of(context).pop();
                     },
                     child: Row(

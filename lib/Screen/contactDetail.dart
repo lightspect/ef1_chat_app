@@ -13,8 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ContactDetailPage extends StatefulWidget {
-  final ContactModel contact;
-  final GroupModel groupChat;
+  final ContactModel? contact;
+  final GroupModel? groupChat;
   final bool chatDetail;
   ContactDetailPage(this.contact, this.groupChat, this.chatDetail);
   @override
@@ -26,17 +26,17 @@ enum OffNotificationTime { minutes10, hour1, hour8, hour24, forever }
 
 class _ContactDetailPageState extends State<ContactDetailPage> {
   _ContactDetailPageState(this.contact, this.groupChat, this.chatDetail);
-  DatabaseService databaseService;
-  QuerySnapshot checkGroupResult;
+  DatabaseService? databaseService;
+  QuerySnapshot? checkGroupResult;
   final _nicknameController = TextEditingController();
   final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  OffNotificationTime _time = OffNotificationTime.minutes10;
+  OffNotificationTime? _time = OffNotificationTime.minutes10;
 
-  ContactModel contact;
-  UserModel contactUser;
-  GroupModel privateChat, groupChat;
-  Members currentUser, peerUser;
+  ContactModel? contact;
+  UserModel? contactUser;
+  GroupModel? privateChat, groupChat;
+  Members? currentUser, peerUser;
   String alert = '';
   bool chatDetail;
   String action = "";
@@ -47,29 +47,29 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     databaseService = locator<DatabaseService>();
     getContactDetail();
     if (privateChatExist()) {
-      privateChat = databaseService.groups
+      privateChat = databaseService!.groups!
           .where((element) =>
               element.type == 1 &&
-              element.membersList
-                  .any((member) => member.userId == contact.userId))
+              element.membersList!
+                  .any((member) => member!.userId == contact!.userId))
           .first;
     } else {
       privateChat = new GroupModel();
     }
     currentUser = new Members(
-        userId: databaseService.user.userId, isActive: true, role: 1);
+        userId: databaseService!.user!.userId, isActive: true, role: 1);
   }
 
   void getContactDetail() async {
-    contactUser = await databaseService.getUserById(contact.userId);
-    if (contact.photoUrl != contactUser.photoUrl &&
-        contact.photoUrl.isNotEmpty) {
-      contact.photoUrl = contactUser.photoUrl;
-      await databaseService.setContact(
-          contact, databaseService.user.userId, contact.userId);
-      databaseService.contacts[databaseService.contacts
-          .indexWhere((element) => element.userId == contact.userId)] = contact;
-      await databaseService.setContactsList();
+    contactUser = await databaseService!.getUserById(contact!.userId);
+    if (contact!.photoUrl != contactUser!.photoUrl &&
+        contact!.photoUrl!.isNotEmpty) {
+      contact!.photoUrl = contactUser!.photoUrl;
+      await databaseService!.setContact(
+          contact!, databaseService!.user!.userId, contact!.userId);
+      databaseService!.contacts![databaseService!.contacts!
+          .indexWhere((element) => element!.userId == contact!.userId)] = contact;
+      await databaseService!.setContactsList();
     }
     if (contactUser == null) {
       alert = 'Error getting user information';
@@ -79,12 +79,12 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     setState(() {});
   }
 
-  bool checkUserAdmin(String userId) {
-    if (groupChat.membersList
+  bool checkUserAdmin(String? userId) {
+    if (groupChat!.membersList!
             .firstWhere(
-              (element) => element.userId == userId,
+              (element) => element!.userId == userId,
               orElse: () => Members(),
-            )
+            )!
             .role ==
         2) {
       return true;
@@ -93,8 +93,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   bool inContact() {
-    if (databaseService.contacts
-        .where((element) => element.userId == contact.userId)
+    if (databaseService!.contacts!
+        .where((element) => element!.userId == contact!.userId)
         .isEmpty) {
       return false;
     } else {
@@ -104,10 +104,10 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   bool privateChatExist() {
     bool check = false;
-    for (GroupModel groupModel in databaseService.groups) {
+    for (GroupModel groupModel in databaseService!.groups!) {
       if (groupModel.type == 1) {
-        for (Members member in groupModel.membersList) {
-          if (member.userId == contact.userId) {
+        for (Members? member in groupModel.membersList!) {
+          if (member!.userId == contact!.userId) {
             check = true;
             break;
           }
@@ -127,7 +127,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   Future<void> _changeNicknameDialog() async {
-    _nicknameController.text = contact.nickname;
+    _nicknameController.text = contact!.nickname!;
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -151,7 +151,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a new nickname";
                               }
                               return null;
@@ -209,10 +209,10 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
-                                    contact.nickname = _nicknameController.text;
+                                    contact!.nickname = _nicknameController.text;
                                   });
                                   handleUpdateNickName();
                                   Navigator.of(context).pop();
@@ -258,7 +258,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a keyword to search for message";
                               } else if (value.length < 2) {
                                 return "Please enter more than 1 letter to search";
@@ -318,7 +318,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Search",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
                                   Navigator.of(context).pop();
                                   handleMessageSearch();
@@ -363,7 +363,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             title: const Text('10 minutes'),
                             value: OffNotificationTime.minutes10,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -373,7 +373,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             title: const Text('1 hour'),
                             value: OffNotificationTime.hour1,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -383,7 +383,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             title: const Text('8 hours'),
                             value: OffNotificationTime.hour8,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -393,7 +393,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             title: const Text('24 hours'),
                             value: OffNotificationTime.hour24,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -403,7 +403,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             title: const Text('Until I turn back on'),
                             value: OffNotificationTime.forever,
                             groupValue: _time,
-                            onChanged: (OffNotificationTime value) {
+                            onChanged: (OffNotificationTime? value) {
                               radioListState(() {
                                 _time = value;
                               });
@@ -435,7 +435,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                 text: "Save",
                                 onClick: () {
                                   var validate =
-                                      _formKey.currentState.validate();
+                                      _formKey.currentState!.validate();
                                   if (validate) {
                                     handleTurnOffNotification();
                                     Navigator.of(context).pop();
@@ -478,13 +478,13 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         break;
     }
     if (timeOff == "forever") {
-      databaseService.user.offNotification[privateChat.groupId] = "";
+      databaseService!.user!.offNotification![privateChat!.groupId] = "";
     } else {
-      databaseService.user.offNotification[privateChat.groupId] =
+      databaseService!.user!.offNotification![privateChat!.groupId] =
           DateTime.now().add(duration).toString();
-      databaseService.updateUserField(
-          {"offNotification": databaseService.user.offNotification},
-          databaseService.user.userId);
+      databaseService!.updateUserField(
+          {"offNotification": databaseService!.user!.offNotification},
+          databaseService!.user!.userId);
     }
     setState(() {});
   }
@@ -493,18 +493,18 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
         settings: RouteSettings(name: "/message/detail/search"),
         builder: (context) => ChatSearchScreen(_messageController.text,
-            privateChat, [contactUser, databaseService.user])));
+            privateChat, [contactUser, databaseService!.user])));
   }
 
   void handleUpdateNickName() async {
-    await databaseService
-        .updateContact(contact, databaseService.user.userId, contact.userId)
+    await databaseService!
+        .updateContact(contact!, databaseService!.user!.userId, contact!.userId)
         .then((value) async {
-      databaseService.contacts[databaseService.contacts
-          .indexWhere((element) => element.userId == contact.userId)] = contact;
-      await databaseService.setContactsList();
+      databaseService!.contacts![databaseService!.contacts!
+          .indexWhere((element) => element!.userId == contact!.userId)] = contact;
+      await databaseService!.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
       setState(() {
         action = "change";
       });
@@ -512,14 +512,14 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   void handleRemoveFromContact() async {
-    databaseService
-        .removeContact(databaseService.user.userId, contact.userId)
+    databaseService!
+        .removeContact(databaseService!.user!.userId, contact!.userId)
         .then((value) {
       setState(() {
-        databaseService.contacts
-            .removeWhere((element) => element.userId == contact.userId);
-        databaseService.setContactsList();
-        databaseService.fetchOnlineStatusAsStream();
+        databaseService!.contacts!
+            .removeWhere((element) => element!.userId == contact!.userId);
+        databaseService!.setContactsList();
+        databaseService!.fetchOnlineStatusAsStream();
         alert = "Success";
       });
       _alertDialog(context, () {
@@ -536,18 +536,18 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           Icon(Icons.check_circle, size: 60, color: colorGreen),
           false,
           colorGreen);
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
   }
 
   void handleCreateGroupMessage() async {
-    peerUser = new Members(userId: contact.userId, isActive: true, role: 1);
-    await databaseService.refreshMessageList();
+    peerUser = new Members(userId: contact!.userId, isActive: true, role: 1);
+    await databaseService!.refreshMessageList();
     if (!privateChatExist()) {
-      List<Members> membersList = [peerUser, currentUser];
+      List<Members?> membersList = [peerUser, currentUser];
       privateChat = new GroupModel(
           createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-          createdBy: databaseService.user.userId,
+          createdBy: databaseService!.user!.userId,
           membersList: membersList,
           groupId: "",
           groupName: "",
@@ -557,11 +557,11 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           recentMessageTime: "",
           type: 1);
       DocumentReference groupDocRef =
-          await databaseService.addGroup(privateChat);
+          await databaseService!.addGroup(privateChat!);
       await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
-        privateChat.groupId = groupDocRef.id;
-        privateChat.groupName = contact.nickname;
-        privateChat.groupPhoto = contact.photoUrl;
+        privateChat!.groupId = groupDocRef.id;
+        privateChat!.groupName = contact!.nickname;
+        privateChat!.groupPhoto = contact!.photoUrl;
         if (groupChat != null) {
           goBackUntil("/navigationMenu", false);
         } else {
@@ -570,10 +570,10 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
             builder: (context) => ChatPage(group: privateChat)));
       });
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
     } else {
-      privateChat.groupName = contact.nickname;
-      privateChat.groupPhoto = contact.photoUrl;
+      privateChat!.groupName = contact!.nickname;
+      privateChat!.groupPhoto = contact!.photoUrl;
       if (groupChat != null) {
         goBackUntil("/navigationMenu", false);
       } else {
@@ -586,19 +586,19 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
 
   void handleAddNewContact() async {
     ContactModel newContact = new ContactModel(
-        userId: contact.userId,
-        nickname: contactUser.nickname,
-        photoUrl: contactUser.photoUrl);
-    await databaseService
-        .setContact(newContact, databaseService.user.userId, contact.userId)
+        userId: contact!.userId,
+        nickname: contactUser!.nickname,
+        photoUrl: contactUser!.photoUrl);
+    await databaseService!
+        .setContact(newContact, databaseService!.user!.userId, contact!.userId)
         .then((value) {
       setState(() {
-        databaseService.contacts.add(newContact);
-        databaseService.setContactsList();
+        databaseService!.contacts!.add(newContact);
+        databaseService!.setContactsList();
       });
       Fluttertoast.showToast(msg: "Add Contact Successfully");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
-    await databaseService.refreshMessageList();
+    await databaseService!.refreshMessageList();
     if (groupChat != null) {
       goBackUntil("/chatGroup/detail/members", false);
     } else {
@@ -609,22 +609,22 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
   }
 
   void handleChangeMemberRole() async {
-    if (checkUserAdmin(contact.userId)) {
-      groupChat
-          .membersList[groupChat.membersList
-              .indexWhere((element) => element.userId == contact.userId)]
+    if (checkUserAdmin(contact!.userId)) {
+      groupChat!
+          .membersList![groupChat!.membersList!
+              .indexWhere((element) => element!.userId == contact!.userId)]!
           .role = 1;
     } else {
-      groupChat
-          .membersList[groupChat.membersList
-              .indexWhere((element) => element.userId == contact.userId)]
+      groupChat!
+          .membersList![groupChat!.membersList!
+              .indexWhere((element) => element!.userId == contact!.userId)]!
           .role = 2;
     }
-    await databaseService.updateGroupField({
-      "membersList": groupChat.membersList
-          .map<Map<String, dynamic>>((member) => member.toMap())
+    await databaseService!.updateGroupField({
+      "membersList": groupChat!.membersList!
+          .map<Map<String, dynamic>>((member) => member!.toMap())
           .toList()
-    }, groupChat.groupId).then((value) {
+    }, groupChat!.groupId).then((value) {
       setState(() {
         alert = "Change Role successfully";
       });
@@ -636,7 +636,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           Icon(Icons.check_circle, size: 60, color: colorGreen),
           false,
           colorGreen);
-      databaseService.refreshMessageList();
+      databaseService!.refreshMessageList();
       setState(() {});
     });
   }
@@ -697,11 +697,11 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       appBar: AppBar(
         title: Text(
           inContact()
-              ? databaseService.contacts
-                  .firstWhere((element) => element.userId == contact.userId,
-                      orElse: () => ContactModel())
-                  .nickname
-              : (contactUser != null ? contactUser.nickname : ""),
+              ? databaseService!.contacts!
+                  .firstWhere((element) => element!.userId == contact!.userId,
+                      orElse: () => ContactModel())!
+                  .nickname!
+              : (contactUser != null ? contactUser!.nickname! : ""),
           style: TextStyle(color: colorBlack),
         ),
         leading: BackButton(
@@ -716,17 +716,17 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           arguments["action"] = action;
           if (action == "remove") {
             arguments["data"] = new ContactModel(
-                userId: contact.userId, nickname: contact.userId, photoUrl: "");
+                userId: contact!.userId, nickname: contact!.userId, photoUrl: "");
           } else if (action == "add") {
             arguments["data"] = new ContactModel(
-                userId: contact.userId,
-                nickname: contactUser.nickname,
-                photoUrl: contactUser.photoUrl);
+                userId: contact!.userId,
+                nickname: contactUser!.nickname,
+                photoUrl: contactUser!.photoUrl);
           } else {
             arguments["data"] = new ContactModel(
-                userId: contact.userId,
-                nickname: contact.nickname,
-                photoUrl: contactUser.photoUrl);
+                userId: contact!.userId,
+                nickname: contact!.nickname,
+                photoUrl: contactUser!.photoUrl);
           }
           Navigator.of(context).pop(arguments);
           return Future.value(false);
@@ -755,7 +755,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               height: 60.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: contact.photoUrl,
+                            imageUrl: contact!.photoUrl!,
                             width: 60.0,
                             height: 60.0,
                             fit: BoxFit.cover,
@@ -769,8 +769,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                     clipBehavior: Clip.hardEdge,
                   ),
                 ),
-                Text(contactUser != null ? contactUser.nickname : ""),
-                Text(contactUser != null ? contactUser.aboutMe : "",
+                Text(contactUser != null ? contactUser!.nickname! : ""),
+                Text(contactUser != null ? contactUser!.aboutMe : "",
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
@@ -837,7 +837,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                   InkWell(
                                     onTap: () {
                                       alert = "Add " +
-                                          contact.nickname +
+                                          contact!.nickname! +
                                           " to contact?";
                                       _alertDialog(
                                           context,
@@ -872,14 +872,14 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                 children: [
                                   InkWell(
                                     onTap: () {
-                                      if (databaseService.user.offNotification
-                                          .containsKey(privateChat.groupId)) {
-                                        databaseService.user.offNotification
-                                            .remove(privateChat.groupId);
-                                        databaseService.updateUserField({
-                                          "offNotification": databaseService
-                                              .user.offNotification
-                                        }, databaseService.user.userId);
+                                      if (databaseService!.user!.offNotification!
+                                          .containsKey(privateChat!.groupId)) {
+                                        databaseService!.user!.offNotification!
+                                            .remove(privateChat!.groupId);
+                                        databaseService!.updateUserField({
+                                          "offNotification": databaseService!
+                                              .user!.offNotification
+                                        }, databaseService!.user!.userId);
                                         setState(() {});
                                       } else {
                                         _offNotificationDialog();
@@ -887,9 +887,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                     },
                                     child: CircleAvatar(
                                       child: Icon(
-                                        databaseService.user.offNotification
+                                        databaseService!.user!.offNotification!
                                                 .containsKey(
-                                                    privateChat.groupId)
+                                                    privateChat!.groupId)
                                             ? Icons.notifications_off
                                             : Icons.notifications,
                                         color: colorBlack,
@@ -936,11 +936,11 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                             )),
                         Divider(),
                         groupChat != null
-                            ? (checkUserAdmin(databaseService.user.userId)
+                            ? (checkUserAdmin(databaseService!.user!.userId)
                                 ? InkWell(
                                     onTap: () {
                                       setState(() {
-                                        alert = checkUserAdmin(contact.userId)
+                                        alert = checkUserAdmin(contact!.userId)
                                             ? "Do you want to change this User Role to Member?"
                                             : "Do you want to promote this Member to Admin?";
                                       });
@@ -970,7 +970,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                           Padding(
                                             padding: EdgeInsets.only(left: 40),
                                             child: Text(
-                                                checkUserAdmin(contact.userId)
+                                                checkUserAdmin(contact!.userId)
                                                     ? "Demote to Member"
                                                     : "Promote to Group Admin"),
                                           ),
@@ -1003,7 +1003,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                   ),
                                 )),
                         groupChat != null
-                            ? (checkUserAdmin(databaseService.user.userId)
+                            ? (checkUserAdmin(databaseService!.user!.userId)
                                 ? Divider()
                                 : Container())
                             : Divider(),

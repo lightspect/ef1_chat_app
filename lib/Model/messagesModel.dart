@@ -1,11 +1,11 @@
 class MessagesModel {
-  String messageId;
+  String? messageId;
   String messageContent;
   String sentBy;
   String sentAt;
   int type;
   int contentType;
-  String replyTo;
+  String? replyTo;
 
   MessagesModel({
     this.messageId = "",
@@ -17,7 +17,7 @@ class MessagesModel {
     this.replyTo = "",
   });
 
-  factory MessagesModel.fromMap(Map data, String id) {
+  factory MessagesModel.fromMap(Map? data, String? id) {
     data = data ?? {};
     return MessagesModel(
       messageId: id,

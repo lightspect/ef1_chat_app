@@ -14,8 +14,8 @@ class TestScreen extends StatefulWidget {
 
 class _TestScreenState extends State<TestScreen> {
   _TestScreenState();
-  List<UserModel> users;
-  DatabaseService databaseService;
+  List<UserModel>? users;
+  DatabaseService? databaseService;
 
   @override
   void initState() {
@@ -27,7 +27,7 @@ class _TestScreenState extends State<TestScreen> {
 
   Future<void> setUsersList() async {
     users =
-        await databaseService.getUsersByContact(databaseService.user.userId);
+        await databaseService!.getUsersByContact(databaseService!.user!.userId);
     setState(() {});
   }
 
@@ -53,7 +53,7 @@ class _TestScreenState extends State<TestScreen> {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                users.length.toString() + " users contain this user as Contact",
+                users!.length.toString() + " users contain this user as Contact",
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -61,8 +61,8 @@ class _TestScreenState extends State<TestScreen> {
               child: ListView.builder(
                 padding: EdgeInsets.all(10.0),
                 itemBuilder: (context, index) =>
-                    buildItem(context, users[index]),
-                itemCount: users.length,
+                    buildItem(context, users![index]),
+                itemCount: users!.length,
               ),
             ),
           ],
@@ -90,7 +90,7 @@ class _TestScreenState extends State<TestScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Material(
-                    child: user.photoUrl != null || user.photoUrl.isNotEmpty
+                    child: user.photoUrl != null || user.photoUrl!.isNotEmpty
                         ? CachedNetworkImage(
                             placeholder: (context, url) => Container(
                               child: CircularProgressIndicator(
@@ -102,7 +102,7 @@ class _TestScreenState extends State<TestScreen> {
                               height: 40.0,
                               padding: EdgeInsets.all(10.0),
                             ),
-                            imageUrl: user.photoUrl,
+                            imageUrl: user.photoUrl!,
                             width: 40.0,
                             height: 40.0,
                             fit: BoxFit.cover,
@@ -118,7 +118,7 @@ class _TestScreenState extends State<TestScreen> {
                   Container(
                     padding: EdgeInsets.only(left: 12),
                     child: Text(
-                      user.nickname,
+                      user.nickname!,
                       style: TextStyle(fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),

@@ -54,7 +54,7 @@ class Api {
     return _db.collection(path).where(field, whereIn: condition).get();
   }
 
-  Future<DocumentSnapshot> getDocumentById(String path, String id) {
+  Future<DocumentSnapshot> getDocumentById(String path, String? id) {
     return _db.collection(path).doc(id).get();
   }
 
@@ -63,19 +63,19 @@ class Api {
   }
 
   Future<DocumentReference> addDocument(String path, Map data) {
-    return _db.collection(path).add(data);
+    return _db.collection(path).add(data as Map<String, dynamic>);
   }
 
   Future<void> setDocument(String path, Map data, String id) {
-    return _db.collection(path).doc(id).set(data);
+    return _db.collection(path).doc(id).set(data as Map<String, dynamic>);
   }
 
   Future<void> setDocumentMerge(String path, Map data, String id) {
-    return _db.collection(path).doc(id).set(data, SetOptions(merge: true));
+    return _db.collection(path).doc(id).set(data as Map<String, dynamic>, SetOptions(merge: true));
   }
 
-  Future<void> updateDocument(String path, Map data, String id) {
-    return _db.collection(path).doc(id).update(data);
+  Future<void> updateDocument(String path, Map data, String? id) {
+    return _db.collection(path).doc(id).update(data as Map<String, Object?>);
   }
 
   Future<void> updateDocumentID(String field, DocumentReference doc) {
@@ -124,37 +124,37 @@ class Api {
   }
 
   Future<DocumentSnapshot> getSubDocumentById(
-      String path, String id, String subName, String subId) {
+      String path, String id, String subName, String? subId) {
     return _db.collection(path).doc(id).collection(subName).doc(subId).get();
   }
 
   Future<void> removeSubDocument(
-      String path, String subName, String id, String subId) {
+      String path, String subName, String id, String? subId) {
     return _db.collection(path).doc(id).collection(subName).doc(subId).delete();
   }
 
   Future<DocumentReference> addSubDocument(
-      String path, String subName, String id, Map data) {
-    return _db.collection(path).doc(id).collection(subName).add(data);
+      String path, String subName, String? id, Map data) {
+    return _db.collection(path).doc(id).collection(subName).add(data as Map<String, dynamic>);
   }
 
   Future<void> updateSubDocument(
-      String path, String subName, String id, String subId, Map data) {
+      String path, String subName, String id, String? subId, Map data) {
     return _db
         .collection(path)
         .doc(id)
         .collection(subName)
         .doc(subId)
-        .update(data);
+        .update(data as Map<String, Object?>);
   }
 
   Future<void> setSubDocument(
-      String path, String subName, String id, String subId, Map data) {
+      String path, String subName, String id, String? subId, Map data) {
     return _db
         .collection(path)
         .doc(id)
         .collection(subName)
         .doc(subId)
-        .set(data);
+        .set(data as Map<String, dynamic>);
   }
 }

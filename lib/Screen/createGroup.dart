@@ -11,9 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 class CreateGroupPage extends StatefulWidget {
-  const CreateGroupPage({Key key, this.contact}) : super(key: key);
+  const CreateGroupPage({Key? key, this.contact}) : super(key: key);
 
-  final ContactModel contact;
+  final ContactModel? contact;
 
   @override
   State<StatefulWidget> createState() => _CreateGroupPageState(contact);
@@ -21,8 +21,8 @@ class CreateGroupPage extends StatefulWidget {
 
 class _CreateGroupPageState extends State<CreateGroupPage> {
   _CreateGroupPageState(this.contact);
-  final ContactModel contact;
-  DatabaseService databaseService;
+  final ContactModel? contact;
+  DatabaseService? databaseService;
   final _searchController = TextEditingController();
   final _groupNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -30,11 +30,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   String alert = '';
   String groupName = '';
-  List<ContactModel> contacts = [];
-  List<ContactModel> selectedContacts = [];
-  List<ContactModel> searchList = [];
-  Map<String, bool> contactMap = {};
-  Map<String, bool> searchMap = {};
+  List<ContactModel?>? contacts = [];
+  List<ContactModel?> selectedContacts = [];
+  List<ContactModel?> searchList = [];
+  Map<String?, bool?> contactMap = {};
+  Map<String?, bool?> searchMap = {};
 
   @override
   void initState() {
@@ -44,21 +44,21 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   }
 
   void getContacts() {
-    contacts = databaseService.contacts;
+    contacts = databaseService!.contacts;
     if (contact != null) {
       ContactModel element = new ContactModel(
-          userId: contact.userId,
-          nickname: contact.nickname,
-          photoUrl: contact.photoUrl);
+          userId: contact!.userId,
+          nickname: contact!.nickname,
+          photoUrl: contact!.photoUrl);
       selectedContacts.add(element);
     }
-    for (ContactModel element in contacts) {
+    for (ContactModel? element in contacts!) {
       if (selectedContacts
-          .where((contact) => element.userId == contact.userId)
+          .where((contact) => element!.userId == contact!.userId)
           .isNotEmpty) {
-        contactMap[element.userId] = true;
+        contactMap[element!.userId] = true;
       } else {
-        contactMap[element.userId] = false;
+        contactMap[element!.userId] = false;
       }
     }
   }
@@ -86,7 +86,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           margin: EdgeInsets.only(top: 12, bottom: 16),
                           child: TextFormField(
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Please enter a group Name";
                               }
                               return null;
@@ -157,9 +157,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               borderRadius: 4,
                               text: "Create",
                               onClick: () {
-                                var validate = _formKey.currentState.validate();
+                                var validate = _formKey.currentState!.validate();
                                 if (validate) {
-                                  _formKey.currentState.save();
+                                  _formKey.currentState!.save();
                                   groupName = _groupNameController.text;
                                   handleCreateGroupMessage();
                                   Navigator.of(context).pop();
@@ -180,16 +180,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   void handleCreateGroupMessage() async {
     List<Members> groupMember = [];
-    for (ContactModel element in selectedContacts) {
+    for (ContactModel? element in selectedContacts) {
       Members member =
-          new Members(userId: element.userId, isActive: true, role: 1);
+          new Members(userId: element!.userId, isActive: true, role: 1);
       groupMember.add(member);
     }
     groupMember.add(new Members(
-        userId: databaseService.user.userId, isActive: true, role: 2));
+        userId: databaseService!.user!.userId, isActive: true, role: 2));
     GroupModel group = new GroupModel(
         createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-        createdBy: databaseService.user.userId,
+        createdBy: databaseService!.user!.userId,
         membersList: groupMember,
         groupId: "",
         groupName: groupName,
@@ -198,7 +198,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         recentMessageSender: "",
         recentMessageTime: "",
         type: 2);
-    DocumentReference groupDocRef = await databaseService.addGroup(group);
+    DocumentReference groupDocRef = await databaseService!.addGroup(group);
     await groupDocRef.update({'groupId': groupDocRef.id}).then((value) {
       group.groupId = groupDocRef.id;
       Navigator.of(context, rootNavigator: true).push(
@@ -209,11 +209,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   void search(String search) {
     searchMap = {};
     if (search.isNotEmpty) {
-      for (int i = 0; i < contacts.length; i++) {
-        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
-            contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
-          searchList.add(contacts[i]);
-          searchMap[contacts[i].userId] = contactMap[contacts[i].userId];
+      for (int i = 0; i < contacts!.length; i++) {
+        if (contacts![i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
+            contacts![i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
+          searchList.add(contacts![i]);
+          searchMap[contacts![i]!.userId] = contactMap[contacts![i]!.userId];
         }
       }
       setState(() {});
@@ -311,16 +311,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               ),
             ),
             Flexible(
-              child: GroupedListView<ContactModel, String>(
-                elements: searchList.isEmpty ? contacts : searchList,
-                groupBy: (element) => element.nickname.substring(0, 1),
+              child: GroupedListView<ContactModel?, String>(
+                elements: searchList.isEmpty ? contacts! : searchList,
+                groupBy: (element) => element!.nickname!.substring(0, 1),
                 groupSeparatorBuilder: (String groupByValue) => Container(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Text(groupByValue),
                 ),
                 itemBuilder: (context, element) => StatefulBuilder(
                   builder: (context, checkListState) => CheckboxListTile(
-                    title: Text(element.nickname),
+                    title: Text(element!.nickname!),
                     value: searchMap.isEmpty
                         ? (contactMap[element.userId] ?? false)
                         : (searchMap[element.userId] ?? false),
@@ -332,13 +332,13 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         }
                       });
                       setState(() {
-                        if (value) {
+                        if (value!) {
                           if (!selectedContacts.contains(element)) {
                             selectedContacts.add(element);
                           }
                         } else {
                           selectedContacts.removeWhere((selectedContact) =>
-                              selectedContact.userId == element.userId);
+                              selectedContact!.userId == element.userId);
                         }
                       });
                     },
@@ -355,7 +355,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 height: 40.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: element.photoUrl,
+                              imageUrl: element.photoUrl!,
                               width: 40.0,
                               height: 40.0,
                               fit: BoxFit.cover,
@@ -397,7 +397,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     );
   }
 
-  Widget buildItem(ContactModel contactModel) {
+  Widget buildItem(ContactModel? contactModel) {
     return Container(
       alignment: Alignment.center,
       width: 60,
@@ -420,7 +420,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                 height: 40.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: contactModel.photoUrl,
+                              imageUrl: contactModel.photoUrl!,
                               width: 40.0,
                               height: 40.0,
                               fit: BoxFit.cover,
@@ -439,7 +439,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         onTap: () {
                           setState(() {
                             selectedContacts.removeWhere((element) =>
-                                element.userId == contactModel.userId);
+                                element!.userId == contactModel.userId);
                             contactMap[contactModel.userId] = false;
                           });
                         },
@@ -457,7 +457,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 ),
                 Flexible(
                   child: Text(
-                    contactModel.nickname,
+                    contactModel.nickname!,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

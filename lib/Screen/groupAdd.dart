@@ -11,10 +11,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 class AddMemberPage extends StatefulWidget {
-  const AddMemberPage({Key key, this.groupId, this.members}) : super(key: key);
+  const AddMemberPage({Key? key, this.groupId, this.members}) : super(key: key);
 
-  final String groupId;
-  final List<Members> members;
+  final String? groupId;
+  final List<Members?>? members;
 
   @override
   State<StatefulWidget> createState() => _AddMemberPageState(groupId, members);
@@ -22,19 +22,19 @@ class AddMemberPage extends StatefulWidget {
 
 class _AddMemberPageState extends State<AddMemberPage> {
   _AddMemberPageState(this.groupId, this.currentMembers);
-  final String groupId;
-  DatabaseService databaseService;
+  final String? groupId;
+  DatabaseService? databaseService;
   final _searchController = TextEditingController();
   final _debouncer = Debouncer(milliseconds: 500);
 
   String alert = '';
   String groupName = '';
-  List<Members> currentMembers;
-  List<ContactModel> contacts = [];
-  List<ContactModel> selectedContacts = [];
-  List<ContactModel> searchList = [];
-  Map<String, bool> contactMap = {};
-  Map<String, bool> searchMap = {};
+  List<Members?>? currentMembers;
+  List<ContactModel?> contacts = [];
+  List<ContactModel?> selectedContacts = [];
+  List<ContactModel?> searchList = [];
+  Map<String?, bool?> contactMap = {};
+  Map<String?, bool?> searchMap = {};
 
   @override
   void initState() {
@@ -46,38 +46,38 @@ class _AddMemberPageState extends State<AddMemberPage> {
   void getContacts() {
     contacts.clear();
     setState(() {
-      for (Members member in currentMembers) {
-        if (!member.isActive) {
-          contacts.add(databaseService.contacts
-              .where((element) => element.userId == member.userId)
+      for (Members? member in currentMembers!) {
+        if (!member!.isActive) {
+          contacts.add(databaseService!.contacts!
+              .where((element) => element!.userId == member.userId)
               .first);
         }
       }
       contacts.forEach((element) {
-        contactMap[element.userId] = false;
+        contactMap[element!.userId] = false;
       });
     });
   }
 
   void handleAddMember() async {
     selectedContacts.forEach((contact) {
-      if (currentMembers
-          .where((member) => member.userId == contact.userId)
+      if (currentMembers!
+          .where((member) => member!.userId == contact!.userId)
           .isNotEmpty) {
-        Members memberToBeAdd = currentMembers[currentMembers
-            .indexWhere((element) => element.userId == contact.userId)];
+        Members memberToBeAdd = currentMembers![currentMembers!
+            .indexWhere((element) => element!.userId == contact!.userId)]!;
         memberToBeAdd.isActive = true;
-        currentMembers[currentMembers.indexWhere(
-            (element) => element.userId == contact.userId)] = memberToBeAdd;
+        currentMembers![currentMembers!.indexWhere(
+            (element) => element!.userId == contact!.userId)] = memberToBeAdd;
       } else {
         Members member =
-            new Members(userId: contact.userId, isActive: true, role: 1);
-        currentMembers.add(member);
+            new Members(userId: contact!.userId, isActive: true, role: 1);
+        currentMembers!.add(member);
       }
     });
-    await databaseService.updateGroupField({
-      'membersList': currentMembers
-          .map<Map<String, dynamic>>((member) => member.toMap())
+    await databaseService!.updateGroupField({
+      'membersList': currentMembers!
+          .map<Map<String, dynamic>>((member) => member!.toMap())
           .toList()
     }, groupId);
 
@@ -87,9 +87,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
         contentType: 1,
         type: 4,
         sentAt: DateTime.now().toString(),
-        sentBy: databaseService.user.userId);
+        sentBy: databaseService!.user!.userId);
 
-    await databaseService.addMessage(message, groupId);
+    await databaseService!.addMessage(message, groupId);
 
     Navigator.of(context).popUntil((route) {
       if (route.settings.name == '/message/chatGroup') {
@@ -106,10 +106,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
     searchMap = {};
     if (search.isNotEmpty) {
       for (int i = 0; i < contacts.length; i++) {
-        if (contacts[i].nickname.toLowerCase().contains(search.toLowerCase()) ||
-            contacts[i].userId.toLowerCase().contains(search.toLowerCase())) {
+        if (contacts[i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
+            contacts[i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
           searchList.add(contacts[i]);
-          searchMap[contacts[i].userId] = contactMap[contacts[i].userId];
+          searchMap[contacts[i]!.userId] = contactMap[contacts[i]!.userId];
         }
       }
       setState(() {});
@@ -207,16 +207,16 @@ class _AddMemberPageState extends State<AddMemberPage> {
               ),
             ),
             Flexible(
-              child: GroupedListView<ContactModel, String>(
+              child: GroupedListView<ContactModel?, String>(
                 elements: searchList.isEmpty ? contacts : searchList,
-                groupBy: (element) => element.nickname.substring(0, 1),
+                groupBy: (element) => element!.nickname!.substring(0, 1),
                 groupSeparatorBuilder: (String groupByValue) => Container(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Text(groupByValue),
                 ),
                 itemBuilder: (context, element) => StatefulBuilder(
                   builder: (context, checkListState) => CheckboxListTile(
-                    title: Text(element.nickname),
+                    title: Text(element!.nickname!),
                     value: searchMap.isEmpty
                         ? (contactMap[element.userId] ?? false)
                         : (searchMap[element.userId] ?? false),
@@ -228,13 +228,13 @@ class _AddMemberPageState extends State<AddMemberPage> {
                         }
                       });
                       setState(() {
-                        if (value) {
+                        if (value!) {
                           if (!selectedContacts.contains(element)) {
                             selectedContacts.add(element);
                           }
                         } else {
                           selectedContacts.removeWhere((selectedContact) =>
-                              selectedContact.userId == element.userId);
+                              selectedContact!.userId == element.userId);
                         }
                       });
                     },
@@ -251,7 +251,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                                 height: 40.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: element.photoUrl,
+                              imageUrl: element.photoUrl!,
                               width: 40.0,
                               height: 40.0,
                               fit: BoxFit.cover,
@@ -293,7 +293,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
     );
   }
 
-  Widget buildItem(ContactModel contactModel) {
+  Widget buildItem(ContactModel? contactModel) {
     return Container(
       alignment: Alignment.center,
       width: 60,
@@ -316,7 +316,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                                 height: 40.0,
                                 padding: EdgeInsets.all(10.0),
                               ),
-                              imageUrl: contactModel.photoUrl,
+                              imageUrl: contactModel.photoUrl!,
                               width: 40.0,
                               height: 40.0,
                               fit: BoxFit.cover,
@@ -335,7 +335,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                         onTap: () {
                           setState(() {
                             selectedContacts.removeWhere((element) =>
-                                element.userId == contactModel.userId);
+                                element!.userId == contactModel.userId);
                             contactMap[contactModel.userId] = false;
                           });
                         },
@@ -353,7 +353,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 ),
                 Flexible(
                   child: Text(
-                    contactModel.nickname,
+                    contactModel.nickname!,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

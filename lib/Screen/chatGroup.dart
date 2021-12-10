@@ -21,9 +21,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatGroupPage extends StatefulWidget {
-  const ChatGroupPage({Key key, this.group}) : super(key: key);
+  const ChatGroupPage({Key? key, this.group}) : super(key: key);
 
-  final GroupModel group;
+  final GroupModel? group;
 
   static const route = '/message/chat';
 
@@ -33,14 +33,14 @@ class ChatGroupPage extends StatefulWidget {
 
 class _ChatGroupPageState extends State<ChatGroupPage> {
   _ChatGroupPageState(this.group);
-  SharedPreferences prefs;
-  DatabaseService databaseService;
+  SharedPreferences? prefs;
+  DatabaseService? databaseService;
   final _chatController = TextEditingController();
   final ScrollController listScrollController = ScrollController();
 
-  GroupModel group;
-  List<MessagesModel> messages;
-  List<UserModel> members = [];
+  GroupModel? group;
+  List<MessagesModel>? messages;
+  List<UserModel>? members = [];
 
   MessagesModel replyMessage = new MessagesModel();
   bool hasContent = false;
@@ -55,7 +55,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     databaseService = locator<DatabaseService>();
     listScrollController.addListener(_scrollListener);
     getMemberList();
-    databaseService.currentGroupId = group.groupId;
+    databaseService!.currentGroupId = group!.groupId;
   }
 
   _scrollListener() {
@@ -82,15 +82,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     setState(() {
       isLoading = true;
     });
-    if (!databaseService.groupMembersList.containsKey(group.groupId)) {
-      for (Members member in group.membersList) {
-        UserModel memberUser = await databaseService.getUserById(member.userId);
-        members.add(memberUser);
+    if (!databaseService!.groupMembersList.containsKey(group!.groupId)) {
+      for (Members? member in group!.membersList!) {
+        UserModel memberUser = await databaseService!.getUserById(member!.userId);
+        members!.add(memberUser);
       }
-      databaseService.groupMembersList[group.groupId] = members;
+      databaseService!.groupMembersList[group!.groupId] = members;
       print("Get Online");
     } else {
-      members = databaseService.groupMembersList[group.groupId];
+      members = databaseService!.groupMembersList[group!.groupId];
       print("Get Offline");
     }
     if (this.mounted) {
@@ -101,12 +101,12 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   Future<GroupModel> getGroupData(String groupId) async {
-    GroupModel groupModel = await databaseService.getGroupById(groupId);
+    GroupModel groupModel = await databaseService!.getGroupById(groupId);
     return groupModel;
   }
 
   UserModel getMemberData(String sentId) {
-    UserModel member = members.firstWhere(
+    UserModel member = members!.firstWhere(
         ((element) => element.userId == sentId),
         orElse: () => new UserModel());
     if (member != null) {
@@ -116,9 +116,9 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
     }
   }
 
-  Future<MessagesModel> getMessageData(String id) async {
+  Future<MessagesModel> getMessageData(String? id) async {
     MessagesModel message = new MessagesModel();
-    message = await databaseService.getMessageById(group.groupId, id);
+    message = await databaseService!.getMessageById(group!.groupId, id);
     return message;
   }
 
@@ -139,19 +139,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       MessagesModel messagesModel = new MessagesModel(
         messageContent: message,
         sentAt: dateTime,
-        sentBy: databaseService.user.userId,
-        type: replyMessage.messageId.isNotEmpty ? 3 : 1,
+        sentBy: databaseService!.user!.userId,
+        type: replyMessage.messageId!.isNotEmpty ? 3 : 1,
         contentType: contentType,
         replyTo:
-            replyMessage.messageId.isNotEmpty ? replyMessage.messageId : '',
+            replyMessage.messageId!.isNotEmpty ? replyMessage.messageId : '',
       );
-      await databaseService
-          .addMessage(messagesModel, group.groupId)
-          .then((value) => databaseService.updateGroupField({
+      await databaseService!
+          .addMessage(messagesModel, group!.groupId)
+          .then((value) => databaseService!.updateGroupField({
                 'recentMessage': contentType == 2 ? "Photo" : message,
-                'recentMessageSender': databaseService.user.userId,
+                'recentMessageSender': databaseService!.user!.userId,
                 'recentMessageTime': dateTime,
-              }, group.groupId).catchError((onError) {
+              }, group!.groupId).catchError((onError) {
                 Fluttertoast.showToast(msg: onError.toString());
               }))
           .catchError((onError) {
@@ -166,8 +166,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   void openGallery() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile pickedFile;
-    File image;
+    PickedFile? pickedFile;
+    File? image;
 
     pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
 
@@ -201,7 +201,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       if (value != null) {
         storageTaskSnapshot = value;
         storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          group.groupPhoto = downloadUrl;
+          group!.groupPhoto = downloadUrl;
           storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
             setState(() {
               isLoading = false;
@@ -243,7 +243,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Material(
-                  child: group.groupPhoto != ""
+                  child: group!.groupPhoto != ""
                       ? CachedNetworkImage(
                           placeholder: (context, url) => Container(
                             child: CircularProgressIndicator(
@@ -255,7 +255,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                             height: 50.0,
                             padding: EdgeInsets.all(15.0),
                           ),
-                          imageUrl: group.groupPhoto,
+                          imageUrl: group!.groupPhoto!,
                           width: 50.0,
                           height: 50.0,
                           fit: BoxFit.cover,
@@ -276,7 +276,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
                     child: Text(
-                      group.groupName,
+                      group!.groupName!,
                       style: TextStyle(color: colorBlack),
                       overflow: TextOverflow.ellipsis,
                       softWrap: true,
@@ -305,11 +305,11 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                               GroupDetailPage(group, members))).then(
                       (value) async {
                     final arguments =
-                        ModalRoute.of(context).settings.arguments as Map;
+                        ModalRoute.of(context)!.settings.arguments as Map?;
                     bool result =
                         arguments != null ? arguments['addMember'] : false;
                     if (result) {
-                      group = await getGroupData(group.groupId);
+                      group = await getGroupData(group!.groupId);
                       getMemberList();
                       result = false;
                     }
@@ -330,7 +330,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               if (isLoading) {
                 return Future.value(false);
               } else {
-                databaseService.currentGroupId = "";
+                databaseService!.currentGroupId = "";
                 return Future.value(true);
               }
             }));
@@ -351,8 +351,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder(
-                stream: databaseService.fetchMessagesAsStreamPagination(
-                    group.groupId, limit),
+                stream: databaseService!.fetchMessagesAsStreamPagination(
+                    group!.groupId, limit),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
                     return Center(
@@ -361,17 +361,17 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                       ),
                     );
                   } else {
-                    messages = snapshot.data.docs
-                        .map((doc) => MessagesModel.fromMap(doc.data(), doc.id))
+                    messages = snapshot.data!.docs
+                        .map((doc) => MessagesModel.fromMap(doc.data() as Map<dynamic, dynamic>?, doc.id))
                         .toList();
                     return ListView.builder(
                       itemBuilder: (context, index) => GestureDetector(
                           onLongPress: () {
-                            _settingModalBottomSheet(messages[index], context);
+                            _settingModalBottomSheet(messages![index], context);
                           },
                           child: Column(
                             children: [
-                              buildItem(index, messages[index]),
+                              buildItem(index, messages![index]),
                               isLastMessageYesterday(index)
                                   ? Container(
                                       height: 40,
@@ -387,7 +387,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                              messages[index - 1]
+                                              messages![index - 1]
                                                   .sentAt
                                                   .substring(0, 10),
                                               textAlign: TextAlign.center,
@@ -403,7 +403,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           )),
                       reverse: true,
                       controller: listScrollController,
-                      itemCount: messages.length,
+                      itemCount: messages!.length,
                     );
                   }
                 },
@@ -424,15 +424,15 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                         Text(
                           "Reply to ".replaceAll(" ", "\u00A0") +
                               (replyMessage.sentBy ==
-                                      databaseService.user.userId
+                                      databaseService!.user!.userId
                                   ? "yourself"
-                                  : members
+                                  : members!
                                       .firstWhere(
                                           (element) =>
                                               element.userId ==
                                               replyMessage.sentBy,
                                           orElse: () => new UserModel())
-                                      .nickname),
+                                      .nickname!),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
@@ -600,19 +600,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: Text(
-          (message.sentBy == databaseService.user.userId
+          (message.sentBy == databaseService!.user!.userId
                   ? "You"
-                  : members
+                  : members!
                       .firstWhere((element) => element.userId == message.sentBy,
                           orElse: () => UserModel())
-                      .nickname) +
+                      .nickname)! +
               " " +
               message.messageContent,
           style: TextStyle(color: Colors.grey),
         ),
       );
     } else {
-      if (message.sentBy == databaseService.user.userId) {
+      if (message.sentBy == databaseService!.user!.userId) {
         // Right (my message)
         return Column(
           children: [
@@ -844,8 +844,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool isLastMessageLeft(int index) {
     if ((index > 0 &&
             messages != null &&
-            (messages[index - 1].sentBy == databaseService.user.userId ||
-                messages[index].sentBy != messages[index - 1].sentBy)) ||
+            (messages![index - 1].sentBy == databaseService!.user!.userId ||
+                messages![index].sentBy != messages![index - 1].sentBy)) ||
         index == 0) {
       return true;
     } else {
@@ -856,7 +856,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   bool isLastMessageRight(int index) {
     if ((index > 0 &&
             messages != null &&
-            messages[index - 1].sentBy != databaseService.user.userId) ||
+            messages![index - 1].sentBy != databaseService!.user!.userId) ||
         index == 0) {
       return true;
     } else {
@@ -865,19 +865,19 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   }
 
   bool isLastMessageYesterday(int index) {
-    if (messages.isNotEmpty && index > 0) {
+    if (messages!.isNotEmpty && index > 0) {
       String lastDate =
-          DateTime.parse(messages[index - 1].sentAt).day.toString() +
+          DateTime.parse(messages![index - 1].sentAt).day.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).month.toString() +
+              DateTime.parse(messages![index - 1].sentAt).month.toString() +
               "" +
-              DateTime.parse(messages[index - 1].sentAt).year.toString();
+              DateTime.parse(messages![index - 1].sentAt).year.toString();
       String currentDate =
-          DateTime.parse(messages[index].sentAt).day.toString() +
+          DateTime.parse(messages![index].sentAt).day.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).month.toString() +
+              DateTime.parse(messages![index].sentAt).month.toString() +
               "" +
-              DateTime.parse(messages[index].sentAt).year.toString();
+              DateTime.parse(messages![index].sentAt).year.toString();
       if (currentDate != lastDate) {
         return true;
       } else {
@@ -893,7 +893,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
       return Container(
         margin: EdgeInsets.only(left: 50, right: 15, bottom: 5),
         child: Row(
-            mainAxisAlignment: message.sentBy == databaseService.user.userId
+            mainAxisAlignment: message.sentBy == databaseService!.user!.userId
                 ? MainAxisAlignment.end
                 : MainAxisAlignment.start,
             children: [
@@ -904,10 +904,10 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
               ),
               Flexible(
                 child: Text(
-                  members.isNotEmpty
-                      ? (message.sentBy == databaseService.user.userId
+                  members!.isNotEmpty
+                      ? (message.sentBy == databaseService!.user!.userId
                           ? "You"
-                          : getMemberData(message.sentBy).nickname)
+                          : getMemberData(message.sentBy).nickname!)
                       : "",
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                   overflow: TextOverflow.ellipsis,
@@ -932,20 +932,20 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
             return Container(
               child: Row(
                 children: <Widget>[
-                  snap.data.contentType == 1 || snap.data.contentType == 4
+                  snap.data!.contentType == 1 || snap.data!.contentType == 4
                       // Text
                       ? Container(
                           child: Text(
-                            snap.data.messageContent,
+                            snap.data!.messageContent,
                             style: TextStyle(
                                 color: Colors.white,
-                                fontStyle: snap.data.contentType == 1
+                                fontStyle: snap.data!.contentType == 1
                                     ? FontStyle.normal
                                     : FontStyle.italic),
                             overflow: TextOverflow.ellipsis,
                           ),
                           padding: EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 10.0),
-                          margin: message.sentBy == databaseService.user.userId
+                          margin: message.sentBy == databaseService!.user!.userId
                               ? EdgeInsets.only(right: 10)
                               : EdgeInsets.only(left: 45),
                           width: MediaQuery.of(context).size.width / 2,
@@ -953,7 +953,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           decoration: BoxDecoration(
                               color: Color(0xFF868B90),
                               borderRadius:
-                                  message.sentBy == databaseService.user.userId
+                                  message.sentBy == databaseService!.user!.userId
                                       ? BorderRadius.only(
                                           bottomLeft: Radius.circular(18),
                                           topLeft: Radius.circular(18),
@@ -963,7 +963,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                           topLeft: Radius.circular(18),
                                           topRight: Radius.circular(18))),
                         )
-                      : snap.data.contentType == 2
+                      : snap.data!.contentType == 2
                           // Image
                           ? Container(
                               child: TextButton(
@@ -1001,7 +1001,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                       ),
                                       clipBehavior: Clip.hardEdge,
                                     ),
-                                    imageUrl: snap.data.messageContent,
+                                    imageUrl: snap.data!.messageContent,
                                     width:
                                         MediaQuery.of(context).size.width / 2,
                                     height: 100.0,
@@ -1016,13 +1016,13 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) => FullPhoto(
-                                              url: snap.data.messageContent)));
+                                              url: snap.data!.messageContent)));
                                 },
                                 style: TextButton.styleFrom(
                                     padding: EdgeInsets.all(0)),
                               ),
                               margin:
-                                  message.sentBy == databaseService.user.userId
+                                  message.sentBy == databaseService!.user!.userId
                                       ? EdgeInsets.only(right: 10)
                                       : EdgeInsets.only(left: 45),
                             )
@@ -1039,7 +1039,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                           right: 10.0),*/
                               ),
                 ],
-                mainAxisAlignment: message.sentBy == databaseService.user.userId
+                mainAxisAlignment: message.sentBy == databaseService!.user!.userId
                     ? MainAxisAlignment.end
                     : MainAxisAlignment.start,
               ),
@@ -1061,8 +1061,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
 
   Widget buildChatAvatar(MessagesModel message, int index) {
     if (isLastMessageLeft(index) || isLastMessageYesterday(index)) {
-      if (members.isNotEmpty) {
-        if (getMemberData(message.sentBy).photoUrl.isNotEmpty) {
+      if (members!.isNotEmpty) {
+        if (getMemberData(message.sentBy).photoUrl!.isNotEmpty) {
           return Material(
             child: CachedNetworkImage(
               placeholder: (context, url) => Container(
@@ -1074,7 +1074,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 height: 35.0,
                 padding: EdgeInsets.all(10.0),
               ),
-              imageUrl: getMemberData(message.sentBy).photoUrl,
+              imageUrl: getMemberData(message.sentBy).photoUrl!,
               width: 35.0,
               height: 35.0,
               fit: BoxFit.cover,
@@ -1127,7 +1127,7 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                 },
               ),
               Visibility(
-                visible: message.sentBy == databaseService.user.userId,
+                visible: message.sentBy == databaseService!.user!.userId,
                 child: IconButton(
                   icon: Icon(
                     Icons.delete_forever,
@@ -1182,8 +1182,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
                     onTap: () {
                       message.contentType = 4;
                       message.messageContent = "This message has been deleted";
-                      databaseService.updateMessage(
-                          message, group.groupId, message.messageId);
+                      databaseService!.updateMessage(
+                          message, group!.groupId, message.messageId);
                       Navigator.of(context).pop();
                     },
                     child: Row(
