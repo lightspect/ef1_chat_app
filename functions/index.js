@@ -2,8 +2,8 @@ const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 const algoliasearch = require('algoliasearch');
 
-const ALGOLIA_ID = "GDVJZMIBQ9"; //ApplicationID
-const ALGOLIA_ADMIN_KEY = "7aa52990ab3f4f023c7e973f7e1e3a62"; //Admin API Key
+const ALGOLIA_ID = "FLG1KT65QC"; //ApplicationID
+const ALGOLIA_ADMIN_KEY = "24316df49437b91e0f777d64f738e285"; //Admin API Key
 const algoliaClient = algoliasearch(ALGOLIA_ID, ALGOLIA_ADMIN_KEY);
 
 admin.initializeApp()

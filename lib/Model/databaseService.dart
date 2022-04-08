@@ -320,8 +320,8 @@ class DatabaseService extends ChangeNotifier {
     for (ContactModel? contact in contacts!) {
       contactId.add(contact!.userId);
     }
-    List<List<String>> contactChunk =
-        splitListToChunk(contactId, 10).cast<List<String>>().toList();
+    List<List<String?>> contactChunk =
+        splitListToChunk(contactId, 10).cast<List<String?>>().toList();
     List<Stream<List<OnlineStatusModel>?>> streams = [];
     contactChunk.forEach((element) {
       streams.add(_api!

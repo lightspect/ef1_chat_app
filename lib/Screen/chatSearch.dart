@@ -49,7 +49,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
     );
 
     AlgoliaQuery query = algolia.instance.index(group!.groupId);
-    query = query.search(keyword);
+    query = query.query(keyword);
 
     _results = (await query.getObjects()).hits;
 

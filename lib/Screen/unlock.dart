@@ -60,9 +60,8 @@ class _UnlockPageState extends State<UnlockPage> {
       isLoading = true;
     });
 
-    GoogleSignInAccount googleUser =
-        await (googleSignIn.signIn() as Future<GoogleSignInAccount>);
-    GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    GoogleSignInAccount? googleUser = await (googleSignIn.signIn());
+    GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
