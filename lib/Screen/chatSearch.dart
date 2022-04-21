@@ -7,6 +7,7 @@ import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/messagesModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 
 import '../locator.dart';
@@ -44,8 +45,8 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
       _searching = true;
     });
     Algolia algolia = Algolia.init(
-      applicationId: 'GDVJZMIBQ9',
-      apiKey: '8ee8e6b349014daf8586c63b409d18d8',
+      applicationId: dotenv.env['ALGOLIA_ID']!,
+      apiKey: dotenv.env['API_KEY'] ?? "",
     );
 
     AlgoliaQuery query = algolia.instance.index(group!.groupId);

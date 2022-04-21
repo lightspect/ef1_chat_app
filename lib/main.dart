@@ -11,11 +11,13 @@ import 'package:chat_app_ef1/Screen/term.dart';
 import 'package:chat_app_ef1/Screen/unlock.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 Future<void> main() async {
+  await dotenv.load(fileName: 'env/.env_dev');
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   setupLocator();

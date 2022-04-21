@@ -71,7 +71,10 @@ class Api {
   }
 
   Future<void> setDocumentMerge(String path, Map data, String id) {
-    return _db.collection(path).doc(id).set(data as Map<String, dynamic>, SetOptions(merge: true));
+    return _db
+        .collection(path)
+        .doc(id)
+        .set(data as Map<String, dynamic>, SetOptions(merge: true));
   }
 
   Future<void> updateDocument(String path, Map data, String? id) {
@@ -135,7 +138,11 @@ class Api {
 
   Future<DocumentReference> addSubDocument(
       String path, String subName, String? id, Map data) {
-    return _db.collection(path).doc(id).collection(subName).add(data as Map<String, dynamic>);
+    return _db
+        .collection(path)
+        .doc(id)
+        .collection(subName)
+        .add(data as Map<String, dynamic>);
   }
 
   Future<void> updateSubDocument(
