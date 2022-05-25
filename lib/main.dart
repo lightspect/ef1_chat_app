@@ -13,8 +13,8 @@ import 'package:chat_app_ef1/locator.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:get/route_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: 'env/.env_dev');
@@ -29,41 +29,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => locator<DatabaseService>()),
-        ],
-        child: RefreshConfiguration(
-          footerTriggerDistance: 15,
-          dragSpeedRatio: 0.91,
-          headerBuilder: () => MaterialClassicHeader(),
-          footerBuilder: () => ClassicFooter(),
-          enableLoadingWhenNoData: false,
-          enableRefreshVibrate: false,
-          enableLoadMoreVibrate: false,
-          shouldFooterFollowWhenNotFull: (state) {
-            // If you want load more with noMoreData state ,may be you should return false
-            return false;
-          },
-          child: MaterialApp(
-            navigatorKey: locator<NavigationService>().navigatorKey,
-            title: 'Flutter Demo',
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-            ),
-            home: SplashScreenDemo(),
-            initialRoute: '/',
-            routes: {
-              '/unlock': (context) => UnlockPage(),
-              '/term': (context) => TermService(),
-              '/registration': (context) => RegistrationPage(),
-              '/seedCreate': (context) => SeedCreatePage(),
-              '/seedConfirm': (context) => SeedConfirmPage(),
-              '/seedSuccess': (context) => SeedSuccessPage(),
-              '/navigationMenu': (context) => NavigationMenu(),
-              '/qrscan': (context) => ScanScreen(),
-            },
-          ),
-        ));
+      providers: [
+        ChangeNotifierProvider(create: (_) => locator<DatabaseService>()),
+      ],
+      child: GetMaterialApp(
+        navigatorKey: locator<NavigationService>().navigatorKey,
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: SplashScreenDemo(),
+        initialRoute: '/',
+        routes: {
+          '/unlock': (context) => UnlockPage(),
+          '/term': (context) => TermService(),
+          '/registration': (context) => RegistrationPage(),
+          '/seedCreate': (context) => SeedCreatePage(),
+          '/seedConfirm': (context) => SeedConfirmPage(),
+          '/seedSuccess': (context) => SeedSuccessPage(),
+          '/navigationMenu': (context) => NavigationMenu(),
+          '/qrscan': (context) => ScanScreen(),
+        },
+      ),
+    );
   }
 }

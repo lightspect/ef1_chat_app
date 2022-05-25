@@ -181,27 +181,6 @@ class LoginButton extends StatelessWidget {
   }
 }
 
-class LoginLogo extends StatelessWidget {
-  LoginLogo({this.margin, this.width, this.image});
-
-  final EdgeInsets? margin;
-  final double? width;
-  final Image? image;
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      child: Container(
-        margin: margin ?? EdgeInsets.only(bottom: 16),
-        width: width ?? MediaQuery.of(context).size.width,
-        child: Image(
-          image: image as ImageProvider<Object>? ?? AssetImage('assets/images/logo_wallet.png'),
-        ),
-      ),
-    );
-  }
-}
-
 class TextFormFieldWidget extends StatefulWidget {
   final TextInputType? textInputType;
   final String hintText;

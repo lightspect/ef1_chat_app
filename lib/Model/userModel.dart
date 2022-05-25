@@ -72,28 +72,6 @@ class ContactModel {
   }
 }
 
-class GroupSettingModel {
-  String groupId;
-  String offNotificationUntil;
-
-  GroupSettingModel({this.groupId = "", this.offNotificationUntil = ""});
-
-  factory GroupSettingModel.fromMap(Map? data) {
-    data = data ?? {};
-    return GroupSettingModel(
-      groupId: data['groupId'] ?? '',
-      offNotificationUntil: data['offNotificationUntil'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'groupId': groupId,
-      'offNotificationUntil': offNotificationUntil,
-    };
-  }
-}
-
 class OnlineStatusModel {
   String userId;
   String? nickname;

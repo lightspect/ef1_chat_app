@@ -8,7 +8,6 @@ import 'package:chat_app_ef1/Screen/createMessage.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({Key? key, this.title}) : super(key: key);
@@ -23,8 +22,6 @@ class MessagePage extends StatefulWidget {
 
 class _MessagePageState extends State<MessagePage> {
   final _searchController = TextEditingController();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
   //final _debouncer = Debouncer(milliseconds: 500);
   DatabaseService? databaseService;
 
@@ -39,11 +36,10 @@ class _MessagePageState extends State<MessagePage> {
     _onRefresh();
   }
 
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     print("onRefresh");
     databaseService!.refreshMessageList();
     setState(() {});
-    _refreshController.refreshCompleted();
   }
 
   void search(String search) {
@@ -211,31 +207,7 @@ class _MessagePageState extends State<MessagePage> {
                         return 1;
                       }
                     });
-                    return SmartRefresher(
-                      enablePullDown: true,
-                      enablePullUp: true,
-                      header: WaterDropHeader(),
-                      footer: CustomFooter(
-                        builder: (BuildContext context, LoadStatus? mode) {
-                          Widget body;
-                          if (mode == LoadStatus.idle) {
-                            body = Text("pull up load");
-                          } else if (mode == LoadStatus.loading) {
-                            body = Text("Loading");
-                          } else if (mode == LoadStatus.failed) {
-                            body = Text("Load Failed! Click retry!");
-                          } else if (mode == LoadStatus.canLoading) {
-                            body = Text("Release to load more");
-                          } else {
-                            body = Text("No more Data");
-                          }
-                          return Container(
-                            height: 55.0,
-                            child: Center(child: body),
-                          );
-                        },
-                      ),
-                      controller: _refreshController,
+                    return RefreshIndicator(
                       onRefresh: _onRefresh,
                       child: ListView.builder(
                         padding: EdgeInsets.all(10.0),

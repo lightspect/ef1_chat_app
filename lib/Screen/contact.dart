@@ -8,10 +8,8 @@ import 'package:chat_app_ef1/Model/navigationModel.dart';
 import 'package:chat_app_ef1/Model/userModel.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:grouped_list/grouped_list.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({Key? key, this.title}) : super(key: key);
@@ -30,8 +28,6 @@ class _ContactPageState extends State<ContactPage> {
   final _aliasController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final _debouncer = Debouncer(milliseconds: 500);
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
   DatabaseService? databaseService;
 
   late List<OnlineStatusModel> contacts;
@@ -49,11 +45,10 @@ class _ContactPageState extends State<ContactPage> {
     _onRefresh();
   }
 
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     print("refresh Contact");
     databaseService!.fetchOnlineStatusAsStream();
     setState(() {});
-    _refreshController.refreshCompleted();
   }
 
   void search(String search) {
@@ -503,31 +498,7 @@ class _ContactPageState extends State<ContactPage> {
                   } else {
                     print("Has data");
                     contacts = List.from(snapshot.data!);
-                    return SmartRefresher(
-                        enablePullDown: true,
-                        enablePullUp: true,
-                        header: WaterDropHeader(),
-                        footer: CustomFooter(
-                          builder: (BuildContext context, LoadStatus? mode) {
-                            Widget body;
-                            if (mode == LoadStatus.idle) {
-                              body = Text("pull up load");
-                            } else if (mode == LoadStatus.loading) {
-                              body = Text("Loading");
-                            } else if (mode == LoadStatus.failed) {
-                              body = Text("Load Failed! Click retry!");
-                            } else if (mode == LoadStatus.canLoading) {
-                              body = Text("Release to load more");
-                            } else {
-                              body = Text("No more Data");
-                            }
-                            return Container(
-                              height: 55.0,
-                              child: Center(child: body),
-                            );
-                          },
-                        ),
-                        controller: _refreshController,
+                    return RefreshIndicator(
                         onRefresh: _onRefresh,
                         child: GroupedListView<OnlineStatusModel, String>(
                           controller: NavigationProvider.of(context)

@@ -28,7 +28,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  SharedPref? sharedPref;
   DatabaseService? databaseService;
 
   bool isLoading = false;
