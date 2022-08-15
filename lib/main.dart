@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => locator<DatabaseService>()),
       ],
       child: GetMaterialApp(
-        navigatorKey: locator<NavigationService>().navigatorKey,
         title: 'Flutter Demo',
         theme: ThemeData(
           primarySwatch: Colors.blue,

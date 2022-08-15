@@ -308,12 +308,6 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
   }
 }
 
-void changeFocus(
-    BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
-  currentFocus.unfocus();
-  FocusScope.of(context).requestFocus(nextFocus);
-}
-
 class CustomAlertDialog extends StatelessWidget {
   CustomAlertDialog({
     this.title,

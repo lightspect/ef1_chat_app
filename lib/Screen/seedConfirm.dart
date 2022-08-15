@@ -8,39 +8,11 @@ class SeedConfirmPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final String seed = ModalRoute.of(context)!.settings.arguments as String;
     List<String> seedArray = seed.split(" ")..shuffle();
-    Future<void> _showMyDialog() async {
-      return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Secret Phrase Test'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text(
-                    'You have entered the wrong Key Phrase.\nPlease try again.',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Try Again'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
 
     return ChangeNotifierProvider<ButtonModel>(
-        create: (context) => ButtonModel(),
-        child: Builder(builder: (context) {
+      create: (context) => ButtonModel(),
+      child: Builder(
+        builder: (context) {
           return Scaffold(
             appBar: AppBar(
               backgroundColor: splashBG,
@@ -147,14 +119,9 @@ class SeedConfirmPage extends StatelessWidget {
                         text: "Next",
                         color: colorRed,
                         highlightColor: colorRed,
-                        onClick: () {
-                          provider.checkArray(seed);
-                          if (provider.check) {
-                            Navigator.pushNamed(context, '/seedSuccess');
-                          } else {
-                            _showMyDialog();
-                          }
-                        },
+                        onClick: () => provider.checkArray(seed)
+                            ? Navigator.pushNamed(context, '/seedSuccess')
+                            : _showMyDialog(context),
                         borderColor: colorRed,
                         textColor: Colors.white,
                       );
@@ -164,7 +131,39 @@ class SeedConfirmPage extends StatelessWidget {
               ),
             ),
           );
-        }));
+        },
+      ),
+    );
+  }
+
+  Future<void> _showMyDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Secret Phrase Test'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  'You have entered the wrong Key Phrase.\nPlease try again.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Try Again'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -186,7 +185,6 @@ class ButtonModel with ChangeNotifier {
     false
   ];
   String seedString = "";
-  bool check = false;
 
   void checkClicked(List<String> array, String text, int pos) {
     seedArray = array;
@@ -212,15 +210,7 @@ class ButtonModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void checkArray(String text) {
-    if (seedString.isNotEmpty) {
-      seedString = seedString.substring(0, seedString.length - 1);
-    }
-    if (text == seedString) {
-      check = true;
-    } else {
-      check = false;
-    }
-    notifyListeners();
+  bool checkArray(String text) {
+    return seedString.trim() == text;
   }
 }

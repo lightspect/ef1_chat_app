@@ -260,7 +260,7 @@ class _ChatPageState extends State<ChatPage> {
           actions: [
             IconButton(
                 icon: Icon(
-                  MyIcon.ellipsis_v,
+                  Icons.more_vert,
                   size: 24,
                   color: colorBlack,
                 ),
