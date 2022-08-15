@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
@@ -87,8 +87,14 @@ class _CreateMessagePageState extends State<CreateMessagePage> {
     searchList = [];
     if (search.isNotEmpty) {
       for (int i = 0; i < contacts!.length; i++) {
-        if (contacts![i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
-            contacts![i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
+        if (contacts![i]!
+                .nickname!
+                .toLowerCase()
+                .contains(search.toLowerCase()) ||
+            contacts![i]!
+                .userId!
+                .toLowerCase()
+                .contains(search.toLowerCase())) {
           searchList.add(contacts![i]);
         }
       }

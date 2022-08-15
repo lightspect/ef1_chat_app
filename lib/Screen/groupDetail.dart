@@ -4,9 +4,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/messagesModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/groupAdd.dart';
 import 'package:chat_app_ef1/Screen/groupMember.dart';
@@ -138,7 +138,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
                                     group!.groupName = _nicknameController.text;
@@ -247,7 +248,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               borderRadius: 4,
                               text: "Search",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   Navigator.of(context).pop();
                                   handleMessageSearch();
@@ -437,8 +439,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void handleLeaveGroup() async {
-    Members memberToBeRemove = group!.membersList![group!.membersList!.indexWhere(
-        (element) => element!.userId == databaseService!.user!.userId)]!;
+    Members memberToBeRemove = group!.membersList![group!.membersList!
+        .indexWhere(
+            (element) => element!.userId == databaseService!.user!.userId)]!;
     memberToBeRemove.isActive = false;
     group!.membersList![group!.membersList!.indexWhere(
             (element) => element!.userId == databaseService!.user!.userId)] =
@@ -538,7 +541,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     firebase_storage.FirebaseStorage storage =
         firebase_storage.FirebaseStorage.instance;
     firebase_storage.Reference reference = storage.ref().child(fileName);
-    firebase_storage.UploadTask uploadTask = reference.putFile(avatarImageFile!);
+    firebase_storage.UploadTask uploadTask =
+        reference.putFile(avatarImageFile!);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
       if (value != null) {

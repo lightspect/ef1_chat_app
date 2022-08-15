@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/chatGroup.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -157,7 +157,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                               borderRadius: 4,
                               text: "Create",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   _formKey.currentState!.save();
                                   groupName = _groupNameController.text;
@@ -210,8 +211,14 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     searchMap = {};
     if (search.isNotEmpty) {
       for (int i = 0; i < contacts!.length; i++) {
-        if (contacts![i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
-            contacts![i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
+        if (contacts![i]!
+                .nickname!
+                .toLowerCase()
+                .contains(search.toLowerCase()) ||
+            contacts![i]!
+                .userId!
+                .toLowerCase()
+                .contains(search.toLowerCase())) {
           searchList.add(contacts![i]);
           searchMap[contacts![i]!.userId] = contactMap[contacts![i]!.userId];
         }

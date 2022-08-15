@@ -3,7 +3,7 @@ import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
@@ -53,8 +53,8 @@ class _ScanState extends State<ScanScreen> {
       if (userModel != null) {
         //check if user is not self
         if (userModel!.userId != databaseService!.user!.userId) {
-          contactModel = await databaseService!.getContactById(
-              databaseService!.user!.userId, code);
+          contactModel = await databaseService!
+              .getContactById(databaseService!.user!.userId, code);
           //check if user not in contact list
           if (contactModel == null) {
             contactModel = new ContactModel(

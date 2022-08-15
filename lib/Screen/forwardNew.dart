@@ -2,9 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/messagesModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -64,8 +64,8 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
   Future<ContactModel> getContactDetail(List<dynamic> members) async {
     members.removeWhere(
         (element) => element.userId == databaseService!.user!.userId);
-    ContactModel contactModel = await databaseService!.getContactById(
-        databaseService!.user!.userId, members.first.userId);
+    ContactModel contactModel = await databaseService!
+        .getContactById(databaseService!.user!.userId, members.first.userId);
     if (contactModel != null && contactModel.userId!.isNotEmpty) {
       return contactModel;
     } else {

@@ -2,9 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/messagesModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -67,8 +67,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
         Members memberToBeAdd = currentMembers![currentMembers!
             .indexWhere((element) => element!.userId == contact!.userId)]!;
         memberToBeAdd.isActive = true;
-        currentMembers![currentMembers!.indexWhere(
-            (element) => element!.userId == contact!.userId)] = memberToBeAdd;
+        currentMembers![currentMembers!
+                .indexWhere((element) => element!.userId == contact!.userId)] =
+            memberToBeAdd;
       } else {
         Members member =
             new Members(userId: contact!.userId, isActive: true, role: 1);
@@ -106,7 +107,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
     searchMap = {};
     if (search.isNotEmpty) {
       for (int i = 0; i < contacts.length; i++) {
-        if (contacts[i]!.nickname!.toLowerCase().contains(search.toLowerCase()) ||
+        if (contacts[i]!
+                .nickname!
+                .toLowerCase()
+                .contains(search.toLowerCase()) ||
             contacts[i]!.userId!.toLowerCase().contains(search.toLowerCase())) {
           searchList.add(contacts[i]);
           searchMap[contacts[i]!.userId] = contactMap[contacts[i]!.userId];

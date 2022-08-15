@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/chatGroup.dart';
 import 'package:chat_app_ef1/Screen/createMessage.dart';

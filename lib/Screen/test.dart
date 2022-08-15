@@ -1,7 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
+
 import 'package:flutter/material.dart';
 
 import '../locator.dart';
@@ -53,7 +54,8 @@ class _TestScreenState extends State<TestScreen> {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                users!.length.toString() + " users contain this user as Contact",
+                users!.length.toString() +
+                    " users contain this user as Contact",
                 style: TextStyle(fontSize: 16),
               ),
             ),

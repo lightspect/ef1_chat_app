@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/chatSearch.dart';
 import 'package:chat_app_ef1/Screen/createGroup.dart';
@@ -65,10 +65,11 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
     if (contact!.photoUrl != contactUser!.photoUrl &&
         contact!.photoUrl!.isNotEmpty) {
       contact!.photoUrl = contactUser!.photoUrl;
-      await databaseService!.setContact(
-          contact!, databaseService!.user!.userId, contact!.userId);
+      await databaseService!
+          .setContact(contact!, databaseService!.user!.userId, contact!.userId);
       databaseService!.contacts![databaseService!.contacts!
-          .indexWhere((element) => element!.userId == contact!.userId)] = contact;
+              .indexWhere((element) => element!.userId == contact!.userId)] =
+          contact;
       await databaseService!.setContactsList();
     }
     if (contactUser == null) {
@@ -209,10 +210,12 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Save",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   setState(() {
-                                    contact!.nickname = _nicknameController.text;
+                                    contact!.nickname =
+                                        _nicknameController.text;
                                   });
                                   handleUpdateNickName();
                                   Navigator.of(context).pop();
@@ -318,7 +321,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                               borderRadius: 4,
                               text: "Search",
                               onClick: () {
-                                var validate = _formKey.currentState!.validate();
+                                var validate =
+                                    _formKey.currentState!.validate();
                                 if (validate) {
                                   Navigator.of(context).pop();
                                   handleMessageSearch();
@@ -501,7 +505,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         .updateContact(contact!, databaseService!.user!.userId, contact!.userId)
         .then((value) async {
       databaseService!.contacts![databaseService!.contacts!
-          .indexWhere((element) => element!.userId == contact!.userId)] = contact;
+              .indexWhere((element) => element!.userId == contact!.userId)] =
+          contact;
       await databaseService!.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
       databaseService!.refreshMessageList();
@@ -716,7 +721,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           arguments["action"] = action;
           if (action == "remove") {
             arguments["data"] = new ContactModel(
-                userId: contact!.userId, nickname: contact!.userId, photoUrl: "");
+                userId: contact!.userId,
+                nickname: contact!.userId,
+                photoUrl: "");
           } else if (action == "add") {
             arguments["data"] = new ContactModel(
                 userId: contact!.userId,
@@ -872,7 +879,8 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
                                 children: [
                                   InkWell(
                                     onTap: () {
-                                      if (databaseService!.user!.offNotification!
+                                      if (databaseService!
+                                          .user!.offNotification!
                                           .containsKey(privateChat!.groupId)) {
                                         databaseService!.user!.offNotification!
                                             .remove(privateChat!.groupId);

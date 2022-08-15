@@ -2,9 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/messagesModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -62,11 +62,12 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   }
 
   void removeMember(UserModel member) async {
-    Members memberToBeRemove = groupMembers![
-        groupMembers!.indexWhere((element) => element!.userId == member.userId)]!;
+    Members memberToBeRemove = groupMembers![groupMembers!
+        .indexWhere((element) => element!.userId == member.userId)]!;
     memberToBeRemove.isActive = false;
-    groupMembers![groupMembers!.indexWhere(
-        (element) => element!.userId == member.userId)] = memberToBeRemove;
+    groupMembers![groupMembers!
+            .indexWhere((element) => element!.userId == member.userId)] =
+        memberToBeRemove;
     await databaseService!.updateGroupField({
       "membersList": groupMembers!
           .map<Map<String, dynamic>>((member) => member!.toMap())
@@ -216,7 +217,8 @@ class _GroupMemberState extends State<GroupMemberScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Material(
-                    child: member.photoUrl != null || member.photoUrl!.isNotEmpty
+                    child: member.photoUrl != null ||
+                            member.photoUrl!.isNotEmpty
                         ? CachedNetworkImage(
                             placeholder: (context, url) => Container(
                               child: CircularProgressIndicator(
@@ -256,7 +258,8 @@ class _GroupMemberState extends State<GroupMemberScreen> {
             (groupMembers!
                             .firstWhere(
                               (element) =>
-                                  element!.userId == databaseService!.user!.userId,
+                                  element!.userId ==
+                                  databaseService!.user!.userId,
                               orElse: () => Members(),
                             )!
                             .role ==

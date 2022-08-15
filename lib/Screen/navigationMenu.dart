@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
 import 'package:chat_app_ef1/Model/navigationModel.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/navigationService.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -63,7 +63,8 @@ class NavigationMenuState extends State<NavigationMenu> {
         if (groupId != databaseService!.currentGroupId &&
             !databaseService!.user!.offNotification!.containsKey(groupId)) {
           showNotification(notification, groupId);
-        } else if (databaseService!.user!.offNotification!.containsKey(groupId)) {
+        } else if (databaseService!.user!.offNotification!
+            .containsKey(groupId)) {
           if (databaseService!.user!.offNotification![groupId].isNotEmpty) {
             if (DateTime.now().isAfter(DateTime.parse(
                 databaseService!.user!.offNotification![groupId]))) {

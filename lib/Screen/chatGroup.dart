@@ -4,12 +4,11 @@ import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/Common/color_utils.dart';
 import 'package:chat_app_ef1/Common/loading.dart';
-import 'package:chat_app_ef1/Common/my_icons.dart';
 import 'package:chat_app_ef1/Common/photo.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/groupsModel.dart';
-import 'package:chat_app_ef1/Model/messagesModel.dart';
-import 'package:chat_app_ef1/Model/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
+import 'package:chat_app_ef1/domain/entities/userModel.dart';
 import 'package:chat_app_ef1/Screen/forward.dart';
 import 'package:chat_app_ef1/Screen/groupDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
@@ -109,12 +108,8 @@ class _ChatGroupPageState extends State<ChatGroupPage> {
   UserModel getMemberData(String sentId) {
     UserModel member = members!.firstWhere(
         ((element) => element.userId == sentId),
-        orElse: () => new UserModel());
-    if (member != null) {
-      return member;
-    } else {
-      return new UserModel(nickname: "", photoUrl: "");
-    }
+        orElse: () => UserModel(nickname: "", photoUrl: ""));
+    return member;
   }
 
   Future<MessagesModel> getMessageData(String? id) async {
