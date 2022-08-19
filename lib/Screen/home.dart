@@ -72,16 +72,16 @@ class _HomePageState extends State<HomePage> {
         nickname: "",
         photoUrl: "",
         token: "");
-    databaseService!.setLocal();
+    //databaseService!.setLocal();
 
     Navigator.of(context, rootNavigator: true)
         .pushNamedAndRemoveUntil('/unlock', (Route<dynamic> route) => false);
   }
 
   void readLocal() async {
-    await databaseService!.readLocal();
+    //await databaseService!.readLocal();
     await databaseService!.fetchContacts(databaseService!.user!.userId);
-    await databaseService!.setContactsList();
+    //await databaseService!.setContactsList();
     databaseService!.refreshMessageList();
     // Force refresh input
     setState(() {});
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
         databaseService!
             .updateUser(databaseService!.user!, databaseService!.user!.userId)
             .then((data) async {
-          await databaseService!.setLocal();
+          //await databaseService!.setLocal();
           setState(() {
             isLoading = false;
           });
@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage> {
     databaseService!
         .updateUser(databaseService!.user!, databaseService!.user!.userId)
         .then((data) async {
-      await databaseService!.setLocal();
+      //await databaseService!.setLocal();
       setState(() {
         isLoading = false;
       });

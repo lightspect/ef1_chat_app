@@ -70,7 +70,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       databaseService!.contacts![databaseService!.contacts!
               .indexWhere((element) => element!.userId == contact!.userId)] =
           contact;
-      await databaseService!.setContactsList();
+      //await databaseService!.setContactsList();
     }
     if (contactUser == null) {
       alert = 'Error getting user information';
@@ -507,7 +507,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       databaseService!.contacts![databaseService!.contacts!
               .indexWhere((element) => element!.userId == contact!.userId)] =
           contact;
-      await databaseService!.setContactsList();
+      //await databaseService!.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
       databaseService!.refreshMessageList();
       setState(() {
@@ -523,7 +523,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       setState(() {
         databaseService!.contacts!
             .removeWhere((element) => element!.userId == contact!.userId);
-        databaseService!.setContactsList();
+        //databaseService!.setContactsList();
         databaseService!.fetchOnlineStatusAsStream();
         alert = "Success";
       });
@@ -599,7 +599,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         .then((value) {
       setState(() {
         databaseService!.contacts!.add(newContact);
-        databaseService!.setContactsList();
+        //databaseService!.setContactsList();
       });
       Fluttertoast.showToast(msg: "Add Contact Successfully");
     }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));

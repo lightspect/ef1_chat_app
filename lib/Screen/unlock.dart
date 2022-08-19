@@ -92,12 +92,12 @@ class _UnlockPageState extends State<UnlockPage> {
         await databaseService!.setUser(user!, currentUser.uid);
 
         // Write data to local
-        await databaseService!.setLocal();
+        //await databaseService!.setLocal();
       } else {
         // Write data to local
         user = UserModel.fromMap(documents[0].data() as Map<dynamic, dynamic>?);
         databaseService!.user = user;
-        await databaseService!.setLocal();
+        //await databaseService!.setLocal();
       }
       Fluttertoast.showToast(msg: "Sign in success");
       this.setState(() {

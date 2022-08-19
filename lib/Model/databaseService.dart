@@ -14,7 +14,6 @@ import 'package:rxdart/rxdart.dart';
 class DatabaseService extends ChangeNotifier {
   Api? _api = locator<Api>();
 
-  late SharedPref sharedPref;
   UserModel? user;
   List<UserModel>? users;
   List<ContactModel?>? contacts;
@@ -28,55 +27,13 @@ class DatabaseService extends ChangeNotifier {
   DatabaseReference? databaseReference;
 
   DatabaseService() {
-    sharedPref = SharedPref();
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
     contacts = [];
     groups = [];
     statusList = [];
     currentGroupId = "";
     groupMembersList = {};
-    readLocal();
-    readContactsList();
     databaseReference = FirebaseDatabase.instance.ref();
-  }
-
-  Future readLocal() async {
-    user = UserModel.fromMap(await sharedPref.read("user"));
-    notifyListeners();
-  }
-
-  Future setLocal() async {
-    await sharedPref.save("user", user!.toMap());
-    readLocal();
-  }
-
-  Future readContactsList() async {
-    List<dynamic> contactList = await sharedPref.read("contactList");
-    contacts = contactList
-        .map<ContactModel?>((contact) => ContactModel.fromMap(contact))
-        .toList();
-  }
-
-  Future setContactsList() async {
-    await sharedPref.save(
-        "contactList",
-        contacts!
-            .map<Map<String, dynamic>>((contact) => contact!.toMap())
-            .toList());
-    readContactsList();
-  }
-
-  Future readGroupsList() async {
-    List<dynamic> groupList = await sharedPref.read("groupList");
-    groups = groupList
-        .map<GroupModel>((group) => GroupModel.fromMap(group))
-        .toList();
-  }
-
-  Future setGroupList() async {
-    await sharedPref.save("groupList",
-        groups!.map<Map<String, dynamic>>((group) => group.toMap()).toList());
-    readGroupsList();
   }
 
   Future<List<UserModel>?> fetchUsers() async {
