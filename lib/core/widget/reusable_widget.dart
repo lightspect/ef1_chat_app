@@ -1,7 +1,6 @@
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'color_utils.dart';
 
 class AppButton extends StatelessWidget {
   AppButton(
@@ -94,8 +93,8 @@ class AppTextField extends StatelessWidget {
       margin: const EdgeInsets.only(top: 15.0),
       child: TextField(
         controller: controller,
-        readOnly: null == readOnly ? false : true,
-        obscureText: null == isPassword ? false : true,
+        readOnly: isPassword ?? false,
+        obscureText: isPassword ?? false,
         decoration: InputDecoration(
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: Colors.grey),
@@ -106,12 +105,12 @@ class AppTextField extends StatelessWidget {
           border: UnderlineInputBorder(
             borderSide: BorderSide(color: Colors.grey),
           ),
-          hintText: null == hintText ? '' : hintText,
+          hintText: hintText ?? '',
           hintStyle: TextStyle(color: Colors.grey),
-          helperText: null == helpText ? '' : helpText,
+          helperText: helpText ?? '',
           prefixIcon: null == prefixIcon ? null : Icon(prefixIcon),
           suffix: null == suffixIcon ? null : Icon(suffixIcon),
-          enabled: null == enabled ? true : false,
+          enabled: enabled ?? false,
         ),
         style: TextStyle(color: Colors.white),
       ),
@@ -161,7 +160,7 @@ class LoginButton extends StatelessWidget {
         minWidth: minWidth ?? 160,
         height: height ?? 48,
         color: color ?? colorRed,
-        onPressed: onClick ?? () {},
+        onPressed: onClick,
         child: Text(
           text ?? "Button",
           style: TextStyle(fontSize: fontSize ?? 14),

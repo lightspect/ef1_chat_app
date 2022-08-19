@@ -1,6 +1,6 @@
 import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/chatGroup.dart';
-import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
+import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:get/get.dart';
 
 class NavigationService {

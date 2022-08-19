@@ -1,5 +1,4 @@
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Model/navigationService.dart';
 import 'package:chat_app_ef1/Screen/navigationMenu.dart';
 import 'package:chat_app_ef1/Screen/qrcode.dart';
 import 'package:chat_app_ef1/Screen/registration.dart';

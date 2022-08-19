@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:chat_app_ef1/Common/loading.dart';
+import 'package:chat_app_ef1/core/widget/loading.dart';
+import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/domain/entities/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 

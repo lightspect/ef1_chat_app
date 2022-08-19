@@ -1,11 +1,11 @@
 import 'package:algolia/algolia.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/loading.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
-import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
-import 'package:chat_app_ef1/domain/entities/userModel.dart';
+import 'package:chat_app_ef1/core/widget/loading.dart';
+import 'package:chat_app_ef1/domain/entities/groups_model.dart';
+import 'package:chat_app_ef1/domain/entities/messages_model.dart';
+import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
@@ -147,9 +147,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
   }
 
   List<TextSpan> highlightOccurrences(String source, String query) {
-    if (query == null ||
-        query.isEmpty ||
-        !source.toLowerCase().contains(query.toLowerCase())) {
+    if (query.isEmpty || !source.toLowerCase().contains(query.toLowerCase())) {
       return [TextSpan(text: source)];
     }
     final matches = query.toLowerCase().allMatches(source.toLowerCase());

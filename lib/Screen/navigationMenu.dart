@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:chat_app_ef1/Common/color_utils.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:chat_app_ef1/Model/navigationModel.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/Model/navigationService.dart';
-import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
-import 'package:chat_app_ef1/domain/entities/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groups_model.dart';
+import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';

@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
+import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/domain/entities/groupsModel.dart';
-import 'package:chat_app_ef1/domain/entities/messagesModel.dart';
-import 'package:chat_app_ef1/domain/entities/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/groups_model.dart';
+import 'package:chat_app_ef1/domain/entities/messages_model.dart';
+import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
+import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 
 class SeedSuccessPage extends StatefulWidget {
   SeedSuccessPage({Key? key, this.title}) : super(key: key);

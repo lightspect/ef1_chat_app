@@ -1,4 +1,4 @@
-import 'package:chat_app_ef1/Common/color_utils.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';

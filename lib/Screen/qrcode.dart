@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chat_app_ef1/Common/color_utils.dart';
-import 'package:chat_app_ef1/Common/loading.dart';
-import 'package:chat_app_ef1/Common/reusableWidgetClass.dart';
+import 'package:chat_app_ef1/core/utils/color_utils.dart';
+import 'package:chat_app_ef1/core/widget/loading.dart';
+import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/domain/entities/userModel.dart';
+import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/Screen/contactDetail.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:flutter/material.dart';
