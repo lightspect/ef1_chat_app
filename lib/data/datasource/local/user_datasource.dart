@@ -2,14 +2,14 @@ import 'package:chat_app_ef1/core/helper/share_prefs.dart';
 import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 
-class UserDatasource {
+class LocalUserDatasource {
   late SharedPref sharedPref;
   UserModel? user;
   List<UserModel>? users;
   List<ContactModel?>? contacts;
   List<GroupModel>? groups;
 
-  UserDatasource() {
+  LocalUserDatasource() {
     sharedPref = SharedPref();
     readLocal();
     readContactsList();

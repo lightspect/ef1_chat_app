@@ -3,13 +3,13 @@ import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class UserDatasource {
+class ServerUserDatasource {
   Api? _api = locator<Api>();
 
   UserModel? user;
   List<UserModel>? users;
 
-  UserDatasource() {
+  ServerUserDatasource() {
     user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
   }
 
