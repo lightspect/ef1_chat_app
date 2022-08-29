@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:chat_app_ef1/core/helper/share_prefs.dart';
 import 'package:chat_app_ef1/core/helper/api.dart';
 import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:chat_app_ef1/domain/entities/messages_model.dart';

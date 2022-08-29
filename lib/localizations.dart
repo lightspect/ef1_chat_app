@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -63,11 +62,6 @@ class AppLocalizations {
     }
 
     arguments.forEach((argumentKey, value) {
-      if (value == null) {
-        print(
-            'Value for "$argumentKey" is null in call of translate(\'$key\')');
-        value = '';
-      }
       translation = translation!.replaceAll("\$$argumentKey", value);
     });
 

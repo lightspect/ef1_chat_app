@@ -66,7 +66,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
         (element) => element.userId == databaseService!.user!.userId);
     ContactModel contactModel = await databaseService!
         .getContactById(databaseService!.user!.userId, members.first.userId);
-    if (contactModel != null && contactModel.userId!.isNotEmpty) {
+    if (contactModel.userId!.isNotEmpty) {
       return contactModel;
     } else {
       return new ContactModel(

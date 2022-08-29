@@ -70,6 +70,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       databaseService!.contacts![databaseService!.contacts!
               .indexWhere((element) => element!.userId == contact!.userId)] =
           contact;
+      //TODO
       //await databaseService!.setContactsList();
     }
     if (contactUser == null) {
@@ -507,13 +508,16 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       databaseService!.contacts![databaseService!.contacts!
               .indexWhere((element) => element!.userId == contact!.userId)] =
           contact;
+      //TODO
       //await databaseService!.setContactsList();
       Fluttertoast.showToast(msg: "Update success");
       databaseService!.refreshMessageList();
       setState(() {
         action = "change";
       });
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
   }
 
   void handleRemoveFromContact() async {
@@ -523,6 +527,7 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
       setState(() {
         databaseService!.contacts!
             .removeWhere((element) => element!.userId == contact!.userId);
+        //TODO
         //databaseService!.setContactsList();
         databaseService!.fetchOnlineStatusAsStream();
         alert = "Success";
@@ -542,7 +547,9 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
           false,
           colorGreen);
       databaseService!.refreshMessageList();
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
   }
 
   void handleCreateGroupMessage() async {
@@ -599,10 +606,13 @@ class _ContactDetailPageState extends State<ContactDetailPage> {
         .then((value) {
       setState(() {
         databaseService!.contacts!.add(newContact);
+        //TODO
         //databaseService!.setContactsList();
       });
       Fluttertoast.showToast(msg: "Add Contact Successfully");
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
     await databaseService!.refreshMessageList();
     if (groupChat != null) {
       goBackUntil("/chatGroup/detail/members", false);

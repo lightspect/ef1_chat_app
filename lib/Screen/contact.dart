@@ -346,6 +346,7 @@ class _ContactPageState extends State<ContactPage> {
                   contact!, databaseService!.user!.userId, contact!.userId)
               .then((value) async {
             databaseService!.contacts!.add(contact);
+            //TODO
             //await databaseService!.setContactsList();
             setState(() {
               alert = "success";

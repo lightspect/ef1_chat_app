@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage> {
   void readLocal() async {
     //await databaseService!.readLocal();
     await databaseService!.fetchContacts(databaseService!.user!.userId);
+    //TODO
     //await databaseService!.setContactsList();
     databaseService!.refreshMessageList();
     // Force refresh input

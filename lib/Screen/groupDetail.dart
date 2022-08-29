@@ -435,7 +435,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               .indexWhere((element) => element.groupId == group!.groupId)]
           .groupName = group!.groupName;
       Fluttertoast.showToast(msg: "Update success");
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
   }
 
   void handleLeaveGroup() async {
@@ -456,7 +458,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       });
       _alertDialog(context);
       databaseService!.refreshMessageList();
-    }).catchError((err) => Fluttertoast.showToast(msg: err.toString()));
+    }).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+    });
     MessagesModel message = new MessagesModel(
         messageContent: "has left the group",
         contentType: 1,
@@ -518,10 +522,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
-    PickedFile? pickedFile;
+    XFile? pickedFile;
     File? image;
 
-    pickedFile = await imagePicker.getImage(source: ImageSource.gallery);
+    pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       image = File(pickedFile.path);
@@ -545,33 +549,26 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         reference.putFile(avatarImageFile!);
     firebase_storage.TaskSnapshot storageTaskSnapshot;
     uploadTask.then((value) {
-      if (value != null) {
-        storageTaskSnapshot = value;
-        storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-          group!.groupPhoto = downloadUrl;
-          databaseService!.updateGroup(group!, group!.groupId).then((data) {
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: "Upload success");
-          }).catchError((err) {
-            setState(() {
-              isLoading = false;
-            });
-            Fluttertoast.showToast(msg: err.toString());
-          });
-        }, onError: (err) {
+      storageTaskSnapshot = value;
+      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
+        group!.groupPhoto = downloadUrl;
+        databaseService!.updateGroup(group!, group!.groupId).then((data) {
           setState(() {
             isLoading = false;
           });
-          Fluttertoast.showToast(msg: 'This file is not an image');
+          Fluttertoast.showToast(msg: "Upload success");
+        }).catchError((err) {
+          setState(() {
+            isLoading = false;
+          });
+          Fluttertoast.showToast(msg: err.toString());
         });
-      } else {
+      }, onError: (err) {
         setState(() {
           isLoading = false;
         });
         Fluttertoast.showToast(msg: 'This file is not an image');
-      }
+      });
     }, onError: (err) {
       setState(() {
         isLoading = false;

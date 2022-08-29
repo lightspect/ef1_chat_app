@@ -62,12 +62,9 @@ class _GroupMemberState extends State<GroupMemberScreen> {
   }
 
   void removeMember(UserModel member) async {
-    Members memberToBeRemove = groupMembers![groupMembers!
-        .indexWhere((element) => element!.userId == member.userId)]!;
-    memberToBeRemove.isActive = false;
-    groupMembers![groupMembers!
-            .indexWhere((element) => element!.userId == member.userId)] =
-        memberToBeRemove;
+    int removeId =
+        groupMembers!.indexWhere((element) => element!.userId == member.userId);
+    groupMembers![removeId]?.isActive = false;
     await databaseService!.updateGroupField({
       "membersList": groupMembers!
           .map<Map<String, dynamic>>((member) => member!.toMap())
