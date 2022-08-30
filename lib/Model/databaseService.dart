@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:chat_app_ef1/core/helper/api.dart';
+import 'package:chat_app_ef1/domain/entities/contact_model.dart';
 import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:chat_app_ef1/domain/entities/messages_model.dart';
+import 'package:chat_app_ef1/domain/entities/online_status_model.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

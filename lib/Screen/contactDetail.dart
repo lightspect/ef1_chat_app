@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
+import 'package:chat_app_ef1/domain/entities/contact_model.dart';
 import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/Screen/chat.dart';
