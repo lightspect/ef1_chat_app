@@ -1,8 +1,7 @@
+import 'package:chat_app_ef1/core/helper/api.dart';
 import 'package:chat_app_ef1/domain/entities/messages_model.dart';
 import 'package:chat_app_ef1/locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../../../core/helper/api.dart';
 
 class MessageDatasource {
   Api? _api = locator<Api>();

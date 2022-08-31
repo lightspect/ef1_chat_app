@@ -8,4 +8,10 @@ abstract class ContactRepository {
   Future removeContact(String id, String? subId);
 
   Future updateContact(ContactModel data, String id, String? subId);
+
+  Future updateContactField(Map<String, dynamic> data, String id, String subId);
+
+  Future addContact(ContactModel data, String id);
+
+  Future setContact(ContactModel data, String id, String? subId);
 }

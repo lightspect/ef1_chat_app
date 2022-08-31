@@ -22,4 +22,6 @@ abstract class UserRepository {
   Future updateUser(Map<String, dynamic> data, String id);
 
   Future setUser(UserModel data, String id);
+
+  Future addUser(UserModel data);
 }
