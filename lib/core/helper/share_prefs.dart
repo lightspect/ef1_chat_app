@@ -2,19 +2,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class SharedPref {
+  SharedPreferences? preferences;
+  static SharedPref? _instance;
+
+  SharedPref(this.preferences);
+
+  static Future init({isTest = false}) async {
+    if (_instance == null) {
+      _instance =
+          SharedPref(isTest ? null : await SharedPreferences.getInstance());
+    }
+  }
+
+  static SharedPref getInstance() {
+    if (_instance == null) {
+      throw ("SharedPreferenceUtils must call init first");
+    }
+    return _instance!;
+  }
+
   read(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    print(prefs.getString(key));
-    return json.decode(prefs.getString(key) ?? "[]");
+    print(preferences?.getString(key));
+    return json.decode(preferences?.getString(key) ?? "[]");
   }
 
   save(String key, value) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(key, json.encode(value));
+    preferences?.setString(key, json.encode(value));
   }
 
   remove(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.remove(key);
+    preferences?.remove(key);
   }
 }

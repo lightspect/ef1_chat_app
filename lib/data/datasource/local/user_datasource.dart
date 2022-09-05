@@ -4,56 +4,43 @@ import 'package:chat_app_ef1/domain/entities/groups_model.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 
 class LocalUserDatasource {
-  late SharedPref sharedPref;
-  UserModel? user;
-  List<UserModel>? users;
-  List<ContactModel?>? contacts;
-  List<GroupModel>? groups;
+  static SharedPref sharedPref = SharedPref.getInstance();
 
-  LocalUserDatasource() {
-    sharedPref = SharedPref();
-    readLocal();
-    readContactsList();
-    user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
-    contacts = [];
-    groups = [];
+  static Future<UserModel> readLocal() async {
+    UserModel localUser = UserModel.fromMap(await sharedPref.read("user"));
+    return localUser;
   }
 
-  Future readLocal() async {
-    user = UserModel.fromMap(await sharedPref.read("user"));
-  }
-
-  Future setLocal() async {
+  static Future setLocal(UserModel? user) async {
     await sharedPref.save("user", user!.toMap());
-    readLocal();
   }
 
-  Future readContactsList() async {
+  static Future<List<ContactModel?>> readContactsList() async {
     List<dynamic> contactList = await sharedPref.read("contactList");
-    contacts = contactList
+    List<ContactModel?> contacts = contactList
         .map<ContactModel?>((contact) => ContactModel.fromMap(contact))
         .toList();
+    return contacts;
   }
 
-  Future setContactsList() async {
+  static Future setContactsList(List<ContactModel?> contacts) async {
     await sharedPref.save(
         "contactList",
-        contacts!
+        contacts
             .map<Map<String, dynamic>>((contact) => contact!.toMap())
             .toList());
-    readContactsList();
   }
 
-  Future readGroupsList() async {
+  static Future<List<GroupModel?>> readGroupsList() async {
     List<dynamic> groupList = await sharedPref.read("groupList");
-    groups = groupList
+    List<GroupModel?> groups = groupList
         .map<GroupModel>((group) => GroupModel.fromMap(group))
         .toList();
+    return groups;
   }
 
-  Future setGroupList() async {
+  static Future setGroupList(List<GroupModel>? groups) async {
     await sharedPref.save("groupList",
         groups!.map<Map<String, dynamic>>((group) => group.toMap()).toList());
-    readGroupsList();
   }
 }
