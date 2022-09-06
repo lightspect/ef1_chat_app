@@ -6,16 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ServerUserDatasource {
   static Api? _api = locator<Api>();
 
-  static UserModel? user;
-  static List<UserModel>? users;
-
-  ServerUserDatasource() {
-    user = new UserModel(userId: "", nickname: "", aboutMe: "", photoUrl: "");
-  }
-
   static Future<List<UserModel>?> fetchUsers() async {
     var result = await _api!.getDataCollection('users');
-    users = result.docs
+    List<UserModel>? users = result.docs
         .map((doc) => UserModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
         .toList();
     return users;
@@ -23,7 +16,7 @@ class ServerUserDatasource {
 
   static Future<List<UserModel>?> fetchUsersById(String id) async {
     var result = await _api!.getCollectionByCondition('users', 'id', id);
-    users = result.docs
+    List<UserModel>? users = result.docs
         .map((doc) => UserModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
         .toList();
     return users;
@@ -31,7 +24,7 @@ class ServerUserDatasource {
 
   static Future<List<UserModel>?> fetchUsersByArray(List<String> id) async {
     var result = await _api!.getCollectionFromArray('users', 'id', id);
-    users = result.docs
+    List<UserModel>? users = result.docs
         .map((doc) => UserModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
         .toList();
     return users;
@@ -67,13 +60,13 @@ class ServerUserDatasource {
   }
 
   static Future<List<UserModel>?> getUsersByContact(String contactId) async {
-    users = [];
+    List<UserModel>? users = [];
     var result = await _api!
         .getDataCollectionBySubCollection("contacts", "id", contactId);
     for (QueryDocumentSnapshot element in result.docs) {
       await element.reference.parent.parent!
           .get()
-          .then((value) => users!.add(UserModel.fromMap(value.data())));
+          .then((value) => users.add(UserModel.fromMap(value.data())));
     }
     return users;
   }

@@ -4,9 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 abstract class MessageRepository {
   Future<List<MessagesModel>?> fetchMessages(String id);
 
-  Stream<QuerySnapshot> fetchMessagesAsStream(String id);
-
-  Stream<QuerySnapshot> fetchMessagesAsStreamPagination(String id, int limit);
+  Stream<List<MessagesModel>> fetchMessagesAsStreamPagination(
+      String id, int limit);
 
   Future<MessagesModel> getMessageById(String id, String? subId);
 

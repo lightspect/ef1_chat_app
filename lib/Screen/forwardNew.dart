@@ -33,7 +33,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
 
   List<String> id = [];
 
-  Map<GroupModel, bool> groupsMap = {};
+  Map<String, bool> groupsMap = {};
 
   @override
   void initState() {
@@ -56,7 +56,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                     }));
               }
               groups!.forEach((element) {
-                groupsMap[element] = false;
+                groupsMap[element.groupId] = false;
               });
             }));
   }
@@ -178,7 +178,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                 child: ListView.builder(
               padding: EdgeInsets.all(10.0),
               itemBuilder: (context, index) {
-                return buildItem(context, groups![index], groupsMap);
+                return buildItem(context, groups![index]);
               },
               itemCount: groups!.length,
             )),
@@ -188,7 +188,7 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
     );
   }
 
-  Widget buildItem(BuildContext context, GroupModel group, Map groupsMap) {
+  Widget buildItem(BuildContext context, GroupModel group) {
     if (group.recentMessageContent == '') {
       return Container();
     } else {
@@ -251,18 +251,21 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                 LoginButton(
                   text: "Send",
                   onClick: () {
-                    if (!groupsMap[group]) {
+                    if (!groupsMap[group.groupId]!) {
                       sendMessage(group.groupId, message!.messageContent,
                           message!.contentType);
-                      groupsMap[group] = true;
+                      groupsMap[group.groupId] = true;
                     }
                   },
-                  color: groupsMap[group] ? colorMainBG : colorLightGreen,
-                  textColor: groupsMap[group] ? Colors.grey : Colors.white,
+                  color:
+                      groupsMap[group.groupId]! ? colorMainBG : colorLightGreen,
+                  textColor:
+                      groupsMap[group.groupId]! ? Colors.grey : Colors.white,
                   minWidth: 56,
                   height: 20,
                   borderRadius: 10,
-                  borderColor: groupsMap[group] ? Colors.grey : colorLightGreen,
+                  borderColor:
+                      groupsMap[group.groupId]! ? Colors.grey : colorLightGreen,
                 ),
               ],
             ),

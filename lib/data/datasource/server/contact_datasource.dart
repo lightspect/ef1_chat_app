@@ -5,11 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ContactDatasource {
   static Api? _api = locator<Api>();
-  static List<ContactModel?>? contacts;
 
   static Future<List<ContactModel?>?> fetchContacts(String id) async {
     var result = await _api!.getSubCollection('users', id, 'contacts');
-    contacts = result.docs
+    List<ContactModel?>? contacts = result.docs
         .map(
             (doc) => ContactModel.fromMap(doc.data() as Map<dynamic, dynamic>?))
         .toList();

@@ -16,12 +16,7 @@ class MessageRepositoryImp implements MessageRepository {
   }
 
   @override
-  Stream<QuerySnapshot<Object?>> fetchMessagesAsStream(String id) {
-    return MessageDatasource.fetchMessagesAsStream(id);
-  }
-
-  @override
-  Stream<QuerySnapshot<Object?>> fetchMessagesAsStreamPagination(
+  Stream<List<MessagesModel>> fetchMessagesAsStreamPagination(
       String id, int limit) {
     return MessageDatasource.fetchMessagesAsStreamPagination(id, limit);
   }

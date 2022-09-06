@@ -16,14 +16,15 @@ class MessageDatasource {
     return messages;
   }
 
-  static Stream<QuerySnapshot> fetchMessagesAsStream(String id) {
-    return _api!.streamSubCollection('messages', id, 'messages');
-  }
-
-  static Stream<QuerySnapshot> fetchMessagesAsStreamPagination(
+  static Stream<List<MessagesModel>> fetchMessagesAsStreamPagination(
       String id, int limit) {
-    return _api!.streamSubCollectionOrderByLimit(
+    var result = _api!.streamSubCollectionOrderByLimit(
         'messages', id, 'messages', 'sentAt', limit);
+    Stream<List<MessagesModel>> streamList = result.map((event) => event.docs
+        .map((e) =>
+            MessagesModel.fromMap(e.data() as Map<dynamic, dynamic>, e.id))
+        .toList());
+    return streamList;
   }
 
   static Future<MessagesModel> getMessageById(String id, String? subId) async {
