@@ -50,6 +50,12 @@ class AuthController extends GetxController {
       } else {
         // Write data to local
         user = checkUser;
+        if (checkUser.token !=
+            FirebaseCloudMessageHelper.instance.deviceToken) {
+          await useCase.updateUser(
+              {"token": FirebaseCloudMessageHelper.instance.deviceToken},
+              checkUser.userId);
+        }
         await useCase.setLocal(user!);
       }
     }
