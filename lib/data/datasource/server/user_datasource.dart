@@ -30,9 +30,13 @@ class ServerUserDatasource {
     return users;
   }
 
-  static Future<UserModel> getUserById(String? id) async {
+  static Future<UserModel?> getUserById(String? id) async {
     var doc = await _api!.getDocumentById('users', id);
-    return UserModel.fromMap(doc.data() as Map<dynamic, dynamic>?);
+    if (doc.exists) {
+      return UserModel.fromMap(doc.data() as Map<dynamic, dynamic>?);
+    } else {
+      return null;
+    }
   }
 
   static Future removeUser(String id) async {

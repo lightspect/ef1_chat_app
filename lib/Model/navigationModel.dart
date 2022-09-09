@@ -2,7 +2,7 @@ import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/contact.dart';
 import 'package:chat_app_ef1/Screen/home.dart';
 import 'package:chat_app_ef1/Screen/message.dart';
-import 'package:chat_app_ef1/Screen/navigationMenu.dart';
+import 'package:chat_app_ef1/presentation/pages/navigation/navigation_menu.dart';
 import 'package:chat_app_ef1/Screen/wallet.dart';
 import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 import 'package:chat_app_ef1/domain/entities/screen_model.dart';

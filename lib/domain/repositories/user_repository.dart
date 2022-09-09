@@ -17,7 +17,7 @@ abstract class UserRepository {
 
   Future<bool> checkUserExist();
 
-  Future<UserModel> getUserById(String? id);
+  Future<UserModel?> getUserById(String? id);
 
   Future updateUser(Map<String, dynamic> data, String id);
 

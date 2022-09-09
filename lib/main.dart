@@ -1,5 +1,7 @@
 import 'package:chat_app_ef1/Model/databaseService.dart';
-import 'package:chat_app_ef1/Screen/navigationMenu.dart';
+import 'package:chat_app_ef1/presentation/binding/unlock/unlock_binding.dart';
+import 'package:chat_app_ef1/presentation/controller/auth/auth_controller.dart';
+import 'package:chat_app_ef1/presentation/pages/navigation/navigation_menu.dart';
 import 'package:chat_app_ef1/Screen/qrcode.dart';
 import 'package:chat_app_ef1/Screen/registration.dart';
 import 'package:chat_app_ef1/Screen/seedConfirm.dart';
@@ -7,18 +9,16 @@ import 'package:chat_app_ef1/Screen/seedCreate.dart';
 import 'package:chat_app_ef1/Screen/seedSuccess.dart';
 import 'package:chat_app_ef1/Screen/splash.dart';
 import 'package:chat_app_ef1/Screen/term.dart';
-import 'package:chat_app_ef1/Screen/unlock.dart';
+import 'package:chat_app_ef1/presentation/pages/unlock/unlock.dart';
 import 'package:chat_app_ef1/locator.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:chat_app_ef1/routes/pages.dart';
+import 'package:chat_app_ef1/setting/config.dart';
 import 'package:flutter/material.dart';
-import 'package:get/route_manager.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: 'env/.env_dev');
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Config.settingApp();
   setupLocator();
   runApp(MyApp());
 }
@@ -32,11 +32,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => locator<DatabaseService>()),
       ],
       child: GetMaterialApp(
-        title: 'Flutter Demo',
+        title: 'EF1 ChatApp',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
+        getPages: Pages.pages,
+        initialBinding: UnlockBinding(),
         home: SplashScreenDemo(),
         initialRoute: '/',
         routes: {

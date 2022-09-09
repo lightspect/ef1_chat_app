@@ -18,7 +18,7 @@ class UserRepositoryImp implements UserRepository {
   }
 
   @override
-  Future<UserModel> getUserById(String? id) async {
+  Future<UserModel?> getUserById(String? id) async {
     return await ServerUserDatasource.getUserById(id);
   }
 
