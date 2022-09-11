@@ -51,7 +51,7 @@ class DatabaseService extends ChangeNotifier {
   }
 
   Future readContactsList() async {
-    List<dynamic> contactList = await sharedPref.read("contactList");
+    List<dynamic> contactList = await sharedPref.readList("contactList");
     contacts = contactList
         .map<ContactModel?>((contact) => ContactModel.fromMap(contact))
         .toList();
@@ -420,28 +420,28 @@ class DatabaseService extends ChangeNotifier {
       "last_changed": FieldValue.serverTimestamp(),
     };
 
-    databaseReference!
-        .child('.info/connected')
-        .onValue
-        .listen((DatabaseEvent event) async {
-      if (event.snapshot.value == false) {
-        // Instead of simply returning, we'll also set Firestore's state
-        // to 'offline'. This ensures that our Firestore cache is aware
-        // of the switch to 'offline.'
-        setFirestoreStatus(isOfflineForFirestore, uid);
-        return;
-      }
+    // databaseReference!
+    //     .child('.info/connected')
+    //     .onValue
+    //     .listen((DatabaseEvent event) async {
+    //   if (event.snapshot.value == false) {
+    //     // Instead of simply returning, we'll also set Firestore's state
+    //     // to 'offline'. This ensures that our Firestore cache is aware
+    //     // of the switch to 'offline.'
+    //     setFirestoreStatus(isOfflineForFirestore, uid);
+    //     return;
+    //   }
 
-      await userStatusDatabaseRef
-          .onDisconnect()
-          .update(isOfflineForDatabase)
-          .then((snap) {
-        userStatusDatabaseRef.set(isOnlineForDatabase);
+    //   await userStatusDatabaseRef
+    //       .onDisconnect()
+    //       .update(isOfflineForDatabase)
+    //       .then((snap) {
+    //     userStatusDatabaseRef.set(isOnlineForDatabase);
 
-        // We'll also add Firestore set here for when we come online.
-        setFirestoreStatus(isOnlineForFirestore, uid);
-      });
-    });
+    //     // We'll also add Firestore set here for when we come online.
+    //     setFirestoreStatus(isOnlineForFirestore, uid);
+    //   });
+    // });
   }
 
   setFirestoreStatus(Map<String, dynamic> data, String uid) {

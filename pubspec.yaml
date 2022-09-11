@@ -78,6 +78,7 @@ flutter:
   assets:
     - assets/welcome_page.flr
     - assets/images/logo_1.png
+    - env/
   
   fonts:
     - family: MyIcon
