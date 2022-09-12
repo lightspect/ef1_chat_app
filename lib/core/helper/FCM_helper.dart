@@ -103,6 +103,11 @@ class FirebaseCloudMessageHelper {
     });
   }
 
+  registerBackgroundMessage(
+      Future<void> Function(RemoteMessage message) backgroundMessage) {
+    FirebaseMessaging.onBackgroundMessage(backgroundMessage);
+  }
+
   void configLocalNotification() async {
     var initializationSettingsAndroid =
         new AndroidInitializationSettings('ic_launcher');
