@@ -2,29 +2,16 @@ import 'package:chat_app_ef1/core/utils/color_utils.dart';
 import 'package:chat_app_ef1/Model/navigationModel.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/locator.dart';
+import 'package:chat_app_ef1/presentation/controller/navigation/navigation_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-class NavigationMenu extends StatefulWidget {
-  static const route = '/';
+class NavigationMenu extends StatelessWidget {
+  DatabaseService? databaseService = locator<DatabaseService>();
 
-  NavigationMenu({Key? key}) : super(key: key);
-
-  @override
-  State createState() => NavigationMenuState();
-}
-
-class NavigationMenuState extends State<NavigationMenu> {
-  NavigationMenuState();
-
-  DatabaseService? databaseService;
-
-  @override
-  void initState() {
-    super.initState();
-    databaseService = locator<DatabaseService>();
-  }
+  NavigationController _controller = Get.find<NavigationController>();
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +58,12 @@ class NavigationMenuState extends State<NavigationMenu> {
                           "last_changed": FieldValue.serverTimestamp(),
                         }, databaseService!.user!.userId)),
                 child: Scaffold(
-                  body: IndexedStack(
-                    children: screens,
-                    index: provider.currentTabIndex,
+                  body: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 1000),
+                    child:
+                        _controller.listScreen[_controller.selectedIndex.value],
+                    switchInCurve: Curves.fastLinearToSlowEaseIn,
+                    switchOutCurve: Curves.linear,
                   ),
                   bottomNavigationBar: BottomNavigationBar(
                     selectedItemColor: colorBlack,

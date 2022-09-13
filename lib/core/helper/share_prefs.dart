@@ -22,7 +22,12 @@ class SharedPref {
   }
 
   read(String key) async {
-    print(preferences?.getString(key));
+    print(key + (preferences?.getString(key) ?? "null"));
+    return json.decode(preferences?.getString(key) ?? "{}");
+  }
+
+  readList(String key) async {
+    print(key + (preferences?.getString(key) ?? "null"));
     return json.decode(preferences?.getString(key) ?? "[]");
   }
 
