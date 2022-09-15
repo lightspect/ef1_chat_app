@@ -15,73 +15,52 @@ class NavigationMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => NavigationProvider()),
-        ],
-        child: Builder(builder: (context) {
-          return Consumer<NavigationProvider>(
-            builder: (context, provider, child) {
-              // Create bottom navigation bar items from screens.
-              List<BottomNavigationBarItem> bottomNavigationBarItems() {
-                List<BottomNavigationBarItem> navBarItem = [];
-                for (int i = 0; i < provider.screens.length; i++) {
-                  navBarItem.add(BottomNavigationBarItem(
-                    icon: CircleAvatar(
-                      radius: 12,
-                      backgroundColor: provider.currentTabIndex == i
-                          ? Colors.white
-                          : colorBlack,
-                      child: provider.screens[i].icon,
-                    ),
-                    label: provider.screens[i].title,
-                  ));
-                }
-                return navBarItem;
-              }
-
-              // Initialize [Navigator] instance for each screen.
-              final screens = provider.screens
-                  .map(
-                    (screen) => Navigator(
-                      key: screen.navigatorState,
-                      onGenerateRoute: screen.onGenerateRoute,
-                    ),
-                  )
-                  .toList();
-
-              return WillPopScope(
-                onWillPop: () async => provider
-                    .onWillPop(context)
-                    .then((value) => databaseService!.setFirestoreStatus({
-                          "state": 'offline',
-                          "last_changed": FieldValue.serverTimestamp(),
-                        }, databaseService!.user!.userId)),
-                child: Scaffold(
-                  body: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 1000),
-                    child:
-                        _controller.listScreen[_controller.selectedIndex.value],
-                    switchInCurve: Curves.fastLinearToSlowEaseIn,
-                    switchOutCurve: Curves.linear,
-                  ),
-                  bottomNavigationBar: BottomNavigationBar(
-                    selectedItemColor: colorBlack,
-                    unselectedItemColor: Colors.grey,
-                    backgroundColor: colorBlack,
-                    items: bottomNavigationBarItems(),
-                    currentIndex: provider.currentTabIndex,
-                    onTap: (int index) {
-                      provider.setTab(index);
-                    },
-                    showSelectedLabels: false,
-                    showUnselectedLabels: false,
-                    type: BottomNavigationBarType.fixed,
-                  ),
-                ),
-              );
+    return GetBuilder<NavigationController>(builder: (context) {
+      return WillPopScope(
+        onWillPop: () async => _controller
+            .onWillPop()
+            .then((value) => databaseService!.setFirestoreStatus({
+                  "state": 'offline',
+                  "last_changed": FieldValue.serverTimestamp(),
+                }, databaseService!.user!.userId)),
+        child: Scaffold(
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 1000),
+            child: _controller.listScreen[_controller.selectedIndex.value],
+            switchInCurve: Curves.fastLinearToSlowEaseIn,
+            switchOutCurve: Curves.linear,
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            selectedItemColor: colorBlack,
+            unselectedItemColor: Colors.grey,
+            backgroundColor: colorBlack,
+            items: bottomNavigationBarItems(),
+            currentIndex: _controller.selectedIndex.value,
+            onTap: (int index) {
+              _controller.handleIndexChange(index);
             },
-          );
-        }));
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            type: BottomNavigationBarType.fixed,
+          ),
+        ),
+      );
+    });
+  }
+
+  List<BottomNavigationBarItem> bottomNavigationBarItems() {
+    List<BottomNavigationBarItem> navBarItem = [];
+    for (int i = 0; i < _controller.screensName.length; i++) {
+      navBarItem.add(BottomNavigationBarItem(
+        icon: CircleAvatar(
+          radius: 12,
+          backgroundColor:
+              _controller.selectedIndex.value == i ? Colors.white : colorBlack,
+          child: _controller.screensIcon[i],
+        ),
+        label: _controller.screensName[i],
+      ));
+    }
+    return navBarItem;
   }
 }
