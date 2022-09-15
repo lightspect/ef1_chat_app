@@ -1,7 +1,6 @@
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/core/helper/FCM_helper.dart';
 import 'package:chat_app_ef1/presentation/binding/unlock/unlock_binding.dart';
-import 'package:chat_app_ef1/presentation/controller/auth/auth_controller.dart';
 import 'package:chat_app_ef1/presentation/pages/navigation/navigation_menu.dart';
 import 'package:chat_app_ef1/Screen/qrcode.dart';
 import 'package:chat_app_ef1/Screen/registration.dart';
