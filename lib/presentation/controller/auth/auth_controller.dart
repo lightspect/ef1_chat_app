@@ -2,6 +2,7 @@ import 'package:chat_app_ef1/core/helper/FCM_helper.dart';
 import 'package:chat_app_ef1/data/repositories/user_repository_imp.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/domain/usecases/user_usecase.dart';
+import 'package:chat_app_ef1/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -59,5 +60,20 @@ class AuthController extends GetxController {
         await useCase.setLocal(user!);
       }
     }
+  }
+
+  handleSignOutGoogle() async {
+    await FirebaseAuth.instance.signOut();
+    await googleSignIn.disconnect();
+    await googleSignIn.signOut();
+
+    useCase.updateUser({'token': ""}, user!.userId);
+    useCase.updateUserStatus({
+      "state": 'offline',
+      "last_changed": FirebaseCloudMessageHelper.instance.serverTimestamp,
+    }, user!.userId);
+
+    user = null;
+    Get.offNamedUntil(Routes.UNLOCK, (route) => false);
   }
 }

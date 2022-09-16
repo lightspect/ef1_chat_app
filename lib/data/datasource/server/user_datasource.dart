@@ -74,4 +74,8 @@ class ServerUserDatasource {
     }
     return users;
   }
+
+  static Future updateUserStatus(Map<String, dynamic> data, String uid) async {
+    await _api!.setDocumentMerge('status', data, uid);
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:chat_app_ef1/Screen/chat.dart';
 import 'package:chat_app_ef1/Screen/contact.dart';
-import 'package:chat_app_ef1/Screen/home.dart';
+import 'package:chat_app_ef1/presentation/pages/home/home.dart';
 import 'package:chat_app_ef1/Screen/message.dart';
 import 'package:chat_app_ef1/presentation/pages/navigation/navigation_menu.dart';
 import 'package:chat_app_ef1/Screen/wallet.dart';

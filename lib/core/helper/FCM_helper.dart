@@ -8,6 +8,7 @@ import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/domain/usecases/group_usecase.dart';
 import 'package:chat_app_ef1/domain/usecases/user_usecase.dart';
 import 'package:chat_app_ef1/presentation/controller/auth/auth_controller.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -30,6 +31,8 @@ class FirebaseCloudMessageHelper {
   NavigationService navigationService = NavigationService();
 
   AuthController authController = Get.put(AuthController());
+
+  FieldValue serverTimestamp = FieldValue.serverTimestamp();
 
   registerNotification() {
     FirebaseMessaging.instance.requestPermission(

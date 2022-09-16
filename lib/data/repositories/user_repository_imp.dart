@@ -61,4 +61,9 @@ class UserRepositoryImp implements UserRepository {
   Future setLocal(UserModel user) async {
     await LocalUserDatasource.setLocal(user);
   }
+
+  @override
+  Future updateUserStatus(Map<String, dynamic> data, String uid) async {
+    await ServerUserDatasource.updateUserStatus(data, uid);
+  }
 }

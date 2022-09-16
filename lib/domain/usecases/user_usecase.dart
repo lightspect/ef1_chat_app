@@ -51,4 +51,8 @@ class UserUseCase {
   Future addUser(UserModel data) async {
     await repository?.addUser(data);
   }
+
+  Future updateUserStatus(Map<String, dynamic> data, String uid) async {
+    await repository?.updateUserStatus(data, uid);
+  }
 }

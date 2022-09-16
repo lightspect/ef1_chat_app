@@ -6,11 +6,13 @@ import 'package:chat_app_ef1/core/widget/reusable_widget.dart';
 import 'package:chat_app_ef1/Model/databaseService.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/locator.dart';
+import 'package:chat_app_ef1/presentation/controller/home/home_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -37,45 +39,14 @@ class _HomePageState extends State<HomePage> {
   final _nicknameController = TextEditingController();
   final _statusMessageController = TextEditingController();
 
+  HomeController _homeController = Get.find<HomeController>();
+
   @override
   void initState() {
     super.initState();
     databaseService = locator<DatabaseService>();
     readLocal();
     databaseService!.rtdbAndLocalFsPresence();
-  }
-
-  void handleSignOut() async {
-    this.setState(() {
-      isLoading = true;
-    });
-
-    await FirebaseAuth.instance.signOut();
-    await googleSignIn.disconnect();
-    await googleSignIn.signOut();
-
-    this.setState(() {
-      isLoading = false;
-    });
-
-    databaseService!
-        .updateUserField({'token': ""}, databaseService!.user!.userId);
-    databaseService!.setFirestoreStatus({
-      "state": 'offline',
-      "last_changed": FieldValue.serverTimestamp(),
-    }, databaseService!.user!.userId);
-
-    databaseService!.user = new UserModel(
-        userId: "",
-        aboutMe: "",
-        createdAt: "",
-        nickname: "",
-        photoUrl: "",
-        token: "");
-    //databaseService!.setLocal();
-
-    Navigator.of(context, rootNavigator: true)
-        .pushNamedAndRemoveUntil('/unlock', (Route<dynamic> route) => false);
   }
 
   void readLocal() async {
@@ -293,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                   Icons.logout,
                   color: colorBlack,
                 ),
-                onPressed: handleSignOut)
+                onPressed: () => _homeController.handleSignOut())
           ],
         ),
         body: SingleChildScrollView(
