@@ -80,7 +80,7 @@ class NavigationController extends GetxController {
   updateUserStatus() {
     _useCase.updateUserStatus({
       "state": 'offline',
-      "last_changed": FirebaseCloudMessageHelper.instance.serverTimestamp,
+      "last_changed": FirebaseCloudMessageHelper.instance.getServerTimestamp(),
     }, _authController.user!.userId);
   }
 }

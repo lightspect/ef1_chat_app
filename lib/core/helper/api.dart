@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class Api {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  DatabaseReference? databaseReference = FirebaseDatabase.instance.ref();
 
   Api();
 
@@ -163,5 +165,54 @@ class Api {
         .collection(subName)
         .doc(subId)
         .set(data as Map<String, dynamic>);
+  }
+
+  rtdbAndLocalFsPresence(String uid) async {
+    var userStatusDatabaseRef = databaseReference!..child('/status/' + uid);
+
+    var isOfflineForDatabase = {
+      "state": 'offline',
+      "last_changed": ServerValue.timestamp,
+    };
+
+    var isOnlineForDatabase = {
+      "state": 'online',
+      "last_changed": ServerValue.timestamp,
+    };
+
+    // Firestore uses a different server timestamp value, so we'll
+    // create two more constants for Firestore state.
+    var isOfflineForFirestore = {
+      "state": 'offline',
+      "last_changed": FieldValue.serverTimestamp(),
+    };
+
+    var isOnlineForFirestore = {
+      "state": 'online',
+      "last_changed": FieldValue.serverTimestamp(),
+    };
+
+    databaseReference!
+        .child('.info/connected')
+        .onValue
+        .listen((DatabaseEvent event) async {
+      if (event.snapshot.value == false) {
+        // Instead of simply returning, we'll also set Firestore's state
+        // to 'offline'. This ensures that our Firestore cache is aware
+        // of the switch to 'offline.'
+        setDocumentMerge('status', isOfflineForFirestore, uid);
+        return;
+      }
+
+      await userStatusDatabaseRef
+          .onDisconnect()
+          .update(isOfflineForDatabase)
+          .then((snap) {
+        userStatusDatabaseRef.set(isOnlineForDatabase);
+
+        // We'll also add Firestore set here for when we come online.
+        setDocumentMerge('status', isOnlineForFirestore, uid);
+      });
+    });
   }
 }

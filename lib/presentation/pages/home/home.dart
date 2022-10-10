@@ -32,7 +32,6 @@ class _HomePageState extends State<HomePage> {
   DatabaseService? databaseService;
 
   bool isLoading = false;
-  File? avatarImageFile;
 
   final GoogleSignIn googleSignIn = GoogleSignIn();
 
@@ -57,89 +56,6 @@ class _HomePageState extends State<HomePage> {
     databaseService!.refreshMessageList();
     // Force refresh input
     setState(() {});
-  }
-
-  Future getImage() async {
-    ImagePicker imagePicker = ImagePicker();
-    XFile? pickedFile;
-    File? image;
-
-    pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      image = File(pickedFile.path);
-    }
-
-    if (image != null) {
-      setState(() {
-        avatarImageFile = image;
-        isLoading = true;
-      });
-      uploadFile();
-    }
-  }
-
-  Future uploadFile() async {
-    String fileName = databaseService!.user!.userId;
-    firebase_storage.FirebaseStorage storage =
-        firebase_storage.FirebaseStorage.instance;
-    firebase_storage.Reference reference = storage.ref().child(fileName);
-    firebase_storage.UploadTask uploadTask =
-        reference.putFile(avatarImageFile!);
-    firebase_storage.TaskSnapshot storageTaskSnapshot;
-    uploadTask.then((value) {
-      storageTaskSnapshot = value;
-      storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) {
-        databaseService!.user!.photoUrl = downloadUrl;
-        databaseService!
-            .updateUser(databaseService!.user!, databaseService!.user!.userId)
-            .then((data) async {
-          //await databaseService!.setLocal();
-          setState(() {
-            isLoading = false;
-          });
-          Fluttertoast.showToast(msg: "Upload success");
-        }).catchError((err) {
-          setState(() {
-            isLoading = false;
-          });
-          Fluttertoast.showToast(msg: err.toString());
-        });
-      }, onError: (err) {
-        setState(() {
-          isLoading = false;
-        });
-        Fluttertoast.showToast(msg: 'This file is not an image');
-      });
-    }, onError: (err) {
-      setState(() {
-        isLoading = false;
-      });
-      Fluttertoast.showToast(msg: err.toString());
-    });
-  }
-
-  void handleUpdateData() {
-    setState(() {
-      isLoading = true;
-    });
-
-    databaseService!
-        .updateUser(databaseService!.user!, databaseService!.user!.userId)
-        .then((data) async {
-      //await databaseService!.setLocal();
-      setState(() {
-        isLoading = false;
-      });
-
-      Fluttertoast.showToast(msg: "Update success");
-    }).catchError((err) {
-      setState(() {
-        isLoading = false;
-      });
-
-      Fluttertoast.showToast(msg: err.toString());
-    });
   }
 
   Future<void> _showMyDialog(String action) async {
@@ -230,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                                       _statusMessageController.text;
                                 }
                               });
-                              handleUpdateData();
+                              _homeController.handleUpdateData();
                               Navigator.of(context).pop();
                             },
                           )
@@ -277,7 +193,7 @@ class _HomePageState extends State<HomePage> {
                   child: Center(
                     child: InkWell(
                         borderRadius: BorderRadius.circular(90),
-                        onTap: getImage,
+                        onTap: _homeController.getImage,
                         child: profilePicture()),
                   ),
                 ),
@@ -392,7 +308,7 @@ class _HomePageState extends State<HomePage> {
         size: 120.0,
         color: Colors.grey,
       );
-    } else if (avatarImageFile == null) {
+    } else if (_homeController.avatarImageFile == null) {
       if (databaseService!.user!.photoUrl != null ||
           databaseService!.user!.photoUrl!.isNotEmpty) {
         return Material(
@@ -424,7 +340,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       return Material(
         child: Image.file(
-          avatarImageFile!,
+          _homeController.avatarImageFile!,
           width: 120.0,
           height: 120.0,
           fit: BoxFit.cover,

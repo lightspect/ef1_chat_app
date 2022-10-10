@@ -70,7 +70,7 @@ class AuthController extends GetxController {
     useCase.updateUser({'token': ""}, user!.userId);
     useCase.updateUserStatus({
       "state": 'offline',
-      "last_changed": FirebaseCloudMessageHelper.instance.serverTimestamp,
+      "last_changed": FirebaseCloudMessageHelper.instance.getServerTimestamp(),
     }, user!.userId);
 
     user = null;

@@ -32,8 +32,6 @@ class FirebaseCloudMessageHelper {
 
   AuthController authController = Get.put(AuthController());
 
-  FieldValue serverTimestamp = FieldValue.serverTimestamp();
-
   registerNotification() {
     FirebaseMessaging.instance.requestPermission(
       alert: true,
@@ -162,5 +160,9 @@ class FirebaseCloudMessageHelper {
 //    await flutterLocalNotificationsPlugin.show(
 //        0, 'plain title', 'plain body', platformChannelSpecifics,
 //        payload: 'item x');
+  }
+
+  FieldValue getServerTimestamp() {
+    return FieldValue.serverTimestamp();
   }
 }
