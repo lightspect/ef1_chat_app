@@ -5,6 +5,7 @@ import 'package:chat_app_ef1/data/repositories/user_repository_imp.dart';
 import 'package:chat_app_ef1/domain/entities/user_model.dart';
 import 'package:chat_app_ef1/domain/usecases/user_usecase.dart';
 import 'package:chat_app_ef1/presentation/controller/auth/auth_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,6 +20,9 @@ class HomeController extends GetxController {
   UserModel? user;
 
   File? avatarImageFile;
+
+  final nicknameController = TextEditingController();
+  final statusMessageController = TextEditingController();
 
   @override
   void onInit() {
